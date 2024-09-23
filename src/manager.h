@@ -5,9 +5,6 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-#include "utils/vector.h"
-#include "utils/log.h"
-
 #include "settings.h"
 
 typedef enum ServiceStatus
@@ -29,8 +26,8 @@ typedef struct ProjectInfo
     ServiceInfo *services;
 } ProjectInfo;
 
-int manager_init();
-void manager_free();
+int manager_mount();
+void manager_unmount();
 
 ProjectSettings *projects_settings_get();
 ProjectInfo *projects_info_get();

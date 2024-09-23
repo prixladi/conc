@@ -2,11 +2,7 @@
 #define SOCKET_SERVER__H
 
 #include <pthread.h>
-
-#define BUFFER_SIZE 10
-
-#define MAX_WAITING_REQUESTS 10
-#define SOCKET_PATH "conc.sock"
+#include <stdbool.h>
 
 typedef char *(*Dispatch)(const char *command);
 
@@ -17,10 +13,14 @@ typedef struct ServerOptions
 
 typedef struct Server
 {
-    pthread_t main_thread;
+    volatile ServerOptions opts;
+    volatile pthread_t main_thread;
+    volatile bool running;
+
 } Server;
 
-Server server_run_async(ServerOptions opts);
-void server_wait(Server server);
+Server *server_run_async(ServerOptions opts);
+void server_stop(Server *server);
+void server_wait_and_free(Server *server);
 
 #endif
