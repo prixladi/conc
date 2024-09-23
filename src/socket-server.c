@@ -5,11 +5,17 @@
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <sys/un.h>
 
 #include "utils/log.h"
 
 #include "socket-server.h"
+
+#define BUFFER_SIZE 10
+
+#define MAX_WAITING_REQUESTS 10
+#define SOCKET_PATH "conc.sock"
 
 typedef struct HandlerOptions
 {
@@ -21,28 +27,37 @@ static void *client_socket_handle(void *data);
 
 static void *server_run(void *data);
 
-Server server_run_async(ServerOptions opts)
+Server *server_run_async(ServerOptions opts)
 {
-    ServerOptions *opts_ptr = malloc(sizeof(ServerOptions));
-    memcpy(opts_ptr, &opts, sizeof(ServerOptions));
+    Server *server = malloc(sizeof(Server));
+    server->running = true;
+    server->opts = opts;
 
     pthread_t thr;
-    pthread_create(&thr, NULL, server_run, (void *)opts_ptr);
+    pthread_create(&thr, NULL, server_run, (void *)server);
 
-    Server server = {.main_thread = thr};
+    server->main_thread = thr;
+
     return server;
 }
 
-void server_wait(Server server)
+void server_stop(Server *server)
 {
-    pthread_join(server.main_thread, NULL);
+    LOG_INFO("Stopping socket server\n");
+    server->running = false;
+}
+
+void server_wait_and_free(Server *server)
+{
+    pthread_join(server->main_thread, NULL);
+    free(server);
+    LOG_INFO("Socket server stopped\n");
 }
 
 static void *server_run(void *data)
 {
-    ServerOptions *opts = (ServerOptions *)data;
+    Server *server = (Server *)data;
 
-    LOG_INFO("Starting socket server\n");
     int server_socket = socket(AF_UNIX, SOCK_STREAM, 0);
 
     struct sockaddr_un server_addr;
@@ -54,26 +69,37 @@ static void *server_run(void *data)
 
     listen(server_socket, MAX_WAITING_REQUESTS);
 
-    int i = 10;
-    while (i--)
+    LOG_INFO("Socket server started\n");
+
+    while (server->running)
     {
-        struct sockaddr_un client_addr;
-        unsigned int clen = sizeof(client_addr);
+        fd_set read_fds;
+        FD_ZERO(&read_fds);
+        FD_SET(server_socket, &read_fds);
 
-        int client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &clen);
-        LOG_DEBUG("Accepted socket connection '%d'\n", client_socket);
+        struct timeval timeout;
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 1000 * 100;
 
-        HandlerOptions *handler_opts = malloc(sizeof(HandlerOptions));
-        handler_opts->dispatch = opts->dispatch;
-        handler_opts->client_socket = client_socket;
+        // TODO: Use pselect or other fd for instant interruption, this causes delay of the timeout duration on exit
+        int select_status = select(server_socket + 1, &read_fds, NULL, NULL, &timeout);
+        if (select_status > 0 && FD_ISSET(server_socket, &read_fds) && server->running)
+        {
+            struct sockaddr_un client_addr;
+            unsigned int clen = sizeof(client_addr);
 
-        // TODO: Implement some sort of thread_pool
-        pthread_t thr;
-        pthread_create(&thr, NULL, client_socket_handle, (void *)handler_opts);
+            int client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &clen);
+            LOG_DEBUG("Accepted socket connection '%d'\n", client_socket);
+
+            HandlerOptions *handler_opts = malloc(sizeof(HandlerOptions));
+            handler_opts->dispatch = server->opts.dispatch;
+            handler_opts->client_socket = client_socket;
+
+            // TODO: Implement some sort of thread_pool
+            pthread_t thr;
+            pthread_create(&thr, NULL, client_socket_handle, (void *)handler_opts);
+        }
     }
-    sleep(2);
-
-    free(opts);
 
     return NULL;
 }

@@ -51,7 +51,9 @@
         "select.h": "c",
         "time.h": "c",
         "format": "c",
-        "random": "c"
+        "random": "c",
+        "signal.h": "c",
+        "manager.h": "c"
     },
     "cSpell.words": [
         "Wpointer"

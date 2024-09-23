@@ -33,27 +33,29 @@ static void project_free(Project project);
 
 static ProjectStore store;
 
-int manager_init()
+int manager_mount()
 {
     if (pthread_mutex_init(&store.lock, NULL) != 0)
     {
-        LOG_ERROR("Settings store mutex init has failed\n");
+        LOG_ERROR("Settings store mutex init has failed.\n");
         return 1;
     }
 
     store.projects = vector_create(Project);
 
-    LOG_INFO("GTD init done\n");
+    LOG_INFO("Manager mounted\n");
 
     return 0;
 }
 
-void manager_free()
+void manager_unmount()
 {
     pthread_mutex_destroy(&store.lock);
 
     vector_for_each(store.projects, project_free);
     vector_free(store.projects);
+
+    LOG_INFO("Manager unmounted\n");
 
     store.projects = NULL;
 }
