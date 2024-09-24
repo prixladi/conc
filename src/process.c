@@ -56,7 +56,7 @@ static void handle_child(struct process_descriptor pd)
         exit(130);
     }
 
-    LOG_DEBUG("Starting '%s - %d' with PID\n", pd.id, current_pid);
+    LOG_DEBUG("Starting process '%s - %d'\n", pd.id, current_pid);
 
     dup2(fd, STDOUT_FILENO);
     dup2(fd, STDERR_FILENO);
