@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <signal.h>
+#include <dirent.h>
 
 #include "utils/string.h"
 #include "utils/vector.h"
@@ -37,6 +38,28 @@ static FILE *open_project_meta_file(const char *project_name, const char *mode);
 static int get_running_service_pid(const char *project_name, const char *service_name);
 static bool try_get_pid_info(int pid, struct stat *sts);
 static int kill_pid(int pid);
+
+int driver_mount()
+{
+    mkdir(root_projects_dir, S_IRWXU | S_IRWXG | S_IRWXO);
+
+    DIR *dir = opendir(root_projects_dir);
+    if (dir == NULL)
+    {
+        LOG_ERROR("(System) Driver root project dir init failed\n");
+        return 1;
+    }
+
+    closedir(dir);
+
+    LOG_INFO("(System) Driver mounted\n");
+    return 0;
+}
+
+void driver_unmount()
+{
+    LOG_INFO("(System) Driver unmounted\n");
+}
 
 int d_project_init(const ProjectSettings settings)
 {

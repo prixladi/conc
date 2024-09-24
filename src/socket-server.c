@@ -43,7 +43,7 @@ Server *server_run_async(ServerOptions opts)
 
 void server_stop(Server *server)
 {
-    LOG_INFO("Stopping socket server\n");
+    LOG_INFO("(System) Stopping socket server\n");
     server->running = false;
 }
 
@@ -51,7 +51,7 @@ void server_wait_and_free(Server *server)
 {
     pthread_join(server->main_thread, NULL);
     free(server);
-    LOG_INFO("Socket server stopped\n");
+    LOG_INFO("(System) Socket server stopped\n");
 }
 
 static void *server_run(void *data)
@@ -69,7 +69,7 @@ static void *server_run(void *data)
 
     listen(server_socket, MAX_WAITING_REQUESTS);
 
-    LOG_INFO("Socket server started\n");
+    LOG_INFO("(System) Socket server started\n");
 
     while (server->running)
     {
@@ -89,7 +89,7 @@ static void *server_run(void *data)
             unsigned int clen = sizeof(client_addr);
 
             int client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &clen);
-            LOG_DEBUG("Accepted socket connection '%d'\n", client_socket);
+            LOG_INFO("Accepted socket connection '%d'\n", client_socket);
 
             HandlerOptions *handler_opts = malloc(sizeof(HandlerOptions));
             handler_opts->dispatch = server->opts.dispatch;
@@ -135,7 +135,7 @@ static void *client_socket_handle(void *data)
     free(input);
     free(response);
 
-    LOG_DEBUG("Closing socket connection '%d'\n", client_socket);
+    LOG_INFO("Closing socket connection '%d'\n", client_socket);
     close(client_socket);
 
     return NULL;
