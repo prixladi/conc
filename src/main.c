@@ -7,7 +7,7 @@
 #include "protocol.h"
 #include "manager.h"
 
-static Server *server;
+static struct server *server;
 
 void sig_term_int_handler(int signal)
 {
@@ -29,7 +29,7 @@ int main()
         return 1;
     }
 
-    ServerOptions server_opts = {
+    struct server_options server_opts = {
         .dispatch = dispatch_command};
 
     server = server_run_async(server_opts);

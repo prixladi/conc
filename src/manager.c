@@ -10,28 +10,28 @@
 #include "utils/log.h"
 #include "utils/string.h"
 
-typedef struct Project
+struct project
 {
-    ProjectSettings settings;
+    struct project_settings settings;
     pthread_mutex_t lock;
-} Project;
+};
 
-typedef struct ProjectStore
+struct project_store
 {
-    Project *projects;
+    struct project *projects;
     pthread_mutex_t lock;
-} ProjectStore;
+};
 
-static bool try_find_project(const char *project_name, Project *project, int *pos);
-static bool try_find_service(const char *service_name, const Project project, ServiceSettings *service);
+static bool try_find_project(const char *project_name, struct project *project, int *pos);
+static bool try_find_service(const char *service_name, const struct project project, struct service_settings *service);
 
-static ProjectInfo project_info_create(Project project);
-static ServiceInfo service_info_create(const char *project_name, const char *service_name);
+static struct project_info project_info_create(struct project project);
+static struct service_info service_info_create(const char *project_name, const char *service_name);
 
-static Project project_create(const ProjectSettings settings);
-static void project_free(Project project);
+static struct project project_create(const struct project_settings settings);
+static void project_free(struct project project);
 
-static ProjectStore store;
+static struct project_store store;
 
 int manager_init()
 {
@@ -47,7 +47,7 @@ int manager_init()
         return 2;
     }
 
-    store.projects = vector_create(Project);
+    store.projects = vector_create(struct project);
 
     LOG_INFO("(System) Manager initialized\n");
 
@@ -68,15 +68,15 @@ void manager_stop()
     store.projects = NULL;
 }
 
-ProjectSettings *projects_settings_get()
+struct project_settings *projects_settings_get()
 {
     pthread_mutex_lock(&store.lock);
 
     size_t project_count = vector_length(store.projects);
-    ProjectSettings *copy = vector_create_prealloc(ProjectSettings, project_count);
+    struct project_settings *copy = vector_create_prealloc(struct project_settings, project_count);
     for (size_t i = 0; i < project_count; i++)
     {
-        Project project = store.projects[i];
+        struct project project = store.projects[i];
         pthread_mutex_lock(&project.lock);
         vector_push_rval(copy, project_settings_dup(project.settings));
         pthread_mutex_unlock(&project.lock);
@@ -87,15 +87,15 @@ ProjectSettings *projects_settings_get()
     return copy;
 }
 
-ProjectInfo *projects_info_get()
+struct project_info *projects_info_get()
 {
     pthread_mutex_lock(&store.lock);
 
     size_t project_count = vector_length(store.projects);
-    ProjectInfo *infos = vector_create_prealloc(ProjectInfo, project_count);
+    struct project_info *infos = vector_create_prealloc(struct project_info, project_count);
     for (size_t i = 0; i < project_count; i++)
     {
-        Project project = store.projects[i];
+        struct project project = store.projects[i];
         pthread_mutex_lock(&project.lock);
         vector_push_rval(infos, project_info_create(project));
         pthread_mutex_unlock(&project.lock);
@@ -106,11 +106,11 @@ ProjectInfo *projects_info_get()
     return infos;
 }
 
-int project_settings_get(const char *project_name, ProjectSettings *settings)
+int project_settings_get(const char *project_name, struct project_settings *settings)
 {
     pthread_mutex_lock(&store.lock);
 
-    Project project;
+    struct project project;
     if (try_find_project(project_name, &project, NULL) == false)
     {
         pthread_mutex_unlock(&store.lock);
@@ -127,11 +127,11 @@ int project_settings_get(const char *project_name, ProjectSettings *settings)
     return 0;
 }
 
-int project_info_get(const char *project_name, ProjectInfo *info)
+int project_info_get(const char *project_name, struct project_info *info)
 {
     pthread_mutex_lock(&store.lock);
 
-    Project project;
+    struct project project;
     if (try_find_project(project_name, &project, NULL) == false)
     {
         pthread_mutex_unlock(&store.lock);
@@ -148,16 +148,16 @@ int project_info_get(const char *project_name, ProjectInfo *info)
     return 0;
 }
 
-int project_upsert(const ProjectSettings settings)
+int project_upsert(const struct project_settings settings)
 {
-    Project new_project = project_create(project_settings_dup(settings));
+    struct project new_project = project_create(project_settings_dup(settings));
 
     pthread_mutex_lock(&store.lock);
 
     bool replaced = false;
     for (size_t i = 0; i < vector_length(store.projects); i++)
     {
-        Project project = store.projects[i];
+        struct project project = store.projects[i];
         if (strcmp(new_project.settings.name, project.settings.name))
             continue;
 
@@ -189,7 +189,7 @@ int project_start(const char *project_name)
 {
     pthread_mutex_lock(&store.lock);
 
-    Project project;
+    struct project project;
     if (try_find_project(project_name, &project, NULL) == false)
     {
         pthread_mutex_unlock(&store.lock);
@@ -210,7 +210,7 @@ int project_stop(const char *project_name)
 {
     pthread_mutex_lock(&store.lock);
 
-    Project project;
+    struct project project;
     if (try_find_project(project_name, &project, NULL) == false)
     {
         pthread_mutex_unlock(&store.lock);
@@ -231,7 +231,7 @@ int project_remove(const char *project_name)
 {
     pthread_mutex_lock(&store.lock);
 
-    Project project;
+    struct project project;
     int pos;
     if (try_find_project(project_name, &project, &pos) == false)
     {
@@ -252,11 +252,11 @@ int project_remove(const char *project_name)
     return 0;
 }
 
-int service_info_get(const char *project_name, const char *service_name, ServiceInfo *info)
+int service_info_get(const char *project_name, const char *service_name, struct service_info *info)
 {
     pthread_mutex_lock(&store.lock);
 
-    Project project;
+    struct project project;
     if (try_find_project(project_name, &project, NULL) == false)
     {
         pthread_mutex_unlock(&store.lock);
@@ -266,7 +266,7 @@ int service_info_get(const char *project_name, const char *service_name, Service
     pthread_mutex_lock(&project.lock);
     pthread_mutex_unlock(&store.lock);
 
-    ServiceSettings service;
+    struct service_settings service;
     if (try_find_service(service_name, project, &service) == false)
     {
         pthread_mutex_unlock(&project.lock);
@@ -284,7 +284,7 @@ int service_start(const char *project_name, const char *service_name)
 {
     pthread_mutex_lock(&store.lock);
 
-    Project project;
+    struct project project;
     if (try_find_project(project_name, &project, NULL) == false)
     {
         pthread_mutex_unlock(&store.lock);
@@ -294,7 +294,7 @@ int service_start(const char *project_name, const char *service_name)
     pthread_mutex_lock(&project.lock);
     pthread_mutex_unlock(&store.lock);
 
-    ServiceSettings service;
+    struct service_settings service;
     if (try_find_service(service_name, project, &service) == false)
     {
         pthread_mutex_unlock(&project.lock);
@@ -312,7 +312,7 @@ int service_stop(const char *project_name, const char *service_name)
 {
     pthread_mutex_lock(&store.lock);
 
-    Project project;
+    struct project project;
     if (try_find_project(project_name, &project, NULL) == false)
     {
         pthread_mutex_unlock(&store.lock);
@@ -322,7 +322,7 @@ int service_stop(const char *project_name, const char *service_name)
     pthread_mutex_lock(&project.lock);
     pthread_mutex_unlock(&store.lock);
 
-    ServiceSettings service;
+    struct service_settings service;
     if (try_find_service(service_name, project, &service) == false)
     {
         pthread_mutex_unlock(&project.lock);
@@ -336,13 +336,13 @@ int service_stop(const char *project_name, const char *service_name)
     return stop_result;
 }
 
-void service_info_free(ServiceInfo info)
+void service_info_free(struct service_info info)
 {
     free(info.name);
     info.name = NULL;
 }
 
-void project_info_free(ProjectInfo info)
+void project_info_free(struct project_info info)
 {
     free(info.name);
     if (info.services != NULL)
@@ -355,7 +355,7 @@ void project_info_free(ProjectInfo info)
     info.services = NULL;
 }
 
-static bool try_find_project(const char *project_name, Project *project, int *pos)
+static bool try_find_project(const char *project_name, struct project *project, int *pos)
 {
     for (size_t i = 0; i < vector_length(store.projects); i++)
     {
@@ -370,7 +370,7 @@ static bool try_find_project(const char *project_name, Project *project, int *po
     return false;
 }
 
-static bool try_find_service(const char *service_name, const Project project, ServiceSettings *service)
+static bool try_find_service(const char *service_name, const struct project project, struct service_settings *service)
 {
     for (size_t i = 0; i < vector_length(project.settings.services); i++)
     {
@@ -382,9 +382,9 @@ static bool try_find_service(const char *service_name, const Project project, Se
     return false;
 }
 
-static Project project_create(const ProjectSettings settings)
+static struct project project_create(const struct project_settings settings)
 {
-    Project project = {
+    struct project project = {
         .settings = settings};
 
     pthread_mutex_init(&project.lock, NULL);
@@ -392,26 +392,26 @@ static Project project_create(const ProjectSettings settings)
     return project;
 }
 
-static ProjectInfo project_info_create(Project project)
+static struct project_info project_info_create(struct project project)
 {
-    ProjectInfo info;
+    struct project_info info;
     size_t service_count = vector_length(project.settings.services);
 
     info.name = str_dup(project.settings.name);
-    info.services = vector_create_prealloc(ServiceInfo, service_count);
+    info.services = vector_create_prealloc(struct service_info, service_count);
     for (size_t i = 0; i < service_count; i++)
     {
-        ServiceInfo service_info = service_info_create(project.settings.name, project.settings.services[i].name);
+        struct service_info service_info = service_info_create(project.settings.name, project.settings.services[i].name);
         vector_push(info.services, service_info);
     }
 
     return info;
 }
 
-static ServiceInfo service_info_create(const char *project_name, const char *service_name)
+static struct service_info service_info_create(const char *project_name, const char *service_name)
 {
-    D_ServiceInfo d_info = d_service_info_get(project_name, service_name);
-    ServiceStatus status;
+    struct d_service_info d_info = d_service_info_get(project_name, service_name);
+    enum service_status status;
 
     switch (d_info.status)
     {
@@ -426,14 +426,14 @@ static ServiceInfo service_info_create(const char *project_name, const char *ser
         break;
     }
 
-    ServiceInfo info = {
+    struct service_info info = {
         .name = str_dup(service_name),
         .status = status};
 
     return info;
 }
 
-static void project_free(Project project)
+static void project_free(struct project project)
 {
     pthread_mutex_destroy(&project.lock);
     project_settings_free(project.settings);

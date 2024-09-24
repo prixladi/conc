@@ -20,17 +20,17 @@ static const char *root_projects_dir = "./projects";
 static const char *log_file_name = "log.txt";
 static const char *meta_file_name = "meta";
 
-typedef struct ServiceProcessInfo
+struct service_process_info
 {
     int pid;
     time_t c_time;
-} ServiceProcessInfo;
+};
 
 static int ensure_project_dir_exists(const char *project_name);
 static int ensure_service_dir_exists(const char *project_name, const char *service_name);
 
-static void write_service_meta_file(const char *project_name, const char *service_name, ServiceProcessInfo info);
-static bool try_parse_service_meta_file(const char *project_name, const char *service_name, ServiceProcessInfo *info);
+static void write_service_meta_file(const char *project_name, const char *service_name, struct service_process_info info);
+static bool try_parse_service_meta_file(const char *project_name, const char *service_name, struct service_process_info *info);
 
 static FILE *open_service_meta_file(const char *project_name, const char *service_name, const char *mode);
 static FILE *open_project_meta_file(const char *project_name, const char *mode);
@@ -61,7 +61,7 @@ void driver_unmount()
     LOG_INFO("(System) Driver unmounted\n");
 }
 
-int d_project_init(const ProjectSettings settings)
+int d_project_init(const struct project_settings settings)
 {
     ensure_project_dir_exists(settings.name);
 
@@ -80,33 +80,33 @@ int d_project_init(const ProjectSettings settings)
     return 0;
 }
 
-int d_project_start(const ProjectSettings settings)
+int d_project_start(const struct project_settings settings)
 {
     for (size_t i = 0; i < vector_length(settings.services); i++)
     {
-        ServiceSettings service = settings.services[i];
+        struct service_settings service = settings.services[i];
         d_service_start(settings.name, service);
     }
 
     return 0;
 }
 
-int d_project_stop(const ProjectSettings settings)
+int d_project_stop(const struct project_settings settings)
 {
     for (size_t i = 0; i < vector_length(settings.services); i++)
     {
-        ServiceSettings service = settings.services[i];
+        struct service_settings service = settings.services[i];
         d_service_stop(settings.name, service);
     }
 
     return 0;
 }
 
-D_ServiceInfo d_service_info_get(const char *project_name, const char *service_name)
+struct d_service_info d_service_info_get(const char *project_name, const char *service_name)
 {
     int running_pid = get_running_service_pid(project_name, service_name);
 
-    D_ServiceInfo info = {
+    struct d_service_info info = {
         .status = running_pid > 0 ? D_RUNNING : running_pid == 0 ? D_STOPPED
                                                                  : D_NONE,
     };
@@ -114,7 +114,7 @@ D_ServiceInfo d_service_info_get(const char *project_name, const char *service_n
     return info;
 }
 
-int d_service_start(const char *project_name, const ServiceSettings service_settings)
+int d_service_start(const char *project_name, const struct service_settings service_settings)
 {
     int running_pid = get_running_service_pid(project_name, service_settings.name);
     if (running_pid > 0)
@@ -129,7 +129,7 @@ int d_service_start(const char *project_name, const ServiceSettings service_sett
     if (try_get_pid_info(pid, &sts) == false)
         return 1;
 
-    ServiceProcessInfo info = {
+    struct service_process_info info = {
         .pid = pid,
         .c_time = sts.st_ctime};
 
@@ -138,7 +138,7 @@ int d_service_start(const char *project_name, const ServiceSettings service_sett
     return 0;
 }
 
-int d_service_stop(const char *project_name, const ServiceSettings service_settings)
+int d_service_stop(const char *project_name, const struct service_settings service_settings)
 {
     int running_pid = get_running_service_pid(project_name, service_settings.name);
     if (running_pid <= 0)
@@ -151,7 +151,7 @@ int d_service_stop(const char *project_name, const ServiceSettings service_setti
 
 static int get_running_service_pid(const char *project_name, const char *service_name)
 {
-    ServiceProcessInfo info = {0};
+    struct service_process_info info = {0};
     if (try_parse_service_meta_file(project_name, service_name, &info) == false)
         return -1;
 
@@ -178,7 +178,7 @@ static int ensure_project_dir_exists(const char *project_name)
     return result;
 }
 
-static void write_service_meta_file(const char *project_name, const char *service_name, ServiceProcessInfo info)
+static void write_service_meta_file(const char *project_name, const char *service_name, struct service_process_info info)
 {
     FILE *fptr = open_service_meta_file(project_name, service_name, "w");
     if (fptr == NULL)
@@ -189,7 +189,7 @@ static void write_service_meta_file(const char *project_name, const char *servic
 }
 
 #define MAX_META_LINE_LEN 1024 // This should be sufficient but probably should handle cases when it is not
-static bool try_parse_service_meta_file(const char *project_name, const char *service_name, ServiceProcessInfo *info)
+static bool try_parse_service_meta_file(const char *project_name, const char *service_name, struct service_process_info *info)
 {
     FILE *fptr = open_service_meta_file(project_name, service_name, "r");
     if (fptr == NULL)

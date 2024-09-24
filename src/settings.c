@@ -18,12 +18,12 @@
 #define SETTINGS_INVALID_SERVICE_NAME_ERROR(s) str_concat("settings.service.", s, ".name.invalid", NULL)
 #define SETTINGS_INVALID_SERVICE_COMMAND_ERROR(s) str_concat("settings.service.", s, ".command.invalid", NULL)
 
-static ServiceSettings service_settings_parse(cJSON *json);
+static struct service_settings service_settings_parse(cJSON *json);
 static inline bool is_name_valid(const char *name);
 
-char *project_settings_parse(const char *data, ProjectSettings *settings)
+char *project_settings_parse(const char *data, struct project_settings *settings)
 {
-    settings->services = vector_create(ServiceSettings);
+    settings->services = vector_create(struct service_settings);
 
     cJSON *json = cJSON_Parse(data);
     if (json == NULL)
@@ -40,7 +40,7 @@ char *project_settings_parse(const char *data, ProjectSettings *settings)
             cJSON *arr = js->child;
             do
             {
-                ServiceSettings service = service_settings_parse(arr);
+                struct service_settings service = service_settings_parse(arr);
                 vector_push(settings->services, service);
 
                 if (!is_name_valid(service.name))
@@ -72,7 +72,7 @@ char *project_settings_parse(const char *data, ProjectSettings *settings)
     return NULL;
 }
 
-char *project_settings_stringify(const ProjectSettings settings)
+char *project_settings_stringify(const struct project_settings settings)
 {
     cJSON *root = cJSON_CreateObject();
     cJSON_AddItemToObject(root, "name", cJSON_CreateString(settings.name));
@@ -82,7 +82,7 @@ char *project_settings_stringify(const ProjectSettings settings)
 
     for (size_t i = 0; i < vector_length(settings.services); i++)
     {
-        ServiceSettings service_settings = settings.services[i];
+        struct service_settings service_settings = settings.services[i];
 
         cJSON *service = cJSON_CreateObject();
         cJSON_AddItemToArray(services, service);
@@ -103,26 +103,26 @@ char *project_settings_stringify(const ProjectSettings settings)
     return result;
 }
 
-ProjectSettings project_settings_dup(const ProjectSettings settings)
+struct project_settings project_settings_dup(const struct project_settings settings)
 {
-    ProjectSettings copy;
+    struct project_settings copy;
     copy.name = str_dup(settings.name);
 
     size_t service_count = vector_length(settings.services);
-    copy.services = vector_create_prealloc(ServiceSettings, service_count);
+    copy.services = vector_create_prealloc(struct service_settings, service_count);
 
     for (size_t i = 0; i < service_count; i++)
     {
-        ServiceSettings service_settings = service_settings_dup(settings.services[i]);
+        struct service_settings service_settings = service_settings_dup(settings.services[i]);
         vector_push(copy.services, service_settings);
     }
 
     return copy;
 }
 
-ServiceSettings service_settings_dup(const ServiceSettings settings)
+struct service_settings service_settings_dup(const struct service_settings settings)
 {
-    ServiceSettings copy;
+    struct service_settings copy;
     copy.name = str_dup(settings.name);
     if (settings.pwd)
         copy.pwd = str_dup(settings.pwd);
@@ -139,7 +139,7 @@ ServiceSettings service_settings_dup(const ServiceSettings settings)
     return copy;
 }
 
-void project_settings_free(ProjectSettings settings)
+void project_settings_free(struct project_settings settings)
 {
     if (settings.services != NULL)
     {
@@ -152,7 +152,7 @@ void project_settings_free(ProjectSettings settings)
     settings.services = NULL;
 }
 
-void service_settings_free(ServiceSettings settings)
+void service_settings_free(struct service_settings settings)
 {
     free(settings.name);
     free(settings.pwd);
@@ -167,9 +167,9 @@ void service_settings_free(ServiceSettings settings)
     settings.command = NULL;
 }
 
-static ServiceSettings service_settings_parse(cJSON *json)
+static struct service_settings service_settings_parse(cJSON *json)
 {
-    ServiceSettings settings = {0};
+    struct service_settings settings = {0};
     settings.command = vector_create_prealloc(char *, 2);
 
     cJSON *js = json->child;

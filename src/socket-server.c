@@ -12,24 +12,24 @@
 
 #include "socket-server.h"
 
-#define BUFFER_SIZE 10
+#define BUFFER_SIZE 1024
 
 #define MAX_WAITING_REQUESTS 10
 #define SOCKET_PATH "conc.sock"
 
-typedef struct HandlerOptions
+struct handler_options
 {
     Dispatch dispatch;
     int client_socket;
-} HandlerOptions;
+};
 
 static void *client_socket_handle(void *data);
 
 static void *server_run(void *data);
 
-Server *server_run_async(ServerOptions opts)
+struct server *server_run_async(struct server_options opts)
 {
-    Server *server = malloc(sizeof(Server));
+    struct server *server = malloc(sizeof(struct server));
     server->running = true;
     server->opts = opts;
 
@@ -41,13 +41,13 @@ Server *server_run_async(ServerOptions opts)
     return server;
 }
 
-void server_stop(Server *server)
+void server_stop(struct server *server)
 {
     LOG_INFO("(System) Stopping socket server\n");
     server->running = false;
 }
 
-void server_wait_and_free(Server *server)
+void server_wait_and_free(struct server *server)
 {
     pthread_join(server->main_thread, NULL);
     free(server);
@@ -56,7 +56,7 @@ void server_wait_and_free(Server *server)
 
 static void *server_run(void *data)
 {
-    Server *server = (Server *)data;
+    struct server *server = data;
 
     int server_socket = socket(AF_UNIX, SOCK_STREAM, 0);
 
@@ -91,7 +91,7 @@ static void *server_run(void *data)
             int client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &clen);
             LOG_INFO("Accepted socket connection '%d'\n", client_socket);
 
-            HandlerOptions *handler_opts = malloc(sizeof(HandlerOptions));
+            struct handler_options *handler_opts = malloc(sizeof(struct handler_options));
             handler_opts->dispatch = server->opts.dispatch;
             handler_opts->client_socket = client_socket;
 
@@ -106,7 +106,7 @@ static void *server_run(void *data)
 
 static void *client_socket_handle(void *data)
 {
-    HandlerOptions *opts = data;
+    struct handler_options *opts = data;
     int client_socket = opts->client_socket;
     Dispatch dispatch = opts->dispatch;
     free(opts);

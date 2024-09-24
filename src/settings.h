@@ -1,26 +1,26 @@
 #ifndef SETTINGS__H
 #define SETTINGS__H
 
-typedef struct ServiceSettings
+struct service_settings
 {
     char *name;
     char *pwd;
     char **command;
-} ServiceSettings;
+};
 
-typedef struct ProjectSettings
+struct project_settings
 {
     char *name;
-    ServiceSettings *services;
-} ProjectSettings;
+    struct service_settings *services;
+};
 
-char *project_settings_parse(const char *data, ProjectSettings *settings);
-char *project_settings_stringify(const ProjectSettings settings);
+char *project_settings_parse(const char *data, struct project_settings *settings);
+char *project_settings_stringify(const struct project_settings settings);
 
-ProjectSettings project_settings_dup(const ProjectSettings settings);
-ServiceSettings service_settings_dup(const ServiceSettings settings);
+struct project_settings project_settings_dup(const struct project_settings settings);
+struct service_settings service_settings_dup(const struct service_settings settings);
 
-void project_settings_free(ProjectSettings settings);
-void service_settings_free(ServiceSettings settings);
+void project_settings_free(struct project_settings settings);
+void service_settings_free(struct service_settings settings);
 
 #endif
