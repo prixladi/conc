@@ -12,12 +12,13 @@
 #include "utils/vector.h"
 #include "utils/log.h"
 #include "utils/threading.h"
+#include "utils/fs.h"
 
 #include "driver.h"
 #include "process.h"
 
 static const char *root_projects_dir = "./projects";
-static const char *log_file_name = "log.txt";
+static const char *log_file_name = "log";
 static const char *meta_file_name = "meta";
 
 struct service_process_info
@@ -34,6 +35,15 @@ static bool try_parse_service_meta_file(const char *project_name, const char *se
 
 static FILE *open_service_meta_file(const char *project_name, const char *service_name, const char *mode);
 static FILE *open_project_meta_file(const char *project_name, const char *mode);
+
+static char *get_project_dir_path(const char *project_name);
+static char *get_project_meta_file_path(const char *project_name);
+static char *get_service_dir_path(const char *project_name, const char *service_name);
+static char *get_service_meta_file_path(const char *project_name, const char *service_name);
+static char *get_service_log_file_path(const char *project_name, const char *service_name);
+
+static int remove_file_f(char *path);
+static int remove_dir_f(char *path);
 
 static int get_running_service_pid(const char *project_name, const char *service_name);
 static bool try_get_pid_info(int pid, struct stat *sts);
@@ -82,24 +92,41 @@ int d_project_init(const struct project_settings settings)
 
 int d_project_start(const struct project_settings settings)
 {
+    int status = 0;
     for (size_t i = 0; i < vector_length(settings.services); i++)
-    {
-        struct service_settings service = settings.services[i];
-        d_service_start(settings.name, service);
-    }
-
-    return 0;
+        status += d_service_start(settings.name, settings.services[i]);
+    return status;
 }
 
 int d_project_stop(const struct project_settings settings)
 {
+    int status = 0;
+    for (size_t i = 0; i < vector_length(settings.services); i++)
+        status += d_service_stop(settings.name, settings.services[i]);
+    return status;
+}
+
+int d_project_remove(const struct project_settings settings)
+{
     for (size_t i = 0; i < vector_length(settings.services); i++)
     {
         struct service_settings service = settings.services[i];
-        d_service_stop(settings.name, service);
+        remove_file_f(get_service_meta_file_path(settings.name, service.name));
+        remove_file_f(get_service_log_file_path(settings.name, service.name));
+        remove_dir_f(get_service_dir_path(settings.name, service.name));
     }
 
-    return 0;
+    remove_file_f(get_project_meta_file_path(settings.name));
+
+    char *project_dir_path = get_project_dir_path(settings.name);
+    rmdir(project_dir_path);
+
+    bool delete_success = !dir_exists(project_dir_path);
+    if (!delete_success)
+        LOG_ERROR("Unable to remove project directory '%s'\n", project_dir_path);
+
+    free(project_dir_path);
+    return delete_success ? 0 : 1;
 }
 
 struct d_service_info d_service_info_get(const char *project_name, const char *service_name)
@@ -120,7 +147,7 @@ int d_service_start(const char *project_name, const struct service_settings serv
     if (running_pid > 0)
         return 409;
 
-    char *logfile_path = str_concat(root_projects_dir, "/", project_name, "/", service_settings.name, "/", log_file_name, NULL);
+    char *logfile_path = get_service_log_file_path(project_name, service_settings.name);
     int pid = process_start(project_name, service_settings, logfile_path);
 
     free(logfile_path);
@@ -224,23 +251,62 @@ static bool try_parse_service_meta_file(const char *project_name, const char *se
     return parsed == 2;
 }
 
+static FILE *open_project_meta_file(const char *project_name, const char *modes)
+{
+    char *meta_file_path = get_project_meta_file_path(project_name);
+    FILE *fptr;
+    fptr = fopen(meta_file_path, modes);
+    free(meta_file_path);
+
+    return fptr;
+}
+
 static FILE *open_service_meta_file(const char *project_name, const char *service_name, const char *modes)
 {
-    char *meta_file_path = str_concat(root_projects_dir, "/", project_name, "/", service_name, "/", meta_file_name, NULL);
+    char *meta_file_path = get_service_meta_file_path(project_name, service_name);
     FILE *fptr;
     fptr = fopen(meta_file_path, modes);
     free(meta_file_path);
     return fptr;
 }
 
-static FILE *open_project_meta_file(const char *project_name, const char *modes)
+static char *get_project_dir_path(const char *project_name)
 {
-    char *meta_file_path = str_concat(root_projects_dir, "/", project_name, "/", meta_file_name, NULL);
-    FILE *fptr;
-    fptr = fopen(meta_file_path, modes);
-    free(meta_file_path);
+    return str_concat(root_projects_dir, "/", project_name, NULL);
+}
 
-    return fptr;
+static char *get_project_meta_file_path(const char *project_name)
+{
+    return str_concat(root_projects_dir, "/", project_name, "/", meta_file_name, NULL);
+}
+
+static char *get_service_dir_path(const char *project_name, const char *service_name)
+{
+    return str_concat(root_projects_dir, "/", project_name, "/", service_name, NULL);
+}
+
+static char *get_service_meta_file_path(const char *project_name, const char *service_name)
+{
+    return str_concat(root_projects_dir, "/", project_name, "/", service_name, "/", meta_file_name, NULL);
+}
+
+static char *get_service_log_file_path(const char *project_name, const char *service_name)
+{
+    return str_concat(root_projects_dir, "/", project_name, "/", service_name, "/", log_file_name, NULL);
+}
+
+static int remove_file_f(char *path)
+{
+    int res = remove(path);
+    free(path);
+    return res;
+}
+
+static int remove_dir_f(char *path)
+{
+    int res = rmdir(path);
+    free(path);
+    return res;
 }
 
 static bool try_get_pid_info(int pid, struct stat *sts)

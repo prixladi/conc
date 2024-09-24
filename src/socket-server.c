@@ -128,8 +128,8 @@ static void *client_socket_handle(void *data)
     }
 
     LOG_DEBUG("Received command '%s' from connection '%d'\n", input, client_socket);
-
     char *response = dispatch(input);
+    LOG_DEBUG("Sending response '%s' to connection '%d'\n", response, client_socket);
     write(client_socket, response, strlen(response) + 1); // we also want to send '\0' as a end of message indicator
 
     free(input);

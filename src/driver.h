@@ -21,6 +21,7 @@ void driver_unmount();
 int d_project_init(const struct project_settings settings);
 int d_project_start(const struct project_settings settings);
 int d_project_stop(const struct project_settings settings);
+int d_project_remove(const struct project_settings settings);
 
 struct d_service_info d_service_info_get(const char *project_name, const char *service_name);
 int d_service_start(const char *project_name, const struct service_settings service_settings);
