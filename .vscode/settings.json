@@ -53,7 +53,9 @@
         "format": "c",
         "random": "c",
         "signal.h": "c",
-        "manager.h": "c"
+        "manager.h": "c",
+        "dirent.h": "c",
+        "threading.h": "c"
     },
     "cSpell.words": [
         "Wpointer"

@@ -164,6 +164,7 @@ int project_upsert(const struct project_settings settings)
         pthread_mutex_lock(&project.lock);
 
         d_project_stop(project.settings);
+        d_project_remove(project.settings);
         store.projects[i] = new_project;
 
         pthread_mutex_unlock(&project.lock);
@@ -243,12 +244,16 @@ int project_remove(const char *project_name)
 
     vector_remove(store.projects, pos, NULL);
     d_project_stop(project.settings);
+    int remove_res = d_project_remove(project.settings);
 
     pthread_mutex_unlock(&project.lock);
 
     project_free(project);
 
     pthread_mutex_unlock(&store.lock);
+
+    if (remove_res > 0)
+        return 2;
     return 0;
 }
 

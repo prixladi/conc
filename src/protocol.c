@@ -342,6 +342,8 @@ static char *handle_project_remove(char **command)
     {
     case 0:
         return resp_ok_no_content();
+    case 2:
+        return resp_error("project_unable_to_remove");
     case 127:
         return resp_error("project_not_found");
     default:
