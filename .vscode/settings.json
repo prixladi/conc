@@ -55,9 +55,12 @@
         "signal.h": "c",
         "manager.h": "c",
         "dirent.h": "c",
-        "threading.h": "c"
+        "threading.h": "c",
+        "optional": "c",
+        "numbers": "c"
     },
     "cSpell.words": [
+        "valuestring",
         "Wpointer"
     ]
 }

@@ -16,6 +16,7 @@ struct process_descriptor
 {
     char *id;
     char *logfile_path;
+    char ***env;
     char **command;
     char *pwd;
 };
@@ -58,6 +59,12 @@ static void handle_child(struct process_descriptor pd)
 
     LOG_DEBUG("Starting process '%s - %d'\n", pd.id, current_pid);
 
+    for (size_t i = 0; i < vector_length(pd.env); i++)
+    {
+        char **pair = pd.env[i];
+        setenv(pair[0], pair[1], 1);
+    }
+
     dup2(fd, STDOUT_FILENO);
     dup2(fd, STDERR_FILENO);
     close(fd);
@@ -81,11 +88,23 @@ static struct process_descriptor proccess_descriptor_create(const char *project_
         vector_push_rval(command, str_dup(settings.command[i]));
     vector_push(command, command_terminate);
 
+    size_t env_len = vector_length(settings.env);
+    char ***env = vector_create_prealloc(char **, env_len);
+    for (size_t i = 0; i < env_len; i++)
+    {
+        char **env_pair = malloc(sizeof(char *) * 2);
+        env_pair[0] = str_dup(settings.env[i].key);
+        env_pair[1] = str_dup(settings.env[i].value);
+        vector_push(env, env_pair);
+    }
+    vector_push(command, command_terminate);
+
     struct process_descriptor proc = {
         .id = id,
         .logfile_path = logfile_path,
         .command = command,
-        .pwd = pwd};
+        .pwd = pwd,
+        .env = env};
 
     return proc;
 }
@@ -95,6 +114,15 @@ static void process_descriptor_free(struct process_descriptor pd)
     free(pd.id);
     free(pd.logfile_path);
     free(pd.pwd);
+
+    for (size_t i = 0; i < vector_length(pd.env); i++)
+    {
+        char **pair = pd.env[i];
+        free(pair[0]);
+        free(pair[1]);
+        free(pair);
+    }
+    vector_free(pd.env);
 
     vector_for_each(pd.command, free);
     vector_free(pd.command);

@@ -16,10 +16,12 @@
 #define SETTINGS_INVALID_NAME_ERROR() str_dup("settings.name.invalid")
 #define SETTINGS_MISSING_SERVICES_ERROR() str_dup("settings.services.missing")
 #define SETTINGS_INVALID_SERVICE_NAME_ERROR(s) str_concat("settings.service.", s, ".name.invalid", NULL)
+#define SETTINGS_DUPLICATE_SERVICE_NAME_ERROR(s) str_concat("settings.service.", s, ".name.duplicate", NULL)
 #define SETTINGS_INVALID_SERVICE_COMMAND_ERROR(s) str_concat("settings.service.", s, ".command.invalid", NULL)
 
 static struct service_settings service_settings_parse(cJSON *json);
 static inline bool is_name_valid(const char *name);
+static void env_variable_free(struct env_variable e);
 
 char *project_settings_parse(const char *data, struct project_settings *settings)
 {
@@ -41,11 +43,11 @@ char *project_settings_parse(const char *data, struct project_settings *settings
             do
             {
                 struct service_settings service = service_settings_parse(arr);
-                vector_push(settings->services, service);
 
                 if (!is_name_valid(service.name))
                 {
                     cJSON_Delete(json);
+                    service_settings_free(service);
                     return service.name
                                ? SETTINGS_INVALID_SERVICE_NAME_ERROR(service.name)
                                : SETTINGS_INVALID_SERVICE_NAME_ERROR("");
@@ -54,8 +56,21 @@ char *project_settings_parse(const char *data, struct project_settings *settings
                 if (vector_length(service.command) < 1)
                 {
                     cJSON_Delete(json);
+                    service_settings_free(service);
                     return SETTINGS_INVALID_SERVICE_COMMAND_ERROR(service.name);
                 }
+
+                for (size_t i = 0; i < vector_length(settings->services); i++)
+                {
+                    if (strcmp(service.name, settings->services[i].name) == 0)
+                    {
+                        cJSON_Delete(json);
+                        service_settings_free(service);
+                        return SETTINGS_DUPLICATE_SERVICE_NAME_ERROR(service.name);
+                    }
+                }
+
+                vector_push(settings->services, service);
 
             } while ((arr = arr->next));
         }
@@ -95,6 +110,15 @@ char *project_settings_stringify(const struct project_settings settings)
 
         for (size_t j = 0; j < vector_length(service_settings.command); j++)
             cJSON_AddItemToArray(command, cJSON_CreateString(service_settings.command[j]));
+
+        cJSON *env = cJSON_CreateObject();
+        cJSON_AddItemToObject(service, "env", env);
+
+        for (size_t j = 0; j < vector_length(service_settings.env); j++)
+        {
+            struct env_variable e = service_settings.env[j];
+            cJSON_AddItemToObject(env, e.key, cJSON_CreateString(e.value));
+        }
     }
 
     char *result = cJSON_PrintUnformatted(root);
@@ -105,7 +129,7 @@ char *project_settings_stringify(const struct project_settings settings)
 
 struct project_settings project_settings_dup(const struct project_settings settings)
 {
-    struct project_settings copy;
+    struct project_settings copy = {0};
     copy.name = str_dup(settings.name);
 
     size_t service_count = vector_length(settings.services);
@@ -122,14 +146,24 @@ struct project_settings project_settings_dup(const struct project_settings setti
 
 struct service_settings service_settings_dup(const struct service_settings settings)
 {
-    struct service_settings copy;
+    struct service_settings copy = {0};
     copy.name = str_dup(settings.name);
     if (settings.pwd)
         copy.pwd = str_dup(settings.pwd);
 
+    size_t env_len = vector_length(settings.env);
+    copy.env = vector_create_prealloc(struct env_variable, env_len);
+    for (size_t i = 0; i < env_len; i++)
+    {
+        struct env_variable e = {
+            .key = str_dup(settings.env[i].key),
+            .value = str_dup(settings.env[i].value),
+        };
+        vector_push(copy.env, e);
+    }
+
     size_t command_len = vector_length(settings.command);
     copy.command = vector_create_prealloc(char *, command_len);
-
     for (size_t i = 0; i < command_len; i++)
     {
         char *part = str_dup(settings.command[i]);
@@ -156,6 +190,11 @@ void service_settings_free(struct service_settings settings)
 {
     free(settings.name);
     free(settings.pwd);
+    if (settings.env != NULL)
+    {
+        vector_for_each(settings.env, env_variable_free);
+        vector_free(settings.env);
+    }
     if (settings.command != NULL)
     {
         vector_for_each(settings.command, free);
@@ -165,12 +204,23 @@ void service_settings_free(struct service_settings settings)
     settings.name = NULL;
     settings.pwd = NULL;
     settings.command = NULL;
+    settings.env = NULL;
+}
+
+static void env_variable_free(struct env_variable e)
+{
+    free(e.key);
+    free(e.value);
+
+    e.key = NULL;
+    e.value = NULL;
 }
 
 static struct service_settings service_settings_parse(cJSON *json)
 {
     struct service_settings settings = {0};
     settings.command = vector_create_prealloc(char *, 2);
+    settings.env = vector_create(struct env_variable);
 
     cJSON *js = json->child;
     do
@@ -187,6 +237,21 @@ static struct service_settings service_settings_parse(cJSON *json)
                 char *commandPart = str_dup(cmd->valuestring);
                 vector_push(settings.command, commandPart);
             } while ((cmd = cmd->next));
+        }
+        if (strcmp(js->string, "env") == 0 && js->type == cJSON_Object && js->child)
+        {
+            cJSON *e = js->child;
+            do
+            {
+                if (e->type != cJSON_String)
+                    continue;
+
+                struct env_variable env_var =
+                    {
+                        .key = str_dup(e->string),
+                        .value = str_dup(e->valuestring)};
+                vector_push(settings.env, env_var);
+            } while ((e = e->next));
         }
     } while ((js = js->next));
 
