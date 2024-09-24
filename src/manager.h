@@ -7,42 +7,42 @@
 
 #include "settings.h"
 
-typedef enum ServiceStatus
+enum service_status
 {
     IDLE,
     RUNNING,
     STOPPED,
-} ServiceStatus;
+};
 
-typedef struct ServiceInfo
+struct service_info
 {
     char *name;
-    ServiceStatus status;
-} ServiceInfo;
+    enum service_status status;
+};
 
-typedef struct ProjectInfo
+struct project_info
 {
     char *name;
-    ServiceInfo *services;
-} ProjectInfo;
+    struct service_info *services;
+};
 
 int manager_init();
 void manager_stop();
 
-ProjectSettings *projects_settings_get();
-ProjectInfo *projects_info_get();
-int project_settings_get(const char *project_name, ProjectSettings *settings);
-int project_info_get(const char *project_name, ProjectInfo *info);
-int project_upsert(const ProjectSettings settings);
+struct project_settings *projects_settings_get();
+struct project_info *projects_info_get();
+int project_settings_get(const char *project_name, struct project_settings *settings);
+int project_info_get(const char *project_name, struct project_info *info);
+int project_upsert(const struct project_settings settings);
 int project_remove(const char *project_name);
 int project_start(const char *project_name);
 int project_stop(const char *project_name);
 
-int service_info_get(const char *project_name, const char *service_name, ServiceInfo *info);
+int service_info_get(const char *project_name, const char *service_name, struct service_info *info);
 int service_start(const char *project_name, const char *service_name);
 int service_stop(const char *project_name, const char *service_name);
 
-void service_info_free(ServiceInfo info);
-void project_info_free(ProjectInfo info);
+void service_info_free(struct service_info info);
+void project_info_free(struct project_info info);
 
 #endif

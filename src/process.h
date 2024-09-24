@@ -3,6 +3,6 @@
 
 #include "settings.h"
 
-int process_start(const char *project_name, const ServiceSettings settings, const char *logfile_path);
+int process_start(const char *project_name, const struct service_settings settings, const char *logfile_path);
 
 #endif

@@ -34,7 +34,7 @@ static char *handle_service_start(char **command);
 static char *handle_service_stop(char **command);
 
 static char *format_list(char **items);
-static char *format_service_info(ServiceInfo info);
+static char *format_service_info(struct service_info info);
 
 char *dispatch_command(const char *input)
 {
@@ -132,7 +132,7 @@ static inline char *match_and_handle(const char *name, char **command, size_t ar
 
 static char *handle_projects_names()
 {
-    ProjectSettings *projects = projects_settings_get();
+    struct project_settings *projects = projects_settings_get();
     size_t projects_count = vector_length(projects);
     if (projects_count == 0)
     {
@@ -159,7 +159,7 @@ static char *handle_projects_names()
 
 static char *handle_projects_settings()
 {
-    ProjectSettings *projects = projects_settings_get();
+    struct project_settings *projects = projects_settings_get();
     size_t projects_count = vector_length(projects);
     if (projects_count == 0)
     {
@@ -191,7 +191,7 @@ static char *handle_projects_settings()
 
 static char *handle_projects_info()
 {
-    ProjectInfo *infos = projects_info_get();
+    struct project_info *infos = projects_info_get();
 
     size_t project_count = vector_length(infos);
     if (project_count == 0)
@@ -203,7 +203,7 @@ static char *handle_projects_info()
     char **parts = vector_create(char *);
     for (size_t i = 0; i < project_count; i++)
     {
-        ProjectInfo info = infos[i];
+        struct project_info info = infos[i];
         size_t service_count = vector_length(info.services);
 
         vector_push_rval(parts, str_dup(info.name));
@@ -226,7 +226,7 @@ static char *handle_projects_info()
 
 static char *handle_project_settings(char **command)
 {
-    ProjectSettings settings = {0};
+    struct project_settings settings = {0};
     int result = project_settings_get(command[0], &settings);
     if (result > 0)
     {
@@ -250,7 +250,7 @@ static char *handle_project_settings(char **command)
 
 static char *handle_project_info(char **command)
 {
-    ProjectInfo info = {0};
+    struct project_info info = {0};
     int result = project_info_get(command[0], &info);
     if (result > 0)
     {
@@ -264,9 +264,8 @@ static char *handle_project_info(char **command)
     }
 
     size_t service_count = vector_length(info.services);
-    char **parts = vector_create_prealloc(char *, service_count + 1);
+    char **parts = vector_create_prealloc(char *, service_count);
 
-    vector_push_rval(parts, str_dup(info.name));
     for (size_t i = 0; i < service_count; i++)
         vector_push_rval(parts, format_service_info(info.services[i]));
     project_info_free(info);
@@ -282,7 +281,7 @@ static char *handle_project_info(char **command)
 
 static char *handle_project_upsert(char **command)
 {
-    ProjectSettings settings = {0};
+    struct project_settings settings = {0};
     char *parse_error = project_settings_parse(command[0], &settings);
     if (parse_error != NULL)
     {
@@ -352,7 +351,7 @@ static char *handle_project_remove(char **command)
 
 static char *handle_services_names(char **command)
 {
-    ProjectSettings project = {0};
+    struct project_settings project = {0};
     int result = project_settings_get(command[0], &project);
     if (result > 0)
     {
@@ -390,7 +389,7 @@ static char *handle_services_names(char **command)
 
 static char *handle_service_info(char **command)
 {
-    ServiceInfo info;
+    struct service_info info;
     int result = service_info_get(command[0], command[1], &info);
 
     if (result > 0)
@@ -477,7 +476,7 @@ static char *format_list(char **lines)
     return response;
 }
 
-static char *format_service_info(const ServiceInfo info)
+static char *format_service_info(const struct service_info info)
 {
     char *status;
     switch (info.status)

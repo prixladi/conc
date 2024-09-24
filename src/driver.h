@@ -3,27 +3,27 @@
 
 #include "settings.h"
 
-typedef enum D_ServiceStatus
+enum d_service_status
 {
     D_NONE,
     D_RUNNING,
     D_STOPPED,
-} D_ServiceStatus;
+};
 
-typedef struct D_ServiceInfo
+struct d_service_info
 {
-    D_ServiceStatus status;
-} D_ServiceInfo;
+    enum d_service_status status;
+};
 
 int driver_mount();
 void driver_unmount();
 
-int d_project_init(const ProjectSettings settings);
-int d_project_start(const ProjectSettings settings);
-int d_project_stop(const ProjectSettings settings);
+int d_project_init(const struct project_settings settings);
+int d_project_start(const struct project_settings settings);
+int d_project_stop(const struct project_settings settings);
 
-D_ServiceInfo d_service_info_get(const char *project_name, const char *service_name);
-int d_service_start(const char *project_name, const ServiceSettings service_settings);
-int d_service_stop(const char *project_name, const ServiceSettings service_settings);
+struct d_service_info d_service_info_get(const char *project_name, const char *service_name);
+int d_service_start(const char *project_name, const struct service_settings service_settings);
+int d_service_stop(const char *project_name, const struct service_settings service_settings);
 
 #endif

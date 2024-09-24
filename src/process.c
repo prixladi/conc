@@ -12,23 +12,23 @@
 
 #include "process.h"
 
-typedef struct ProcessDescriptor
+struct process_descriptor
 {
     char *id;
     char *logfile_path;
     char **command;
     char *pwd;
-} ProcessDescriptor;
+};
 
-static void handle_child(ProcessDescriptor pd);
+static void handle_child(struct process_descriptor pd);
 
-static ProcessDescriptor proccess_descriptor_create(const char *project_name, const ServiceSettings settings, const char *logfile_path);
+static struct process_descriptor proccess_descriptor_create(const char *project_name, const struct service_settings settings, const char *logfile_path);
 
-static void process_descriptor_free(ProcessDescriptor pd);
+static void process_descriptor_free(struct process_descriptor pd);
 
-int process_start(const char *project_name, const ServiceSettings settings, const char *logfile_path)
+int process_start(const char *project_name, const struct service_settings settings, const char *logfile_path)
 {
-    ProcessDescriptor pd = proccess_descriptor_create(project_name, settings, logfile_path);
+    struct process_descriptor pd = proccess_descriptor_create(project_name, settings, logfile_path);
     pid_t pid = fork();
     if (pid == 0)
     {
@@ -41,7 +41,7 @@ int process_start(const char *project_name, const ServiceSettings settings, cons
     return pid;
 }
 
-static void handle_child(ProcessDescriptor pd)
+static void handle_child(struct process_descriptor pd)
 {
     int current_pid = getpid();
 
@@ -69,7 +69,7 @@ static void handle_child(ProcessDescriptor pd)
 }
 
 static const char *command_terminate = '\0';
-static ProcessDescriptor proccess_descriptor_create(const char *project_name, const ServiceSettings settings, const char *logfile_path_i)
+static struct process_descriptor proccess_descriptor_create(const char *project_name, const struct service_settings settings, const char *logfile_path_i)
 {
     char *id = str_concat(project_name, "/", settings.name, NULL);
     char *logfile_path = str_dup(logfile_path_i);
@@ -81,7 +81,7 @@ static ProcessDescriptor proccess_descriptor_create(const char *project_name, co
         vector_push_rval(command, str_dup(settings.command[i]));
     vector_push(command, command_terminate);
 
-    ProcessDescriptor proc = {
+    struct process_descriptor proc = {
         .id = id,
         .logfile_path = logfile_path,
         .command = command,
@@ -90,7 +90,7 @@ static ProcessDescriptor proccess_descriptor_create(const char *project_name, co
     return proc;
 }
 
-static void process_descriptor_free(ProcessDescriptor pd)
+static void process_descriptor_free(struct process_descriptor pd)
 {
     free(pd.id);
     free(pd.logfile_path);

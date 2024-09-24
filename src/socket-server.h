@@ -6,21 +6,20 @@
 
 typedef char *(*Dispatch)(const char *command);
 
-typedef struct ServerOptions
+struct server_options
 {
     Dispatch dispatch;
-} ServerOptions;
+};
 
-typedef struct Server
+struct server
 {
-    volatile ServerOptions opts;
+    volatile struct server_options opts;
     volatile pthread_t main_thread;
     volatile bool running;
+};
 
-} Server;
-
-Server *server_run_async(ServerOptions opts);
-void server_stop(Server *server);
-void server_wait_and_free(Server *server);
+struct server *server_run_async(struct server_options opts);
+void server_stop(struct server *server);
+void server_wait_and_free(struct server *server);
 
 #endif
