@@ -3,14 +3,23 @@
 
 #include <stdio.h>
 
-#define LOG_ERROR(...) fprintf(stderr, "[ERR] " __VA_ARGS__)
+#include "string.h"
 
-#define LOG_INFO(...) printf("[OK] " __VA_ARGS__)
+enum log_level
+{
+    DEBUG,
+    INFO,
+    WARN,
+    ERROR,
+    CRITICAL
+};
 
-#ifdef __DEBUG__
-#define LOG_DEBUG(...) printf("[DBG] "__VA_ARGS__)
-#else
-#define LOG_DEBUG(...)
-#endif
+void log_init(enum log_level level);
+
+void log_critical(const char *format, ...);
+void log_error(const char *format, ...);
+void log_warn(const char *format, ...);
+void log_info(const char *format, ...);
+void log_debug(const char *format, ...);
 
 #endif

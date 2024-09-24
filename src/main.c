@@ -7,17 +7,18 @@
 #include "protocol.h"
 #include "manager.h"
 
-static struct server *server;
-
 static void graceful_stop_handler(int signal);
 static void restart_handler(int signal);
 
+static struct server *server;
 static volatile bool running = true;
 
 int main()
 {
     char stdout_buffer[1024];
     setvbuf(stdout, stdout_buffer, _IOLBF, 1024);
+
+    log_init(DEBUG);
 
     signal(SIGCHLD, SIG_IGN);
 
@@ -31,7 +32,7 @@ int main()
     {
         if (manager_init() != 0)
         {
-            LOG_ERROR("(System) Unable to init the manager, exiting.");
+            log_error("(System) Unable to init the manager, exiting.");
             return 1;
         }
 
@@ -50,12 +51,12 @@ int main()
 static void graceful_stop_handler(int signal)
 {
     running = false;
-    LOG_INFO("(System) Received '%d' signal, exiting gracefully\n", signal);
+    log_info("(System) Received '%d' signal, exiting gracefully\n", signal);
     server_stop(server);
 }
 
 static void restart_handler(int signal)
 {
-    LOG_INFO("(System) Received '%d' signal, restarting\n", signal);
+    log_info("(System) Received '%d' signal, restarting\n", signal);
     server_stop(server);
 }

@@ -43,7 +43,7 @@ struct server *server_run_async(struct server_options opts)
 
 void server_stop(struct server *server)
 {
-    LOG_INFO("(System) Stopping socket server\n");
+    log_info("(System) Stopping socket server\n");
     server->running = false;
 }
 
@@ -51,7 +51,7 @@ void server_wait_and_free(struct server *server)
 {
     pthread_join(server->main_thread, NULL);
     free(server);
-    LOG_INFO("(System) Socket server stopped\n");
+    log_info("(System) Socket server stopped\n");
 }
 
 static void *server_run(void *data)
@@ -69,7 +69,7 @@ static void *server_run(void *data)
 
     listen(server_socket, MAX_WAITING_REQUESTS);
 
-    LOG_INFO("(System) Socket server started\n");
+    log_info("(System) Socket server started\n");
 
     while (server->running)
     {
@@ -89,7 +89,7 @@ static void *server_run(void *data)
             unsigned int clen = sizeof(client_addr);
 
             int client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &clen);
-            LOG_INFO("Accepted socket connection '%d'\n", client_socket);
+            log_info("Accepted socket connection '%d'\n", client_socket);
 
             struct handler_options *handler_opts = malloc(sizeof(struct handler_options));
             handler_opts->dispatch = server->opts.dispatch;
@@ -127,15 +127,15 @@ static void *client_socket_handle(void *data)
             break;
     }
 
-    LOG_DEBUG("Received command '%s' from connection '%d'\n", input, client_socket);
+    log_debug("Received command '%s' from connection '%d'\n", input, client_socket);
     char *response = dispatch(input);
-    LOG_DEBUG("Sending response '%s' to connection '%d'\n", response, client_socket);
+    log_debug("Sending response '%s' to connection '%d'\n", response, client_socket);
     write(client_socket, response, strlen(response) + 1); // we also want to send '\0' as a end of message indicator
 
     free(input);
     free(response);
 
-    LOG_INFO("Closing socket connection '%d'\n", client_socket);
+    log_info("Closing socket connection '%d'\n", client_socket);
     close(client_socket);
 
     return NULL;

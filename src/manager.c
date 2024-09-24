@@ -37,19 +37,19 @@ int manager_init()
 {
     if (pthread_mutex_init(&store.lock, NULL) != 0)
     {
-        LOG_ERROR("(System) Manager settings store mutex init has failed.\n");
+        log_error("(System) Manager settings store mutex init has failed.\n");
         return 1;
     }
 
     if (driver_mount() != 0)
     {
-        LOG_ERROR("(System) Unable to mount the driver.\n");
+        log_error("(System) Unable to mount the driver.\n");
         return 2;
     }
 
     store.projects = vector_create(struct project);
 
-    LOG_INFO("(System) Manager initialized\n");
+    log_info("(System) Manager initialized\n");
 
     return 0;
 }
@@ -76,7 +76,7 @@ void manager_stop()
     pthread_mutex_unlock(&store.lock);
     pthread_mutex_destroy(&store.lock);
 
-    LOG_INFO("(System) Manager stopped\n");
+    log_info("(System) Manager stopped\n");
 }
 
 struct project_settings *projects_settings_get()
