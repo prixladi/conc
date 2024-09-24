@@ -122,10 +122,12 @@ static inline char *match_and_handle(const char *name, char **command, size_t ar
         return NULL;
 
     size_t command_len = vector_length(command);
+
     if (command_len - 1 != argc)
         return resp_error("invalid_argument_count");
 
-    return handler(command);
+    char **argv = command + 1;
+    return handler(argv);
 }
 
 static char *handle_projects_names()
@@ -225,7 +227,7 @@ static char *handle_projects_info()
 static char *handle_project_settings(char **command)
 {
     ProjectSettings settings = {0};
-    int result = project_settings_get(command[1], &settings);
+    int result = project_settings_get(command[0], &settings);
     if (result > 0)
     {
         switch (result)
@@ -249,7 +251,7 @@ static char *handle_project_settings(char **command)
 static char *handle_project_info(char **command)
 {
     ProjectInfo info = {0};
-    int result = project_info_get(command[1], &info);
+    int result = project_info_get(command[0], &info);
     if (result > 0)
     {
         switch (result)
@@ -281,7 +283,7 @@ static char *handle_project_info(char **command)
 static char *handle_project_upsert(char **command)
 {
     ProjectSettings settings = {0};
-    char *parse_error = project_settings_parse(command[1], &settings);
+    char *parse_error = project_settings_parse(command[0], &settings);
     if (parse_error != NULL)
     {
         char *error = resp_error(parse_error);
@@ -291,42 +293,52 @@ static char *handle_project_upsert(char **command)
     }
 
     project_upsert(settings);
-    project_settings_free(settings);
 
-    return resp_ok_no_content();
+    char *info_command[1];
+    info_command[0] = settings.name;
+    char *info_response = handle_project_info(info_command);
+
+    project_settings_free(settings);
+    return info_response;
 }
 
 static char *handle_project_start(char **command)
 {
-    int result = project_start(command[1]);
-    switch (result)
+    int result = project_start(command[0]);
+    if (result > 0)
     {
-    case 0:
-        return resp_ok_no_content();
-    case 127:
-        return resp_error("project_not_found");
-    default:
-        return resp_error("unknown");
+        switch (result)
+        {
+        case 127:
+            return resp_error("project_not_found");
+        default:
+            return resp_error("unknown");
+        }
     }
+
+    return handle_project_info(command);
 }
 
 static char *handle_project_stop(char **command)
 {
-    int result = project_stop(command[1]);
-    switch (result)
+    int result = project_stop(command[0]);
+    if (result > 0)
     {
-    case 0:
-        return resp_ok_no_content();
-    case 127:
-        return resp_error("project_not_found");
-    default:
-        return resp_error("unknown");
+        switch (result)
+        {
+        case 127:
+            return resp_error("project_not_found");
+        default:
+            return resp_error("unknown");
+        }
     }
+
+    return handle_project_info(command);
 }
 
 static char *handle_project_remove(char **command)
 {
-    int result = project_remove(command[1]);
+    int result = project_remove(command[0]);
     switch (result)
     {
     case 0:
@@ -341,7 +353,7 @@ static char *handle_project_remove(char **command)
 static char *handle_services_names(char **command)
 {
     ProjectSettings project = {0};
-    int result = project_settings_get(command[1], &project);
+    int result = project_settings_get(command[0], &project);
     if (result > 0)
     {
         switch (result)
@@ -379,7 +391,7 @@ static char *handle_services_names(char **command)
 static char *handle_service_info(char **command)
 {
     ServiceInfo info;
-    int result = service_info_get(command[1], command[2], &info);
+    int result = service_info_get(command[0], command[1], &info);
 
     if (result > 0)
     {
@@ -405,40 +417,46 @@ static char *handle_service_info(char **command)
 
 static char *handle_service_start(char **command)
 {
-    int result = service_start(command[1], command[2]);
-    switch (result)
+    int result = service_start(command[0], command[1]);
+    if (result > 0)
     {
-    case 0:
-        return resp_ok_no_content();
-    case 1:
-        return resp_error("exited");
-    case 127:
-        return resp_error("project_not_found");
-    case 128:
-        return resp_error("service_not_found");
-    case 409:
-        return resp_ok("already_running");
-    default:
-        return resp_error("unknown");
+        switch (result)
+        {
+        case 1:
+            return resp_error("exited");
+        case 127:
+            return resp_error("project_not_found");
+        case 128:
+            return resp_error("service_not_found");
+        case 409:
+            return resp_ok("already_running");
+        default:
+            return resp_error("unknown");
+        }
     }
+
+    return handle_service_info(command);
 }
 
 static char *handle_service_stop(char **command)
 {
-    int result = service_stop(command[1], command[2]);
-    switch (result)
+    int result = service_stop(command[0], command[1]);
+    if (result > 0)
     {
-    case 0:
-        return resp_ok_no_content();
-    case 127:
-        return resp_error("project_not_found");
-    case 128:
-        return resp_error("service_not_found");
-    case 409:
-        return resp_ok("already_stoped");
-    default:
-        return resp_error("unknown");
+        switch (result)
+        {
+        case 127:
+            return resp_error("project_not_found");
+        case 128:
+            return resp_error("service_not_found");
+        case 409:
+            return resp_ok("already_stoped");
+        default:
+            return resp_error("unknown");
+        }
     }
+
+    return handle_service_info(command);
 }
 
 static char *format_list(char **lines)
