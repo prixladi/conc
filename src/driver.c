@@ -56,19 +56,19 @@ int driver_mount()
     DIR *dir = opendir(root_projects_dir);
     if (dir == NULL)
     {
-        LOG_ERROR("(System) Driver root project dir init failed\n");
+        log_error("(System) Driver root project dir init failed\n");
         return 1;
     }
 
     closedir(dir);
 
-    LOG_INFO("(System) Driver mounted\n");
+    log_info("(System) Driver mounted\n");
     return 0;
 }
 
 void driver_unmount()
 {
-    LOG_INFO("(System) Driver unmounted\n");
+    log_info("(System) Driver unmounted\n");
 }
 
 int d_project_init(const struct project_settings settings)
@@ -77,7 +77,7 @@ int d_project_init(const struct project_settings settings)
 
     FILE *fptr = open_project_meta_file(settings.name, "w");
     if (fptr == NULL)
-        LOG_ERROR("Unable to open meta file for project. Project: '%s'", settings.name);
+        log_error("Unable to open meta file for project. Project: '%s'", settings.name);
 
     char *stringified_settings = project_settings_stringify(settings);
     fprintf(fptr, "%s", stringified_settings);
@@ -123,7 +123,7 @@ int d_project_remove(const struct project_settings settings)
 
     bool delete_success = !dir_exists(project_dir_path);
     if (!delete_success)
-        LOG_ERROR("Unable to remove project directory '%s'\n", project_dir_path);
+        log_error("Unable to remove project directory '%s'\n", project_dir_path);
 
     free(project_dir_path);
     return delete_success ? 0 : 1;
@@ -209,7 +209,7 @@ static void write_service_meta_file(const char *project_name, const char *servic
 {
     FILE *fptr = open_service_meta_file(project_name, service_name, "w");
     if (fptr == NULL)
-        LOG_ERROR("Unable to open meta file for service. Project: '%s', service: %s", project_name, service_name);
+        log_error("Unable to open meta file for service. Project: '%s', service: %s", project_name, service_name);
 
     fprintf(fptr, "%d\n%ld", info.pid, info.c_time);
     fclose(fptr);

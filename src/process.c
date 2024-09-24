@@ -34,7 +34,7 @@ int process_start(const char *project_name, const struct service_settings settin
     if (pid == 0)
     {
         handle_child(pd);
-        LOG_ERROR("Unable to execute process '%s - %d', aborting", pd.id, pid);
+        log_error("Unable to execute process '%s - %d', aborting", pd.id, pid);
         exit(127);
     }
     process_descriptor_free(pd);
@@ -52,12 +52,12 @@ static void handle_child(struct process_descriptor pd)
     int fd = open(pd.logfile_path, OPEN_FLAGS, CREATE_FLAGS);
     if (fd <= 0)
     {
-        LOG_ERROR("Unable to open log file '%s' for '%s - %d', aborting.\n", pd.logfile_path, pd.id, current_pid);
+        log_error("Unable to open log file '%s' for '%s - %d', aborting.\n", pd.logfile_path, pd.id, current_pid);
         process_descriptor_free(pd);
         exit(130);
     }
 
-    LOG_DEBUG("Starting process '%s - %d'\n", pd.id, current_pid);
+    log_debug("Starting process '%s - %d'\n", pd.id, current_pid);
 
     for (size_t i = 0; i < vector_length(pd.env); i++)
     {
