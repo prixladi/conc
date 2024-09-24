@@ -56,16 +56,27 @@ int manager_init()
 
 void manager_stop()
 {
+    pthread_mutex_lock(&store.lock);
+
+    for (size_t i = 0; i < vector_length(store.projects); i++)
+    {
+        struct project project = store.projects[i];
+        pthread_mutex_lock(&project.lock);
+
+        d_project_stop(project.settings);
+        project_free(project);
+
+        pthread_mutex_unlock(&project.lock);
+    }
+
     driver_unmount();
 
+    vector_free(store.projects);
+    store.projects = NULL;
+    pthread_mutex_unlock(&store.lock);
     pthread_mutex_destroy(&store.lock);
 
-    vector_for_each(store.projects, project_free);
-    vector_free(store.projects);
-
     LOG_INFO("(System) Manager stopped\n");
-
-    store.projects = NULL;
 }
 
 struct project_settings *projects_settings_get()
