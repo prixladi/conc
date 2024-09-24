@@ -218,11 +218,11 @@ int project_stop(const char *project_name)
     }
 
     pthread_mutex_lock(&project.lock);
+    pthread_mutex_unlock(&store.lock);
 
     d_project_stop(project.settings);
 
     pthread_mutex_unlock(&project.lock);
-    pthread_mutex_unlock(&store.lock);
 
     return 0;
 }
