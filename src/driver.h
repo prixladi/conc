@@ -15,6 +15,9 @@ typedef struct D_ServiceInfo
     D_ServiceStatus status;
 } D_ServiceInfo;
 
+int driver_mount();
+void driver_unmount();
+
 int d_project_init(const ProjectSettings settings);
 int d_project_start(const ProjectSettings settings);
 int d_project_stop(const ProjectSettings settings);

@@ -56,14 +56,14 @@ static void handle_child(ProcessDescriptor pd)
         exit(130);
     }
 
+    LOG_DEBUG("Starting '%s - %d' with PID\n", pd.id, current_pid);
+
     dup2(fd, STDOUT_FILENO);
     dup2(fd, STDERR_FILENO);
     close(fd);
 
     if (pd.pwd)
         chdir(pd.pwd);
-
-    LOG_INFO("Starting '%s - %d' with PID\n", pd.id, current_pid);
 
     execvp(pd.command[0], pd.command);
 }

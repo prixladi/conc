@@ -11,7 +11,7 @@ static Server *server;
 
 void sig_term_int_handler(int signal)
 {
-    LOG_INFO("Received '%d' signal, exiting gracefully\n", signal);
+    LOG_INFO("(System) Received '%d' signal, exiting gracefully\n", signal);
     server_stop(server);
 }
 
@@ -23,9 +23,9 @@ int main()
 
     chdir("./run");
 
-    if (manager_mount() != 0)
+    if (manager_init() != 0)
     {
-        LOG_ERROR("Unable to mount the manager, exiting.");
+        LOG_ERROR("(System) Unable to init the manager, exiting.");
         return 1;
     }
 
@@ -35,7 +35,7 @@ int main()
     server = server_run_async(server_opts);
     server_wait_and_free(server);
 
-    manager_unmount();
+    manager_stop();
 
     return 0;
 }

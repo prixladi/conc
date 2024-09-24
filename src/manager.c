@@ -33,29 +33,37 @@ static void project_free(Project project);
 
 static ProjectStore store;
 
-int manager_mount()
+int manager_init()
 {
     if (pthread_mutex_init(&store.lock, NULL) != 0)
     {
-        LOG_ERROR("Settings store mutex init has failed.\n");
+        LOG_ERROR("(System) Manager settings store mutex init has failed.\n");
         return 1;
+    }
+
+    if (driver_mount() != 0)
+    {
+        LOG_ERROR("(System) Unable to mount the driver.\n");
+        return 2;
     }
 
     store.projects = vector_create(Project);
 
-    LOG_INFO("Manager mounted\n");
+    LOG_INFO("(System) Manager initialized\n");
 
     return 0;
 }
 
-void manager_unmount()
+void manager_stop()
 {
+    driver_unmount();
+
     pthread_mutex_destroy(&store.lock);
 
     vector_for_each(store.projects, project_free);
     vector_free(store.projects);
 
-    LOG_INFO("Manager unmounted\n");
+    LOG_INFO("(System) Manager stopped\n");
 
     store.projects = NULL;
 }

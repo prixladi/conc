@@ -26,8 +26,8 @@ typedef struct ProjectInfo
     ServiceInfo *services;
 } ProjectInfo;
 
-int manager_mount();
-void manager_unmount();
+int manager_init();
+void manager_stop();
 
 ProjectSettings *projects_settings_get();
 ProjectInfo *projects_info_get();
