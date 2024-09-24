@@ -33,7 +33,7 @@ static char *handle_service_info(char **command);
 static char *handle_service_start(char **command);
 static char *handle_service_stop(char **command);
 
-static char *format_list(char **items);
+static char *format_list(char **lines);
 static char *format_service_info(struct service_info info);
 
 char *dispatch_command(const char *input)
@@ -140,14 +140,14 @@ static char *handle_projects_names()
         return resp_ok_no_content();
     }
 
-    char **items = vector_create_prealloc(char *, projects_count);
+    char **lines = vector_create_prealloc(char *, projects_count);
 
     for (size_t i = 0; i < projects_count; i++)
-        vector_push(items, projects[i].name);
+        vector_push(lines, projects[i].name);
 
-    char *response = format_list(items);
+    char *response = format_list(lines);
 
-    vector_free(items);
+    vector_free(lines);
     vector_for_each(projects, project_settings_free);
     vector_free(projects);
 
@@ -167,18 +167,20 @@ static char *handle_projects_settings()
         return resp_ok_no_content();
     }
 
-    char **items = vector_create_prealloc(char *, projects_count);
+    char **lines = vector_create_prealloc(char *, projects_count);
 
     for (size_t i = 0; i < projects_count; i++)
     {
         char *json = project_settings_stringify(projects[i]);
-        vector_push(items, json);
+        char *line = str_concat(projects[i].name, " ", json, NULL);
+        free(json);
+            vector_push(lines, line);
     }
 
-    char *response = format_list(items);
+    char *response = format_list(lines);
 
-    vector_for_each(items, free);
-    vector_free(items);
+    vector_for_each(lines, free);
+    vector_free(lines);
 
     vector_for_each(projects, project_settings_free);
     vector_free(projects);
@@ -373,14 +375,14 @@ static char *handle_services_names(char **command)
         return resp_ok_no_content();
     }
 
-    char **items = vector_create_prealloc(char *, services_count);
+    char **lines = vector_create_prealloc(char *, services_count);
 
     for (size_t i = 0; i < services_count; i++)
-        vector_push(items, project.services[i].name);
+        vector_push(lines, project.services[i].name);
 
-    char *response = format_list(items);
+    char *response = format_list(lines);
 
-    vector_free(items);
+    vector_free(lines);
     project_settings_free(project);
 
     char *ok_response = resp_ok(response);

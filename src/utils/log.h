@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#define LOG_ERROR(...) fprintf(stderr,"[ERR] " __VA_ARGS__)
+#define LOG_ERROR(...) fprintf(stderr, "[ERR] " __VA_ARGS__)
 
 #define LOG_INFO(...) printf("[OK] " __VA_ARGS__)
 
