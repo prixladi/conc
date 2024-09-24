@@ -1,6 +1,6 @@
 #ifndef PROTOCOL__H
 #define PROTOCOL__H
 
-char *dispatch(const char *c);
+char *dispatch_command(const char *input);
 
 #endif

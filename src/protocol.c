@@ -36,7 +36,7 @@ static char *handle_service_stop(char **command);
 static char *format_list(char **items);
 static char *format_service_info(ServiceInfo info);
 
-char *dispatch(const char *input)
+char *dispatch_command(const char *input)
 {
     char **command = tokenize(input);
 

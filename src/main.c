@@ -30,7 +30,7 @@ int main()
     }
 
     ServerOptions server_opts = {
-        .dispatch = dispatch};
+        .dispatch = dispatch_command};
 
     server = server_run_async(server_opts);
     server_wait_and_free(server);
