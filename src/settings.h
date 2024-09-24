@@ -1,10 +1,17 @@
 #ifndef SETTINGS__H
 #define SETTINGS__H
 
+struct env_variable
+{
+    char *key;
+    char *value;
+};
+
 struct service_settings
 {
     char *name;
     char *pwd;
+    struct env_variable *env;
     char **command;
 };
 
