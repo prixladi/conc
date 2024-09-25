@@ -37,13 +37,13 @@ int manager_init()
 {
     if (pthread_mutex_init(&store.lock, NULL) != 0)
     {
-        log_error("(System) Manager settings store mutex init has failed.\n");
+        log_critical("Manager settings store mutex init has failed.\n");
         return 1;
     }
 
     if (driver_mount() != 0)
     {
-        log_error("(System) Unable to mount the driver.\n");
+        log_critical("Unable to mount the driver.\n");
         return 2;
     }
 

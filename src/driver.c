@@ -56,7 +56,7 @@ int driver_mount()
     DIR *dir = opendir(root_projects_dir);
     if (dir == NULL)
     {
-        log_error("(System) Driver root project dir init failed\n");
+        log_critical("Driver root project dir init failed\n");
         return 1;
     }
 
@@ -77,7 +77,7 @@ int d_project_init(const struct project_settings settings)
 
     FILE *fptr = open_project_meta_file(settings.name, "w");
     if (fptr == NULL)
-        log_error("Unable to open meta file for project. Project: '%s'", settings.name);
+        log_critical("Unable to open meta file for project. Project: '%s'", settings.name);
 
     char *stringified_settings = project_settings_stringify(settings);
     fprintf(fptr, "%s", stringified_settings);
