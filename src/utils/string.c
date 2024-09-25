@@ -16,7 +16,15 @@ char *str_dup(const char *str)
     return new_str;
 }
 
-char *str_concat(const char *fst, ...)
+char *int_to_str(int i)
+{
+    int length = snprintf(NULL, 0, "%d", i);
+    char *str = malloc(length + 1);
+    snprintf(str, length + 1, "%d", i);
+    return str;
+}
+
+char *_str_concat(const char *fst, ...)
 {
     va_list strings;
 
@@ -42,12 +50,4 @@ char *str_concat(const char *fst, ...)
     va_end(strings);
 
     return result;
-}
-
-char *int_to_string(int i)
-{
-    int length = snprintf(NULL, 0, "%d", i);
-    char *str = malloc(length + 1);
-    snprintf(str, length + 1, "%d", i);
-    return str;
 }

@@ -9,8 +9,8 @@
 #include "settings.h"
 #include "manager.h"
 
-#define resp_error(msg) str_concat("ERROR\n", msg, NULL)
-#define resp_ok(msg) str_concat("OK\n", msg, NULL)
+#define resp_error(msg) STR_CONCAT("ERROR\n", msg)
+#define resp_ok(msg) STR_CONCAT("OK\n", msg)
 #define resp_ok_no_content() str_dup("OK")
 
 static char **tokenize(const char *input);
@@ -172,7 +172,7 @@ static char *handle_projects_settings()
     for (size_t i = 0; i < projects_count; i++)
     {
         char *json = project_settings_stringify(projects[i]);
-        char *line = str_concat(projects[i].name, " ", json, NULL);
+        char *line = STR_CONCAT(projects[i].name, " ", json);
         free(json);
             vector_push(lines, line);
     }
@@ -496,5 +496,5 @@ static char *format_service_info(const struct service_info info)
         break;
     }
 
-    return str_concat(info.name, " ", status, NULL);
+    return STR_CONCAT(info.name, " ", status);
 }

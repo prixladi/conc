@@ -16,7 +16,7 @@ void log_critical(const char *format, ...)
     va_list args;
     va_start(args, format);
 
-    char *fmt = str_concat("[CRT] ", format, NULL);
+    char *fmt = STR_CONCAT("[CRT] ", format);
     vfprintf(stderr, fmt, args);
     free(fmt);
 
@@ -31,7 +31,7 @@ void log_error(const char *format, ...)
     va_list args;
     va_start(args, format);
 
-    char *fmt = str_concat("[ERR] ", format, NULL);
+    char *fmt = STR_CONCAT("[ERR] ", format);
     vfprintf(stderr, fmt, args);
     free(fmt);
 
@@ -46,7 +46,7 @@ void log_warn(const char *format, ...)
     va_list args;
     va_start(args, format);
 
-    char *fmt = str_concat("[WRN] ", format, NULL);
+    char *fmt = STR_CONCAT("[WRN] ", format);
     vfprintf(stderr, fmt, args);
     free(fmt);
 
@@ -61,7 +61,7 @@ void log_info(const char *format, ...)
     va_list args;
     va_start(args, format);
 
-    char *fmt = str_concat("[INF] ", format, NULL);
+    char *fmt = STR_CONCAT("[INF] ", format);
     vprintf(fmt, args);
     free(fmt);
 
@@ -76,7 +76,7 @@ void log_debug(const char *format, ...)
     va_list args;
     va_start(args, format);
 
-    char *fmt = str_concat("[DBG] ", format, NULL);
+    char *fmt = STR_CONCAT("[DBG] ", format);
     vprintf(fmt, args);
     free(fmt);
 

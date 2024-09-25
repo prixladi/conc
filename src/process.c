@@ -78,7 +78,7 @@ static void handle_child(struct process_descriptor pd)
 static const char *command_terminate = '\0';
 static struct process_descriptor proccess_descriptor_create(const char *project_name, const struct service_settings settings, const char *logfile_path_i)
 {
-    char *id = str_concat(project_name, "/", settings.name, NULL);
+    char *id = STR_CONCAT(project_name, "/", settings.name);
     char *logfile_path = str_dup(logfile_path_i);
     char *pwd = str_dup(settings.pwd);
 

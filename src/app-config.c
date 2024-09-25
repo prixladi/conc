@@ -31,10 +31,10 @@ char *app_config_init(int argc, char **argv, struct app_config *config)
             i++;
             bool was_last = i >= argc;
             if (was_last || !try_parse_log_level(argv[i], &config->log_level))
-                error = was_last ? str_dup("Expected log level") : str_concat("Invalid log level '", argv[i], "'", NULL);
+                error = was_last ? str_dup("Expected log level") : STR_CONCAT("Invalid log level '", argv[i], "'");
         }
         else
-            error = str_concat("Invalid argument '", argv[i], "'", NULL);
+            error = STR_CONCAT("Invalid argument '", argv[i], "'");
     }
 
     if (error)

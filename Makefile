@@ -9,7 +9,7 @@ build:
 	$(CC) $(FLAGS) $(SOURCES) -o ./build/conc-debug
 
 run: build
-	./build/conc-debug -l 5
+	./build/conc-debug
 
 dbg: build
 	gdb ./build/conc-debug

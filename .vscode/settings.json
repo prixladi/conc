@@ -57,7 +57,9 @@
         "dirent.h": "c",
         "threading.h": "c",
         "optional": "c",
-        "numbers": "c"
+        "numbers": "c",
+        "thread": "c",
+        "set": "c"
     },
     "cSpell.words": [
         "valuestring",
