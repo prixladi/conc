@@ -113,7 +113,7 @@ static void *client_socket_handle(void *data)
 
     char *input = calloc(1, sizeof(char));
     char buffer[BUFFER_SIZE + 1];
-    int totalLength;
+    int totalLength = 0;
     int len = 0;
 
     while ((len = read(client_socket, buffer, BUFFER_SIZE)) > 0)

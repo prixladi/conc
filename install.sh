@@ -6,6 +6,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 mkdir -p /usr/local/lib/conc
+mkdir -p /usr/local/lib/conc/run
 
 cp ./build/conc /usr/local/lib/conc/conc
 
