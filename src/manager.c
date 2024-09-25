@@ -165,7 +165,6 @@ int project_upsert(const struct project_settings settings)
 
     pthread_mutex_lock(&store.lock);
 
-    bool replaced = false;
     for (size_t i = 0; i < vector_length(store.projects); i++)
     {
         struct project project = store.projects[i];
@@ -176,25 +175,20 @@ int project_upsert(const struct project_settings settings)
 
         d_project_stop(project.settings);
         d_project_remove(project.settings);
-        store.projects[i] = new_project;
+        vector_remove(store.projects, i, NULL);
 
         pthread_mutex_unlock(&project.lock);
 
         project_free(project);
-        replaced = true;
     }
 
-    if (!replaced)
+    int result = d_project_init(new_project.settings);
+    if (result == 0)
         vector_push(store.projects, new_project);
 
-    pthread_mutex_lock(&new_project.lock);
     pthread_mutex_unlock(&store.lock);
 
-    d_project_init(new_project.settings);
-
-    pthread_mutex_unlock(&new_project.lock);
-
-    return 0;
+    return result;
 }
 
 int project_start(const char *project_name)

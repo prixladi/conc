@@ -76,8 +76,10 @@ int d_project_init(const struct project_settings settings)
     ensure_project_dir_exists(settings.name);
 
     FILE *fptr = open_project_meta_file(settings.name, "w");
-    if (fptr == NULL)
+    if (fptr == NULL) {
         log_critical("Unable to open meta file for project. Project: '%s'", settings.name);
+        return 1;
+    }
 
     char *stringified_settings = project_settings_stringify(settings);
     fprintf(fptr, "%s", stringified_settings);

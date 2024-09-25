@@ -174,7 +174,7 @@ static char *handle_projects_settings()
         char *json = project_settings_stringify(projects[i]);
         char *line = STR_CONCAT(projects[i].name, " ", json);
         free(json);
-            vector_push(lines, line);
+        vector_push(lines, line);
     }
 
     char *response = format_list(lines);
@@ -293,7 +293,17 @@ static char *handle_project_upsert(char **command)
         return error;
     }
 
-    project_upsert(settings);
+    int result = project_upsert(settings);
+    if (result > 0)
+    {
+        switch (result)
+        {
+        case 1:
+            return resp_error("project_upsert_failure");
+        default:
+            return resp_error("unknown");
+        }
+    }
 
     char *info_command[1];
     info_command[0] = settings.name;
