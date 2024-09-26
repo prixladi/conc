@@ -2,17 +2,23 @@ CC=gcc
 FLAGS = -D_POSIX_C_SOURCE=200112L -W -Wall -pedantic -Werror -std=c99
 SOURCES = src/external/*.c src/utils/*.c src/*.c
 
-.PHONY: build install
+.PHONY: install
 
-build: FLAGS += -fsanitize=address -g -D __DEBUG__
-build: 
+run: run_debug_t
+
+build_debug: FLAGS += -fsanitize=undefined,address -g -D __DEBUG__
+build_debug: 
 	$(CC) $(FLAGS) $(SOURCES) -o ./build/conc-debug
 
-run: build
+run_debug: build_debug
 	./build/conc-debug
 
-dbg: build
-	gdb ./build/conc-debug
+build_debug_t: FLAGS += -fsanitize=undefined,thread -g -D __DEBUG__
+build_debug_t: 
+	$(CC) $(FLAGS) $(SOURCES) -o ./build/conc-debug
+
+run_debug_t: build_debug_t
+	./build/conc-debug
 
 build: FLAGS += -O2
 build_release: 
