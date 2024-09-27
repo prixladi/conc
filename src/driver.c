@@ -50,7 +50,7 @@ static int get_running_service_pid(const char *project_name, const char *service
 static bool try_get_pid_info(int pid, struct stat *sts);
 static int kill_pid(int pid);
 
-int driver_mount()
+int driver_mount(void)
 {
 	mkdir(root_projects_dir, S_IRWXU | S_IRWXG | S_IRWXO);
 
@@ -67,12 +67,12 @@ int driver_mount()
 	return 0;
 }
 
-void driver_unmount()
+void driver_unmount(void)
 {
 	log_info("Driver unmounted\n");
 }
 
-char **d_get_all_stored_settings()
+char **d_get_all_stored_settings(void)
 {
 	char **settings_vec = vector_create(char *);
 

@@ -152,7 +152,7 @@ extern "C"
 	CJSON_PUBLIC(cJSON *)
 	cJSON_ParseWithLength(const char *value, size_t buffer_length);
 	/* ParseWithOpts allows you to require (and check) that the JSON is null terminated, and to retrieve the pointer to the final byte parsed. */
-	/* If you supply a ptr in return_parse_end and parsing fails, then return_parse_end will contain a pointer to the error so will match cJSON_GetErrorPtr(). */
+	/* If you supply a ptr in return_parse_end and parsing fails, then return_parse_end will contain a pointer to the error so will match cJSON_GetErrorPtr(void). */
 	CJSON_PUBLIC(cJSON *)
 	cJSON_ParseWithOpts(const char *value, const char **return_parse_end, cJSON_bool require_null_terminated);
 	CJSON_PUBLIC(cJSON *)
@@ -189,7 +189,7 @@ extern "C"
 	cJSON_GetObjectItemCaseSensitive(const cJSON *const object, const char *const string);
 	CJSON_PUBLIC(cJSON_bool)
 	cJSON_HasObjectItem(const cJSON *object, const char *string);
-	/* For analysing failed parses. This returns a pointer to the parse error. You'll probably need to look a few chars back to make sense of it. Defined when cJSON_Parse() returns 0. 0 when cJSON_Parse() succeeds. */
+	/* For analysing failed parses. This returns a pointer to the parse error. You'll probably need to look a few chars back to make sense of it. Defined when cJSON_Parse(void) returns 0. 0 when cJSON_Parse(void) succeeds. */
 	CJSON_PUBLIC(const char *)
 	cJSON_GetErrorPtr(void);
 

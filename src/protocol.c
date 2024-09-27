@@ -20,9 +20,9 @@ typedef char *(*Handler)(char **command);
 static inline char *match_and_handle(const char *name, char **tokens, size_t argc, Handler handler);
 
 static char *handle_project_upsert(char **command);
-static char *handle_projects_names();
-static char *handle_projects_settings();
-static char *handle_projects_info();
+static char *handle_projects_names(char **command);
+static char *handle_projects_settings(char **command);
+static char *handle_projects_info(char **command);
 static char *handle_project_settings(char **command);
 static char *handle_project_info(char **command);
 static char *handle_project_start(char **command);
@@ -129,8 +129,9 @@ static inline char *match_and_handle(const char *name, char **command, size_t ar
 	return handler(argv);
 }
 
-static char *handle_projects_names()
+static char *handle_projects_names(char **_command)
 {
+	assert(_command);
 	struct project_settings *projects = projects_settings_get();
 	size_t projects_count = vector_length(projects);
 	if (projects_count == 0)
@@ -156,8 +157,9 @@ static char *handle_projects_names()
 	return ok_response;
 }
 
-static char *handle_projects_settings()
+static char *handle_projects_settings(char **_command)
 {
+	assert(_command);
 	struct project_settings *projects = projects_settings_get();
 	size_t projects_count = vector_length(projects);
 	if (projects_count == 0)
@@ -190,8 +192,9 @@ static char *handle_projects_settings()
 	return ok_response;
 }
 
-static char *handle_projects_info()
+static char *handle_projects_info(char **_command)
 {
+	assert(_command);
 	struct project_info *infos = projects_info_get();
 
 	size_t project_count = vector_length(infos);

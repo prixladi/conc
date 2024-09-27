@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 	char *config_error = app_config_init(argc, argv, &config);
 	if (config_error)
 	{
-		fprintf(stderr, config_error);
+		fprintf(stderr, "%s", config_error);
 		free(config_error);
 		return 1;
 	}
@@ -32,7 +32,7 @@ int main(int argc, char **argv)
 	if (config.print_help)
 	{
 		char *help_message = get_help_message(argv[0]);
-		printf(help_message); // intentionally not using log_* to ignore log level
+		printf("%s", help_message); // intentionally not using log_* to ignore log level
 		free(help_message);
 		return config.is_daemon ? 1 : 0; // deamon should never ask for help
 	}
