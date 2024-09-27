@@ -24,6 +24,14 @@ char *int_to_str(int i)
     return str;
 }
 
+char *unsigned_long_to_str(unsigned long i)
+{
+    int length = snprintf(NULL, 0, "%lu", i);
+    char *str = malloc(length + 1);
+    snprintf(str, length + 1, "%lu", i);
+    return str;
+}
+
 char *_str_concat(const char *fst, ...)
 {
     va_list strings;

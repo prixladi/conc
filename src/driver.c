@@ -62,13 +62,13 @@ int driver_mount()
 
     closedir(dir);
 
-    log_info("(System) Driver mounted\n");
+    log_info("Driver mounted\n");
     return 0;
 }
 
 void driver_unmount()
 {
-    log_info("(System) Driver unmounted\n");
+    log_info("Driver unmounted\n");
 }
 
 int d_project_init(const struct project_settings settings)

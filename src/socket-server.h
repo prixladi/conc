@@ -11,12 +11,7 @@ struct server_options
     Dispatch dispatch;
 };
 
-struct server
-{
-    volatile struct server_options opts;
-    volatile pthread_t main_thread;
-    volatile bool running;
-};
+struct server;
 
 struct server *server_run_async(struct server_options opts);
 void server_stop(struct server *server);

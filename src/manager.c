@@ -54,7 +54,7 @@ int manager_init()
 
     store.projects = vector_create(struct project);
 
-    log_info("(System) Manager initialized\n");
+    log_info("Manager initialized\n");
 
     return 0;
 }
@@ -84,7 +84,7 @@ void manager_stop()
     free(store.lock);
     store.lock = NULL;
 
-    log_info("(System) Manager stopped\n");
+    log_info("Manager stopped\n");
 }
 
 struct project_settings *projects_settings_get()

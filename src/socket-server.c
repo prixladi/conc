@@ -9,13 +9,23 @@
 #include <sys/un.h>
 
 #include "utils/log.h"
+#include "utils/thread-pool.h"
 
 #include "socket-server.h"
 
-#define BUFFER_SIZE 1024
-
-#define MAX_WAITING_REQUESTS 10
 #define SOCKET_PATH "conc.sock"
+
+#define BUFFER_SIZE 1024
+#define MAX_WAITING_REQUESTS 10
+#define THREAD_POOL_CONCURRENCY 5
+#define THREAD_POOL_QUEUE_CAPACITY 1024
+
+struct server
+{
+    volatile struct server_options opts;
+    volatile pthread_t main_thread;
+    volatile bool running;
+};
 
 struct handler_options
 {
@@ -43,7 +53,7 @@ struct server *server_run_async(struct server_options opts)
 
 void server_stop(struct server *server)
 {
-    log_info("(System) Stopping socket server\n");
+    log_info("Socket server stopping\n");
     server->running = false;
 }
 
@@ -51,7 +61,7 @@ void server_wait_and_free(struct server *server)
 {
     pthread_join(server->main_thread, NULL);
     free(server);
-    log_info("(System) Socket server stopped\n");
+    log_info("Socket server stopped\n");
 }
 
 static void *server_run(void *data)
@@ -69,7 +79,10 @@ static void *server_run(void *data)
 
     listen(server_socket, MAX_WAITING_REQUESTS);
 
-    log_info("(System) Socket server started\n");
+    log_info("Socket server started\n");
+
+    struct thread_pool *pool = thread_pool_create(THREAD_POOL_CONCURRENCY, THREAD_POOL_QUEUE_CAPACITY, "socket_server");
+    thread_pool_start(pool);
 
     while (server->running)
     {
@@ -95,11 +108,12 @@ static void *server_run(void *data)
             handler_opts->dispatch = server->opts.dispatch;
             handler_opts->client_socket = client_socket;
 
-            // TODO: Implement some sort of thread_pool
-            pthread_t thr;
-            pthread_create(&thr, NULL, client_socket_handle, (void *)handler_opts);
+            thread_pool_queue_job(pool, NULL, client_socket_handle, handler_opts);
         }
     }
+
+    thread_pool_stop_and_wait(pool);
+    thread_pool_free(pool);
 
     return NULL;
 }

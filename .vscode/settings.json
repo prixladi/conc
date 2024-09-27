@@ -59,7 +59,9 @@
         "optional": "c",
         "numbers": "c",
         "thread": "c",
-        "set": "c"
+        "set": "c",
+        "initializer_list": "c",
+        "span": "c"
     },
     "cSpell.words": [
         "valuestring",

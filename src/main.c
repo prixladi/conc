@@ -71,12 +71,12 @@ int main(int argc, char **argv)
 static void graceful_stop_handler(int signal)
 {
     running = false;
-    log_info("(System) Received '%d' signal, exiting gracefully\n", signal);
+    log_info("Received '%d' signal, exiting gracefully\n", signal);
     server_stop(server);
 }
 
 static void restart_handler(int signal)
 {
-    log_info("(System) Received '%d' signal, restarting\n", signal);
+    log_info("Received '%d' signal, restarting\n", signal);
     server_stop(server);
 }

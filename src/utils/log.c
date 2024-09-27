@@ -82,3 +82,18 @@ void log_debug(const char *format, ...)
 
     va_end(args);
 }
+
+void log_trace(const char *trace_name, const char *format, ...)
+{
+    if (min_level > TRACE)
+        return;
+
+    va_list args;
+    va_start(args, format);
+
+    char *fmt = STR_CONCAT("[TRC] (", trace_name, ") ", format);
+    vprintf(fmt, args);
+    free(fmt);
+
+    va_end(args);
+}
