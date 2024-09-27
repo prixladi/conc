@@ -6,7 +6,8 @@
 
 #include "fs.h"
 
-bool dir_exists(char *path)
+bool
+dir_exists(char *path)
 {
 	DIR *dir = opendir(path);
 	if (dir == NULL)
@@ -16,7 +17,8 @@ bool dir_exists(char *path)
 	return true;
 }
 
-char *get_file_content(FILE *fp)
+char *
+get_file_content(FILE *fp)
 {
 	fseek(fp, 0, SEEK_END);
 	long size = ftell(fp);

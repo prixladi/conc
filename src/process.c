@@ -30,7 +30,8 @@ proccess_descriptor_create(const char *project_name, const struct service_settin
 
 static void process_descriptor_free(struct process_descriptor pd);
 
-int process_start(const char *project_name, const struct service_settings settings, const char *logfile_path)
+int
+process_start(const char *project_name, const struct service_settings settings, const char *logfile_path)
 {
 	struct process_descriptor pd = proccess_descriptor_create(project_name, settings, logfile_path);
 	pid_t pid = fork();
@@ -45,7 +46,8 @@ int process_start(const char *project_name, const struct service_settings settin
 	return pid;
 }
 
-static void handle_child(struct process_descriptor pd)
+static void
+handle_child(struct process_descriptor pd)
 {
 	int current_pid = getpid();
 
@@ -113,7 +115,8 @@ proccess_descriptor_create(const char *project_name, const struct service_settin
 	return proc;
 }
 
-static void process_descriptor_free(struct process_descriptor pd)
+static void
+process_descriptor_free(struct process_descriptor pd)
 {
 	free(pd.id);
 	free(pd.logfile_path);

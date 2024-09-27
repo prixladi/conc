@@ -23,7 +23,8 @@ static struct service_settings service_settings_parse(cJSON *json);
 static inline bool is_name_valid(const char *name);
 static void env_variable_free(struct env_variable e);
 
-char *project_settings_parse(const char *data, struct project_settings *settings)
+char *
+project_settings_parse(const char *data, struct project_settings *settings)
 {
 	settings->services = vector_create(struct service_settings);
 
@@ -89,7 +90,8 @@ char *project_settings_parse(const char *data, struct project_settings *settings
 	return NULL;
 }
 
-char *project_settings_stringify(const struct project_settings settings)
+char *
+project_settings_stringify(const struct project_settings settings)
 {
 	cJSON *root = cJSON_CreateObject();
 	cJSON_AddItemToObject(root, "name", cJSON_CreateString(settings.name));
@@ -129,7 +131,8 @@ char *project_settings_stringify(const struct project_settings settings)
 	return result;
 }
 
-struct project_settings project_settings_dup(const struct project_settings settings)
+struct project_settings
+project_settings_dup(const struct project_settings settings)
 {
 	struct project_settings copy = { 0 };
 	copy.name = str_dup(settings.name);
@@ -146,7 +149,8 @@ struct project_settings project_settings_dup(const struct project_settings setti
 	return copy;
 }
 
-struct service_settings service_settings_dup(const struct service_settings settings)
+struct service_settings
+service_settings_dup(const struct service_settings settings)
 {
 	struct service_settings copy = { 0 };
 	copy.name = str_dup(settings.name);
@@ -175,7 +179,8 @@ struct service_settings service_settings_dup(const struct service_settings setti
 	return copy;
 }
 
-void project_settings_free(struct project_settings settings)
+void
+project_settings_free(struct project_settings settings)
 {
 	if (settings.services != NULL)
 	{
@@ -188,7 +193,8 @@ void project_settings_free(struct project_settings settings)
 	settings.services = NULL;
 }
 
-void service_settings_free(struct service_settings settings)
+void
+service_settings_free(struct service_settings settings)
 {
 	free(settings.name);
 	free(settings.pwd);
@@ -209,7 +215,8 @@ void service_settings_free(struct service_settings settings)
 	settings.env = NULL;
 }
 
-static void env_variable_free(struct env_variable e)
+static void
+env_variable_free(struct env_variable e)
 {
 	free(e.key);
 	free(e.value);
@@ -218,7 +225,8 @@ static void env_variable_free(struct env_variable e)
 	e.value = NULL;
 }
 
-static struct service_settings service_settings_parse(cJSON *json)
+static struct service_settings
+service_settings_parse(cJSON *json)
 {
 	struct service_settings settings = { 0 };
 	settings.command = vector_create_prealloc(char *, 2);
@@ -260,7 +268,8 @@ static struct service_settings service_settings_parse(cJSON *json)
 	return settings;
 }
 
-static inline bool is_name_valid(const char *name)
+static inline bool
+is_name_valid(const char *name)
 {
 	if (name == NULL)
 		return false;

@@ -6,12 +6,14 @@
 
 static volatile enum log_level min_level = WARN;
 
-void log_init(enum log_level level)
+void
+log_init(enum log_level level)
 {
 	min_level = level;
 }
 
-void log_critical(const char *format, ...)
+void
+log_critical(const char *format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -23,7 +25,8 @@ void log_critical(const char *format, ...)
 	va_end(args);
 }
 
-void log_error(const char *format, ...)
+void
+log_error(const char *format, ...)
 {
 	if (min_level > ERROR)
 		return;
@@ -38,7 +41,8 @@ void log_error(const char *format, ...)
 	va_end(args);
 }
 
-void log_warn(const char *format, ...)
+void
+log_warn(const char *format, ...)
 {
 	if (min_level > WARN)
 		return;
@@ -53,7 +57,8 @@ void log_warn(const char *format, ...)
 	va_end(args);
 }
 
-void log_info(const char *format, ...)
+void
+log_info(const char *format, ...)
 {
 	if (min_level > INFO)
 		return;
@@ -68,7 +73,8 @@ void log_info(const char *format, ...)
 	va_end(args);
 }
 
-void log_debug(const char *format, ...)
+void
+log_debug(const char *format, ...)
 {
 	if (min_level > DEBUG)
 		return;
@@ -83,7 +89,8 @@ void log_debug(const char *format, ...)
 	va_end(args);
 }
 
-void log_trace(const char *trace_name, const char *format, ...)
+void
+log_trace(const char *trace_name, const char *format, ...)
 {
 	if (min_level > TRACE)
 		return;

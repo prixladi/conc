@@ -3,7 +3,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-char *str_dup(const char *str)
+char *
+str_dup(const char *str)
 {
 	if (!str)
 		return NULL;
@@ -16,7 +17,8 @@ char *str_dup(const char *str)
 	return new_str;
 }
 
-char *int_to_str(int i)
+char *
+int_to_str(int i)
 {
 	int length = snprintf(NULL, 0, "%d", i);
 	char *str = malloc(length + 1);
@@ -24,7 +26,8 @@ char *int_to_str(int i)
 	return str;
 }
 
-char *unsigned_long_to_str(unsigned long i)
+char *
+unsigned_long_to_str(unsigned long i)
 {
 	int length = snprintf(NULL, 0, "%lu", i);
 	char *str = malloc(length + 1);
@@ -32,7 +35,8 @@ char *unsigned_long_to_str(unsigned long i)
 	return str;
 }
 
-char *_str_concat(const char *fst, ...)
+char *
+_str_concat(const char *fst, ...)
 {
 	va_list strings;
 

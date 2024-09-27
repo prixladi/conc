@@ -52,7 +52,8 @@ static void *run_worker(void *arg);
 static void thread_pool_job_free(struct thread_pool_job *job);
 static void wait_for_workers(struct thread_pool *pool);
 
-struct thread_pool *thread_pool_create(int size, int capacity, char *_name)
+struct thread_pool *
+thread_pool_create(int size, int capacity, char *_name)
 {
 	char *name = STR_CONCAT(_name == NULL ? DEFAULT_THREAD_POOL_NAME : _name, DEFAULT_THREAD_POOL_NAME_SUFFIX);
 
@@ -90,7 +91,8 @@ struct thread_pool *thread_pool_create(int size, int capacity, char *_name)
 	return pool;
 }
 
-int thread_pool_start(struct thread_pool *pool)
+int
+thread_pool_start(struct thread_pool *pool)
 {
 	pthread_mutex_lock(pool->lock);
 
@@ -118,7 +120,8 @@ int thread_pool_start(struct thread_pool *pool)
 	return 0;
 }
 
-int thread_pool_queue_job(struct thread_pool *pool, char *name, void *(*run)(void *), void *args)
+int
+thread_pool_queue_job(struct thread_pool *pool, char *name, void *(*run)(void *), void *args)
 {
 	struct thread_pool_job *job = calloc(1, sizeof(struct thread_pool_job));
 	job->name = name == NULL ? DEFAULT_THREAD_POOL_JOB_NAME() : str_dup(name);
@@ -152,7 +155,8 @@ int thread_pool_queue_job(struct thread_pool *pool, char *name, void *(*run)(voi
 	return 0;
 }
 
-int thread_pool_stop_and_wait(struct thread_pool *pool)
+int
+thread_pool_stop_and_wait(struct thread_pool *pool)
 {
 	log_info("Thread_pool '%s' stopping\n", pool->name);
 
@@ -178,7 +182,8 @@ int thread_pool_stop_and_wait(struct thread_pool *pool)
 	return 0;
 }
 
-int thread_pool_pause_and_wait(struct thread_pool *pool)
+int
+thread_pool_pause_and_wait(struct thread_pool *pool)
 {
 	log_info("Thread_pool '%s' pausing\n", pool->name);
 
@@ -202,7 +207,8 @@ int thread_pool_pause_and_wait(struct thread_pool *pool)
 	return 0;
 }
 
-int thread_pool_free(struct thread_pool *pool)
+int
+thread_pool_free(struct thread_pool *pool)
 {
 	log_trace(pool->name, "Destroying thread_pool\n");
 
@@ -245,7 +251,8 @@ int thread_pool_free(struct thread_pool *pool)
 	return 0;
 }
 
-static void *run_worker(void *arg)
+static void *
+run_worker(void *arg)
 {
 	struct thread_pool *pool = arg;
 	while (1)
@@ -293,7 +300,8 @@ static void *run_worker(void *arg)
 	return NULL;
 }
 
-static void wait_for_workers(struct thread_pool *pool)
+static void
+wait_for_workers(struct thread_pool *pool)
 {
 	log_trace(pool->name, "Waiting for worker threads to finish\n");
 	for (int i = 0; i < pool->size; i++)
@@ -303,7 +311,8 @@ static void wait_for_workers(struct thread_pool *pool)
 	}
 }
 
-static void thread_pool_job_free(struct thread_pool_job *job)
+static void
+thread_pool_job_free(struct thread_pool_job *job)
 {
 	free(job->name);
 
