@@ -4,7 +4,7 @@ SOURCES = src/external/*.c src/utils/*.c src/*.c
 
 .PHONY: install
 
-run: run_debug_t
+run: run_debug
 
 build_debug: FLAGS += -fsanitize=undefined,address -g -D __DEBUG__
 build_debug: 

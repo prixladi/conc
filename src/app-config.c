@@ -51,7 +51,7 @@ char *get_help_message(char *app_name)
 {
     char *str = "Usage: %s [options]...\n\
 Process manager service.\n\n\
-    -l, --log-level <D|I|W|E|C>     Changes default log level\n\
+    -l, --log-level <T|D|I|W|E|C>     Changes default log level\n\
     -h, --help                      Prints help\n\
     -d, --daemon                    Forces the app to run in daemon mode (defaults to true when run outside tty)\n\n\
 Examples:\n\
@@ -84,6 +84,9 @@ static bool try_parse_log_level(char *str, enum log_level *level)
     char c = str[0];
     switch (c)
     {
+    case 'T':
+        (*level) = TRACE;
+        return true;
     case 'D':
         (*level) = DEBUG;
         return true;
