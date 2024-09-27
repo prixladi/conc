@@ -495,6 +495,9 @@ static char *
 format_list(char **lines)
 {
 	size_t item_count = vector_length(lines);
+	if (item_count == 0)
+		return str_dup("");
+
 	size_t response_length = item_count; // newline after each line and the '\0' at the end
 	for (size_t i = 0; i < item_count; i++)
 		response_length += strlen(lines[i]);

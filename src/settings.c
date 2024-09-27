@@ -15,9 +15,9 @@
 #define SETTINGS_PARSE_ERROR() str_dup("settings.parse")
 #define SETTINGS_INVALID_NAME_ERROR() str_dup("settings.name.invalid")
 #define SETTINGS_MISSING_SERVICES_ERROR() str_dup("settings.services.missing")
-#define SETTINGS_INVALID_SERVICE_NAME_ERROR(s) STR_CONCAT("settings.service.", s, ".name.invalid")
-#define SETTINGS_DUPLICATE_SERVICE_NAME_ERROR(s) STR_CONCAT("settings.service.", s, ".name.duplicate")
-#define SETTINGS_INVALID_SERVICE_COMMAND_ERROR(s) STR_CONCAT("settings.service.", s, ".command.invalid")
+#define SETTINGS_INVALID_SERVICE_NAME_ERROR(s) STR_CONCAT("settings.service.", s ? s : "", ".name.invalid")
+#define SETTINGS_DUPLICATE_SERVICE_NAME_ERROR(s) STR_CONCAT("settings.service.", s ? s : "", ".name.duplicate")
+#define SETTINGS_INVALID_SERVICE_COMMAND_ERROR(s) STR_CONCAT("settings.service.", s ? s : "", ".command.invalid")
 
 static struct service_settings service_settings_parse(cJSON *json);
 static inline bool is_name_valid(const char *name);
