@@ -5,14 +5,14 @@
 
 enum d_service_status
 {
-    D_NONE,
-    D_RUNNING,
-    D_STOPPED,
+	D_NONE,
+	D_RUNNING,
+	D_STOPPED,
 };
 
 struct d_service_info
 {
-    enum d_service_status status;
+	enum d_service_status status;
 };
 
 int driver_mount();

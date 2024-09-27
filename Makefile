@@ -1,6 +1,7 @@
 CC=gcc
 FLAGS = -D_POSIX_C_SOURCE=200112L -W -Wall -pedantic -Werror -std=c99
 SOURCES = src/external/*.c src/utils/*.c src/*.c
+HEADERS = src/external/*.h src/utils/*.h src/*.h
 
 .PHONY: install
 
@@ -29,3 +30,6 @@ run_release: build_release
 
 install: build_release
 	sudo ./install.sh
+
+format: 
+	clang-format -i $(SOURCES) $(HEADERS)
