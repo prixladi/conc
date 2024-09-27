@@ -7,7 +7,7 @@
 #ifdef __DEBUG__
 #define DEFAULT_LOG_LEVEL DEBUG
 #else
-#define DEFAULT_LOG_LEVEL WARN
+#define DEFAULT_LOG_LEVEL INFO
 #endif
 
 static char *error_message_create(char *app_name, char *error);

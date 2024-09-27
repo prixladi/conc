@@ -52,7 +52,7 @@ int main(int argc, char **argv)
     {
         if (manager_init() != 0)
         {
-            log_critical("Unable to init the manager, exiting.");
+            log_critical("Unable to init the manager, exiting.\n");
             return 1;
         }
 
