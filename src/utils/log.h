@@ -17,11 +17,11 @@ enum log_level
 
 void log_init(enum log_level level);
 
-void log_critical(const char *format, ...);
-void log_error(const char *format, ...);
-void log_warn(const char *format, ...);
-void log_info(const char *format, ...);
-void log_debug(const char *format, ...);
-void log_trace(const char *trace_name, const char *format, ...);
+void log_critical(const char *format, ...) __attribute__((format(printf, 1, 2)));
+void log_error(const char *format, ...) __attribute__((format(printf, 1, 2)));
+void log_warn(const char *format, ...) __attribute__((format(printf, 1, 2)));
+void log_info(const char *format, ...) __attribute__((format(printf, 1, 2)));
+void log_debug(const char *format, ...) __attribute__((format(printf, 1, 2)));
+void log_trace(const char *trace_name, const char *format, ...) __attribute__((format(printf, 2, 3)));
 
 #endif
