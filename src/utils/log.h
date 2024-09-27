@@ -7,12 +7,12 @@
 
 enum log_level
 {
-    TRACE,
-    DEBUG,
-    INFO,
-    WARN,
-    ERROR,
-    CRITICAL
+	TRACE,
+	DEBUG,
+	INFO,
+	WARN,
+	ERROR,
+	CRITICAL
 };
 
 void log_init(enum log_level level);

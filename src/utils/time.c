@@ -8,20 +8,21 @@
 
 void sleep_ms(int ms)
 {
-    sleep_ns(ms_to_ns(ms));
+	sleep_ns(ms_to_ns(ms));
 }
 
 void sleep_us(int us)
 {
-    sleep_ns(us_to_ns(us));
+	sleep_ns(us_to_ns(us));
 }
 
 void sleep_ns(int ns)
 {
-    struct timespec t = {
-        .tv_sec = 0,
-        .tv_nsec = ns};
-    struct timespec r;
+	struct timespec t = {
+		.tv_sec = 0,
+		.tv_nsec = ns,
+	};
+	struct timespec r;
 
-    nanosleep(&t, &r);
+	nanosleep(&t, &r);
 }

@@ -9,21 +9,21 @@
 
 enum service_status
 {
-    IDLE,
-    RUNNING,
-    STOPPED,
+	IDLE,
+	RUNNING,
+	STOPPED,
 };
 
 struct service_info
 {
-    char *name;
-    enum service_status status;
+	char *name;
+	enum service_status status;
 };
 
 struct project_info
 {
-    char *name;
-    struct service_info *services;
+	char *name;
+	struct service_info *services;
 };
 
 int manager_init();

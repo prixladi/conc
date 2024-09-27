@@ -8,7 +8,7 @@ typedef char *(*Dispatch)(const char *command);
 
 struct server_options
 {
-    Dispatch dispatch;
+	Dispatch dispatch;
 };
 
 struct server;
