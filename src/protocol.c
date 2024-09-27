@@ -36,7 +36,8 @@ static char *handle_service_stop(char **command);
 static char *format_list(char **lines);
 static char *format_service_info(struct service_info info);
 
-char *dispatch_command(const char *input)
+char *
+dispatch_command(const char *input)
 {
 	char **command = tokenize(input);
 
@@ -75,7 +76,8 @@ char *dispatch_command(const char *input)
 	return resp_error("unknown_command");
 }
 
-static char **tokenize(const char *input)
+static char **
+tokenize(const char *input)
 {
 	char **result = vector_create_prealloc(char *, 8);
 
@@ -104,7 +106,8 @@ static char **tokenize(const char *input)
 	return result;
 }
 
-static void tokenize_free(char **tokens)
+static void
+tokenize_free(char **tokens)
 {
 	for (size_t i = 0; i < vector_length(tokens); i++)
 	{
@@ -115,7 +118,8 @@ static void tokenize_free(char **tokens)
 	vector_free(tokens);
 }
 
-static inline char *match_and_handle(const char *name, char **command, size_t argc, Handler handler)
+static inline char *
+match_and_handle(const char *name, char **command, size_t argc, Handler handler)
 {
 	if (strcmp(name, command[0]))
 		return NULL;
@@ -129,7 +133,8 @@ static inline char *match_and_handle(const char *name, char **command, size_t ar
 	return handler(argv);
 }
 
-static char *handle_projects_names(char **_command)
+static char *
+handle_projects_names(char **_command)
 {
 	assert(_command);
 	struct project_settings *projects = projects_settings_get();
@@ -157,7 +162,8 @@ static char *handle_projects_names(char **_command)
 	return ok_response;
 }
 
-static char *handle_projects_settings(char **_command)
+static char *
+handle_projects_settings(char **_command)
 {
 	assert(_command);
 	struct project_settings *projects = projects_settings_get();
@@ -192,7 +198,8 @@ static char *handle_projects_settings(char **_command)
 	return ok_response;
 }
 
-static char *handle_projects_info(char **_command)
+static char *
+handle_projects_info(char **_command)
 {
 	assert(_command);
 	struct project_info *infos = projects_info_get();
@@ -228,7 +235,8 @@ static char *handle_projects_info(char **_command)
 	return ok_response;
 }
 
-static char *handle_project_settings(char **command)
+static char *
+handle_project_settings(char **command)
 {
 	struct project_settings settings = { 0 };
 	int result = project_settings_get(command[0], &settings);
@@ -252,7 +260,8 @@ static char *handle_project_settings(char **command)
 	return ok_response;
 }
 
-static char *handle_project_info(char **command)
+static char *
+handle_project_info(char **command)
 {
 	struct project_info info = { 0 };
 	int result = project_info_get(command[0], &info);
@@ -283,7 +292,8 @@ static char *handle_project_info(char **command)
 	return ok_response;
 }
 
-static char *handle_project_upsert(char **command)
+static char *
+handle_project_upsert(char **command)
 {
 	struct project_settings settings = { 0 };
 	char *parse_error = project_settings_parse(command[0], &settings);
@@ -315,7 +325,8 @@ static char *handle_project_upsert(char **command)
 	return info_response;
 }
 
-static char *handle_project_start(char **command)
+static char *
+handle_project_start(char **command)
 {
 	int result = project_start(command[0]);
 	if (result > 0)
@@ -332,7 +343,8 @@ static char *handle_project_start(char **command)
 	return handle_project_info(command);
 }
 
-static char *handle_project_stop(char **command)
+static char *
+handle_project_stop(char **command)
 {
 	int result = project_stop(command[0]);
 	if (result > 0)
@@ -349,7 +361,8 @@ static char *handle_project_stop(char **command)
 	return handle_project_info(command);
 }
 
-static char *handle_project_remove(char **command)
+static char *
+handle_project_remove(char **command)
 {
 	int result = project_remove(command[0]);
 	switch (result)
@@ -365,7 +378,8 @@ static char *handle_project_remove(char **command)
 	}
 }
 
-static char *handle_services_names(char **command)
+static char *
+handle_services_names(char **command)
 {
 	struct project_settings project = { 0 };
 	int result = project_settings_get(command[0], &project);
@@ -403,7 +417,8 @@ static char *handle_services_names(char **command)
 	return ok_response;
 }
 
-static char *handle_service_info(char **command)
+static char *
+handle_service_info(char **command)
 {
 	struct service_info info;
 	int result = service_info_get(command[0], command[1], &info);
@@ -430,7 +445,8 @@ static char *handle_service_info(char **command)
 	return response;
 }
 
-static char *handle_service_start(char **command)
+static char *
+handle_service_start(char **command)
 {
 	int result = service_start(command[0], command[1]);
 	if (result > 0)
@@ -453,7 +469,8 @@ static char *handle_service_start(char **command)
 	return handle_service_info(command);
 }
 
-static char *handle_service_stop(char **command)
+static char *
+handle_service_stop(char **command)
 {
 	int result = service_stop(command[0], command[1]);
 	if (result > 0)
@@ -474,7 +491,8 @@ static char *handle_service_stop(char **command)
 	return handle_service_info(command);
 }
 
-static char *format_list(char **lines)
+static char *
+format_list(char **lines)
 {
 	size_t item_count = vector_length(lines);
 	size_t response_length = item_count; // newline after each line and the '\0' at the end
@@ -492,7 +510,8 @@ static char *format_list(char **lines)
 	return response;
 }
 
-static char *format_service_info(const struct service_info info)
+static char *
+format_service_info(const struct service_info info)
 {
 	char *status;
 	switch (info.status)

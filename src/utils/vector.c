@@ -5,7 +5,8 @@
 
 #define BYTE_PTR char *
 
-void *_vector_create(size_t init_cap, size_t stride)
+void *
+_vector_create(size_t init_cap, size_t stride)
 {
 	size_t header_size = VECTOR_FIELDS * sizeof(size_t);
 	size_t arr_size = init_cap * stride;
@@ -16,7 +17,8 @@ void *_vector_create(size_t init_cap, size_t stride)
 	return (void *)(arr + VECTOR_FIELDS);
 }
 
-void *_vector_dup(void *arr)
+void *
+_vector_dup(void *arr)
 {
 	size_t header_size = VECTOR_FIELDS * sizeof(size_t);
 	size_t arr_size = vector_capacity(arr) * vector_stride(arr);
@@ -27,22 +29,26 @@ void *_vector_dup(void *arr)
 	return tmp + VECTOR_FIELDS;
 }
 
-void _vector_free(void *arr)
+void
+_vector_free(void *arr)
 {
 	free((size_t *)(arr)-VECTOR_FIELDS);
 }
 
-size_t _vector_field_get(void *arr, size_t field)
+size_t
+_vector_field_get(void *arr, size_t field)
 {
 	return ((size_t *)(arr)-VECTOR_FIELDS)[field];
 }
 
-void _vector_field_set(void *arr, size_t field, size_t value)
+void
+_vector_field_set(void *arr, size_t field, size_t value)
 {
 	((size_t *)(arr)-VECTOR_FIELDS)[field] = value;
 }
 
-void *_vector_resize(void *arr)
+void *
+_vector_resize(void *arr)
 {
 	size_t capacity = vector_capacity(arr);
 	size_t new_capacity = capacity > 0 ? VECTOR_RESIZE_FACTOR * vector_capacity(arr) : VECTOR_DEFAULT_CAPACITY;
@@ -54,7 +60,8 @@ void *_vector_resize(void *arr)
 	return new_arr;
 }
 
-void *_vector_push(void *arr, void *xptr)
+void *
+_vector_push(void *arr, void *xptr)
 {
 	if (vector_length(arr) >= vector_capacity(arr))
 		arr = _vector_resize(arr);
@@ -64,7 +71,8 @@ void *_vector_push(void *arr, void *xptr)
 	return arr;
 }
 
-int _vector_pop(void *arr, void *dest)
+int
+_vector_pop(void *arr, void *dest)
 {
 	size_t len = vector_length(arr);
 	if (len == 0)
@@ -77,7 +85,8 @@ int _vector_pop(void *arr, void *dest)
 	return 0;
 }
 
-int _vector_remove(void *arr, size_t pos, void *dest)
+int
+_vector_remove(void *arr, size_t pos, void *dest)
 {
 	size_t len = vector_length(arr);
 	if (pos >= len)

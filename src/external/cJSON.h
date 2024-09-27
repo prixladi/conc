@@ -358,10 +358,10 @@ extern "C"
 	cJSON_SetValuestring(cJSON *object, const char *valuestring);
 
 /* If the object is not a boolean type this does nothing and returns cJSON_Invalid else it returns the new type*/
-#define cJSON_SetBoolValue(object, boolValue)                                          \
-	((object != NULL && ((object)->type & (cJSON_False | cJSON_True)))             \
+#define cJSON_SetBoolValue(object, boolValue) \
+	((object != NULL && ((object)->type & (cJSON_False | cJSON_True))) \
 		 ? (object)->type = ((object)->type & (~(cJSON_False | cJSON_True))) | \
-				    ((boolValue) ? cJSON_True : cJSON_False)           \
+				    ((boolValue) ? cJSON_True : cJSON_False) \
 		 : cJSON_Invalid)
 
 /* Macro for iterating over an array or object */

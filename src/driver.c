@@ -50,7 +50,8 @@ static int get_running_service_pid(const char *project_name, const char *service
 static bool try_get_pid_info(int pid, struct stat *sts);
 static int kill_pid(int pid);
 
-int driver_mount(void)
+int
+driver_mount(void)
 {
 	mkdir(root_projects_dir, S_IRWXU | S_IRWXG | S_IRWXO);
 
@@ -67,12 +68,14 @@ int driver_mount(void)
 	return 0;
 }
 
-void driver_unmount(void)
+void
+driver_unmount(void)
 {
 	log_info("Driver unmounted\n");
 }
 
-char **d_get_all_stored_settings(void)
+char **
+d_get_all_stored_settings(void)
 {
 	char **settings_vec = vector_create(char *);
 
@@ -103,7 +106,8 @@ char **d_get_all_stored_settings(void)
 	return settings_vec;
 }
 
-int d_project_init(const struct project_settings settings)
+int
+d_project_init(const struct project_settings settings)
 {
 	ensure_project_dir_exists(settings.name);
 
@@ -125,7 +129,8 @@ int d_project_init(const struct project_settings settings)
 	return 0;
 }
 
-int d_project_start(const struct project_settings settings)
+int
+d_project_start(const struct project_settings settings)
 {
 	int status = 0;
 	for (size_t i = 0; i < vector_length(settings.services); i++)
@@ -133,7 +138,8 @@ int d_project_start(const struct project_settings settings)
 	return status;
 }
 
-int d_project_stop(const struct project_settings settings)
+int
+d_project_stop(const struct project_settings settings)
 {
 	int status = 0;
 	for (size_t i = 0; i < vector_length(settings.services); i++)
@@ -141,7 +147,8 @@ int d_project_stop(const struct project_settings settings)
 	return status;
 }
 
-int d_project_remove(const struct project_settings settings)
+int
+d_project_remove(const struct project_settings settings)
 {
 	for (size_t i = 0; i < vector_length(settings.services); i++)
 	{
@@ -164,7 +171,8 @@ int d_project_remove(const struct project_settings settings)
 	return delete_success ? 0 : 1;
 }
 
-struct d_service_info d_service_info_get(const char *project_name, const char *service_name)
+struct d_service_info
+d_service_info_get(const char *project_name, const char *service_name)
 {
 	int running_pid = get_running_service_pid(project_name, service_name);
 
@@ -181,7 +189,8 @@ struct d_service_info d_service_info_get(const char *project_name, const char *s
 	return info;
 }
 
-int d_service_start(const char *project_name, const struct service_settings service_settings)
+int
+d_service_start(const char *project_name, const struct service_settings service_settings)
 {
 	int running_pid = get_running_service_pid(project_name, service_settings.name);
 	if (running_pid > 0)
@@ -206,7 +215,8 @@ int d_service_start(const char *project_name, const struct service_settings serv
 	return 0;
 }
 
-int d_service_stop(const char *project_name, const struct service_settings service_settings)
+int
+d_service_stop(const char *project_name, const struct service_settings service_settings)
 {
 	int running_pid = get_running_service_pid(project_name, service_settings.name);
 	if (running_pid <= 0)
@@ -217,7 +227,8 @@ int d_service_stop(const char *project_name, const struct service_settings servi
 	return 0;
 }
 
-static int get_running_service_pid(const char *project_name, const char *service_name)
+static int
+get_running_service_pid(const char *project_name, const char *service_name)
 {
 	struct service_process_info info = { 0 };
 	if (try_parse_service_meta_file(project_name, service_name, &info) == false)
@@ -230,7 +241,8 @@ static int get_running_service_pid(const char *project_name, const char *service
 	return info.pid;
 }
 
-static int ensure_service_dir_exists(const char *project_name, const char *service_name)
+static int
+ensure_service_dir_exists(const char *project_name, const char *service_name)
 {
 	char *service_dir = STR_CONCAT(root_projects_dir, "/", project_name, "/", service_name);
 	int result = mkdir(service_dir, S_IRWXU | S_IRWXG | S_IRWXO);
@@ -238,7 +250,8 @@ static int ensure_service_dir_exists(const char *project_name, const char *servi
 	return result;
 }
 
-static int ensure_project_dir_exists(const char *project_name)
+static int
+ensure_project_dir_exists(const char *project_name)
 {
 	char *project_dir = STR_CONCAT(root_projects_dir, "/", project_name);
 	int result = mkdir(project_dir, S_IRWXU | S_IRWXG | S_IRWXO);
@@ -246,7 +259,8 @@ static int ensure_project_dir_exists(const char *project_name)
 	return result;
 }
 
-static void write_service_meta_file(const char *project_name, const char *service_name, struct service_process_info info)
+static void
+write_service_meta_file(const char *project_name, const char *service_name, struct service_process_info info)
 {
 	FILE *fp = open_service_meta_file(project_name, service_name, "w");
 	if (fp == NULL)
@@ -257,8 +271,8 @@ static void write_service_meta_file(const char *project_name, const char *servic
 }
 
 #define MAX_META_LINE_LEN 1024 // This should be sufficient but probably should handle cases when it is not
-static bool try_parse_service_meta_file(const char *project_name, const char *service_name,
-					struct service_process_info *info)
+static bool
+try_parse_service_meta_file(const char *project_name, const char *service_name, struct service_process_info *info)
 {
 	FILE *fp = open_service_meta_file(project_name, service_name, "r");
 	if (fp == NULL)
@@ -293,7 +307,8 @@ static bool try_parse_service_meta_file(const char *project_name, const char *se
 	return parsed == 2;
 }
 
-static FILE *open_project_meta_file(const char *project_name, const char *modes)
+static FILE *
+open_project_meta_file(const char *project_name, const char *modes)
 {
 	char *meta_file_path = get_project_meta_file_path(project_name);
 	FILE *fp = fopen(meta_file_path, modes);
@@ -302,7 +317,8 @@ static FILE *open_project_meta_file(const char *project_name, const char *modes)
 	return fp;
 }
 
-static FILE *open_service_meta_file(const char *project_name, const char *service_name, const char *modes)
+static FILE *
+open_service_meta_file(const char *project_name, const char *service_name, const char *modes)
 {
 	char *meta_file_path = get_service_meta_file_path(project_name, service_name);
 	FILE *fp = fopen(meta_file_path, modes);
@@ -310,46 +326,54 @@ static FILE *open_service_meta_file(const char *project_name, const char *servic
 	return fp;
 }
 
-static char *get_project_dir_path(const char *project_name)
+static char *
+get_project_dir_path(const char *project_name)
 {
 	return STR_CONCAT(root_projects_dir, "/", project_name);
 }
 
-static char *get_project_meta_file_path(const char *project_name)
+static char *
+get_project_meta_file_path(const char *project_name)
 {
 	return STR_CONCAT(root_projects_dir, "/", project_name, "/", meta_file_name);
 }
 
-static char *get_service_dir_path(const char *project_name, const char *service_name)
+static char *
+get_service_dir_path(const char *project_name, const char *service_name)
 {
 	return STR_CONCAT(root_projects_dir, "/", project_name, "/", service_name);
 }
 
-static char *get_service_meta_file_path(const char *project_name, const char *service_name)
+static char *
+get_service_meta_file_path(const char *project_name, const char *service_name)
 {
 	return STR_CONCAT(root_projects_dir, "/", project_name, "/", service_name, "/", meta_file_name);
 }
 
-static char *get_service_log_file_path(const char *project_name, const char *service_name)
+static char *
+get_service_log_file_path(const char *project_name, const char *service_name)
 {
 	return STR_CONCAT(root_projects_dir, "/", project_name, "/", service_name, "/", log_file_name);
 }
 
-static int remove_file_f(char *path)
+static int
+remove_file_f(char *path)
 {
 	int res = remove(path);
 	free(path);
 	return res;
 }
 
-static int remove_dir_f(char *path)
+static int
+remove_dir_f(char *path)
 {
 	int res = rmdir(path);
 	free(path);
 	return res;
 }
 
-static bool try_get_pid_info(int pid, struct stat *sts)
+static bool
+try_get_pid_info(int pid, struct stat *sts)
 {
 	char *pid_string = int_to_str(pid);
 	char *proc = STR_CONCAT("/proc/", pid_string);
@@ -361,7 +385,8 @@ static bool try_get_pid_info(int pid, struct stat *sts)
 	return result != -1;
 }
 
-static int kill_pid(int pid)
+static int
+kill_pid(int pid)
 {
 	struct stat sts;
 	if (try_get_pid_info(pid, &sts) == false)

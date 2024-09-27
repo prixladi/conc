@@ -15,7 +15,8 @@ static void restart_handler(int signal);
 static struct server *server;
 static volatile bool running = true;
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	char stdout_buffer[1024];
 	setvbuf(stdout, stdout_buffer, _IOLBF, 1024);
@@ -69,14 +70,16 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-static void graceful_stop_handler(int signal)
+static void
+graceful_stop_handler(int signal)
 {
 	running = false;
 	log_info("Received '%d' signal, exiting gracefully\n", signal);
 	server_stop(server);
 }
 
-static void restart_handler(int signal)
+static void
+restart_handler(int signal)
 {
 	log_info("Received '%d' signal, restarting\n", signal);
 	server_stop(server);

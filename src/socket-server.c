@@ -40,7 +40,8 @@ static void *client_socket_handle(void *data);
 
 static void *server_run(void *data);
 
-struct server *server_run_async(struct server_options opts)
+struct server *
+server_run_async(struct server_options opts)
 {
 	struct server *server = malloc(sizeof(struct server));
 	server->running = true;
@@ -54,20 +55,23 @@ struct server *server_run_async(struct server_options opts)
 	return server;
 }
 
-void server_stop(struct server *server)
+void
+server_stop(struct server *server)
 {
 	log_info("Socket server stopping\n");
 	server->running = false;
 }
 
-void server_wait_and_free(struct server *server)
+void
+server_wait_and_free(struct server *server)
 {
 	pthread_join(server->main_thread, NULL);
 	free(server);
 	log_info("Socket server stopped\n");
 }
 
-static void *server_run(void *data)
+static void *
+server_run(void *data)
 {
 	struct server *server = data;
 
@@ -121,7 +125,8 @@ static void *server_run(void *data)
 	return NULL;
 }
 
-static void *client_socket_handle(void *data)
+static void *
+client_socket_handle(void *data)
 {
 	struct handler_options *opts = data;
 	int client_socket = opts->client_socket;

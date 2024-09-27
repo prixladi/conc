@@ -13,7 +13,8 @@
 static char *error_message_create(char *app_name, char *error);
 static bool try_parse_log_level(char *str, enum log_level *level);
 
-char *app_config_init(int argc, char **argv, struct app_config *config)
+char *
+app_config_init(int argc, char **argv, struct app_config *config)
 {
 	config->is_daemon = !isatty(STDOUT_FILENO);
 	config->log_level = DEFAULT_LOG_LEVEL;
@@ -48,7 +49,8 @@ char *app_config_init(int argc, char **argv, struct app_config *config)
 	return NULL;
 }
 
-char *get_help_message(char *app_name)
+char *
+get_help_message(char *app_name)
 {
 	char *str = "Usage: %s [options]...\n\
 Process manager service.\n\n\
@@ -66,7 +68,8 @@ Examples:\n\
 	return buff;
 }
 
-static char *error_message_create(char *app_name, char *error)
+static char *
+error_message_create(char *app_name, char *error)
 {
 	char *str = "%s\nUsage: %s [options]..., run with again --help for more details\n";
 
@@ -77,7 +80,8 @@ static char *error_message_create(char *app_name, char *error)
 	return buff;
 }
 
-static bool try_parse_log_level(char *str, enum log_level *level)
+static bool
+try_parse_log_level(char *str, enum log_level *level)
 {
 	if (str == NULL || strlen(str) != 1)
 		return false;
