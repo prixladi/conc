@@ -75,7 +75,6 @@ char *dispatch_command(const char *input)
     return resp_error("unknown_command");
 }
 
-// Probably don't want to use strtok_r because it requires gnu extension to c99 standard and it would reduce portability
 static char **tokenize(const char *input)
 {
     char **result = vector_create_prealloc(char *, 8);

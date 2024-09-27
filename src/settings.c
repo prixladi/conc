@@ -47,17 +47,19 @@ char *project_settings_parse(const char *data, struct project_settings *settings
                 if (!is_name_valid(service.name))
                 {
                     cJSON_Delete(json);
+                    char *error = service.name
+                                      ? SETTINGS_INVALID_SERVICE_NAME_ERROR(service.name)
+                                      : SETTINGS_INVALID_SERVICE_NAME_ERROR("");
                     service_settings_free(service);
-                    return service.name
-                               ? SETTINGS_INVALID_SERVICE_NAME_ERROR(service.name)
-                               : SETTINGS_INVALID_SERVICE_NAME_ERROR("");
+                    return error;
                 }
 
                 if (vector_length(service.command) < 1)
                 {
                     cJSON_Delete(json);
+                    char *error = SETTINGS_INVALID_SERVICE_COMMAND_ERROR(service.name);
                     service_settings_free(service);
-                    return SETTINGS_INVALID_SERVICE_COMMAND_ERROR(service.name);
+                    return error;
                 }
 
                 for (size_t i = 0; i < vector_length(settings->services); i++)
@@ -65,8 +67,9 @@ char *project_settings_parse(const char *data, struct project_settings *settings
                     if (strcmp(service.name, settings->services[i].name) == 0)
                     {
                         cJSON_Delete(json);
+                        char *error = SETTINGS_DUPLICATE_SERVICE_NAME_ERROR(service.name);
                         service_settings_free(service);
-                        return SETTINGS_DUPLICATE_SERVICE_NAME_ERROR(service.name);
+                        return error;
                     }
                 }
 

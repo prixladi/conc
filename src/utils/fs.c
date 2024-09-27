@@ -1,4 +1,6 @@
 #include <stdbool.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <dirent.h>
 #include <stdlib.h>
 
@@ -6,10 +8,24 @@
 
 bool dir_exists(char *path)
 {
-    DIR *project_dir = opendir(path);
-    if (project_dir == NULL)
+    DIR *dir = opendir(path);
+    if (dir == NULL)
         return false;
 
-    closedir(project_dir);
+    closedir(dir);
     return true;
+}
+
+char *get_file_content(FILE *fp)
+{
+    fseek(fp, 0, SEEK_END);
+    long size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
+    char *content = malloc(size * sizeof(char) + 1);
+    fread(content, sizeof(char), size, fp);
+
+    content[size] = '\0';
+
+    return content;
 }

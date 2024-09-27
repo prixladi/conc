@@ -25,10 +25,10 @@ void *_vector_push(void *arr, void *xptr);
 int _vector_pop(void *arr, void *dest);
 int _vector_remove(void *arr, size_t pos, void *dest);
 
-#define VECTOR_DEFAULT_CAP 1
+#define VECTOR_DEFAULT_CAPACITY 1
 #define VECTOR_RESIZE_FACTOR 2
 
-#define vector_create(type) _vector_create(VECTOR_DEFAULT_CAP, sizeof(type))
+#define vector_create(type) _vector_create(VECTOR_DEFAULT_CAPACITY, sizeof(type))
 #define vector_create_prealloc(type, capacity) _vector_create(capacity, sizeof(type))
 #define vector_dup(arr) _vector_dup(arr)
 

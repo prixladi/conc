@@ -18,6 +18,8 @@ struct d_service_info
 int driver_mount();
 void driver_unmount();
 
+char **d_get_all_stored_settings();
+
 int d_project_init(const struct project_settings settings);
 int d_project_start(const struct project_settings settings);
 int d_project_stop(const struct project_settings settings);
