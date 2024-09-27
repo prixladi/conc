@@ -42,13 +42,16 @@ void _vector_field_set(void *arr, size_t field, size_t value)
 
 void *_vector_resize(void *arr)
 {
-    void *temp = _vector_create(
-        VECTOR_RESIZE_FACTOR * vector_capacity(arr),
-        vector_stride(arr));
-    memcpy(temp, arr, vector_length(arr) * vector_stride(arr));
-    _vector_field_set(temp, LENGTH, vector_length(arr));
+    size_t capacity = vector_capacity(arr);
+    size_t new_capacity = capacity > 0
+                              ? VECTOR_RESIZE_FACTOR * vector_capacity(arr)
+                              : VECTOR_DEFAULT_CAPACITY;
+
+    void *new_arr = _vector_create(new_capacity, vector_stride(arr));
+    memcpy(new_arr, arr, vector_length(arr) * vector_stride(arr));
+    _vector_field_set(new_arr, LENGTH, vector_length(arr));
     _vector_free(arr);
-    return temp;
+    return new_arr;
 }
 
 void *_vector_push(void *arr, void *xptr)
@@ -95,7 +98,7 @@ int _vector_remove(void *arr, size_t pos, void *dest)
     if (dest != NULL)
         memcpy(dest, arr + pos * vector_stride(arr), vector_stride(arr));
 
-    memmove(arr + (pos * vector_stride(arr)), arr + ((pos + 1) * vector_stride(arr)), vector_stride(arr) * (len -1 - pos));
+    memmove(arr + (pos * vector_stride(arr)), arr + ((pos + 1) * vector_stride(arr)), vector_stride(arr) * (len - 1 - pos));
 #pragma GCC diagnostic pop
 
     _vector_field_set(arr, LENGTH, vector_length(arr) - 1);

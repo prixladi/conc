@@ -35,6 +35,12 @@ static struct project_store store;
 
 int manager_init()
 {
+    if (driver_mount() != 0)
+    {
+        log_critical("Unable to mount the driver.\n");
+        return 2;
+    }
+
     store.lock = malloc(sizeof(pthread_mutex_t));
     if (pthread_mutex_init(store.lock, NULL) != 0)
     {
@@ -44,15 +50,38 @@ int manager_init()
         return 1;
     }
 
-    if (driver_mount() != 0)
+    pthread_mutex_lock(store.lock);
+
+    char **stored_settings = d_get_all_stored_settings();
+    size_t settings_count = vector_length(stored_settings);
+    store.projects = vector_create_prealloc(struct project, settings_count);
+    for (size_t i = 0; i < settings_count; i++)
     {
-        free(store.lock);
-        store.lock = NULL;
-        log_critical("Unable to mount the driver.\n");
-        return 2;
+        struct project_settings settings = {0};
+
+        char *parse_error = project_settings_parse(stored_settings[i], &settings);
+        if (parse_error)
+        {
+            log_error("Unable to parse settings '%s' because of error '%s'.\n", stored_settings[i], parse_error);
+            free(parse_error);
+            project_settings_free(settings);
+            continue;
+        }
+
+        log_debug("Loaded stored project '%s'\n", settings.name);
+        struct project project = project_create(settings);
+
+        pthread_mutex_lock(project.lock);
+        d_project_stop(project.settings);
+        pthread_mutex_unlock(project.lock);
+
+        vector_push(store.projects, project);
     }
 
-    store.projects = vector_create(struct project);
+    vector_for_each(stored_settings, free);
+    vector_free(stored_settings);
+
+    pthread_mutex_unlock(store.lock);
 
     log_info("Manager initialized\n");
 
@@ -66,7 +95,7 @@ void manager_stop()
     for (size_t i = 0; i < vector_length(store.projects); i++)
     {
         struct project project = store.projects[i];
-        
+
         pthread_mutex_lock(project.lock);
         d_project_stop(project.settings);
         pthread_mutex_unlock(project.lock);

@@ -71,19 +71,51 @@ void driver_unmount()
     log_info("Driver unmounted\n");
 }
 
+char **d_get_all_stored_settings()
+{
+    char **settings_vec = vector_create(char *);
+
+    DIR *projects_dir = opendir(root_projects_dir);
+    if (!projects_dir)
+        return settings_vec;
+
+    struct dirent *entry;
+    while ((entry = readdir(projects_dir)) != NULL)
+    {
+        if (strncmp(entry->d_name, ".", 1) == 0 || strncmp(entry->d_name, "..", 2) == 0)
+            continue;
+
+        char *settings_file_path = STR_CONCAT(root_projects_dir, "/", entry->d_name, "/", meta_file_name);
+        FILE *fp = fopen(settings_file_path, "r");
+        if (!fp)
+            log_error("Unable to load settings from '%s'\n", settings_file_path);
+        else
+        {
+            char *content = get_file_content(fp);
+            fclose(fp);
+            vector_push(settings_vec, content);
+        }
+        free(settings_file_path);
+    }
+    closedir(projects_dir);
+
+    return settings_vec;
+}
+
 int d_project_init(const struct project_settings settings)
 {
     ensure_project_dir_exists(settings.name);
 
-    FILE *fptr = open_project_meta_file(settings.name, "w");
-    if (fptr == NULL) {
+    FILE *fp = open_project_meta_file(settings.name, "w");
+    if (fp == NULL)
+    {
         log_critical("Unable to open meta file for project. Project: '%s'", settings.name);
         return 1;
     }
 
     char *stringified_settings = project_settings_stringify(settings);
-    fprintf(fptr, "%s", stringified_settings);
-    fclose(fptr);
+    fprintf(fp, "%s", stringified_settings);
+    fclose(fp);
     free(stringified_settings);
 
     for (size_t i = 0; i < vector_length(settings.services); i++)
@@ -209,25 +241,25 @@ static int ensure_project_dir_exists(const char *project_name)
 
 static void write_service_meta_file(const char *project_name, const char *service_name, struct service_process_info info)
 {
-    FILE *fptr = open_service_meta_file(project_name, service_name, "w");
-    if (fptr == NULL)
+    FILE *fp = open_service_meta_file(project_name, service_name, "w");
+    if (fp == NULL)
         log_error("Unable to open meta file for service. Project: '%s', service: %s", project_name, service_name);
 
-    fprintf(fptr, "%d\n%ld", info.pid, info.c_time);
-    fclose(fptr);
+    fprintf(fp, "%d\n%ld", info.pid, info.c_time);
+    fclose(fp);
 }
 
 #define MAX_META_LINE_LEN 1024 // This should be sufficient but probably should handle cases when it is not
 static bool try_parse_service_meta_file(const char *project_name, const char *service_name, struct service_process_info *info)
 {
-    FILE *fptr = open_service_meta_file(project_name, service_name, "r");
-    if (fptr == NULL)
+    FILE *fp = open_service_meta_file(project_name, service_name, "r");
+    if (fp == NULL)
         return false;
 
     char buffer[MAX_META_LINE_LEN];
 
     int parsed = 0;
-    if (fgets(buffer, MAX_META_LINE_LEN, fptr))
+    if (fgets(buffer, MAX_META_LINE_LEN, fp))
     {
         buffer[strcspn(buffer, "\n")] = '\0';
         int pid = atoi(buffer);
@@ -238,7 +270,7 @@ static bool try_parse_service_meta_file(const char *project_name, const char *se
         }
     }
 
-    if (fgets(buffer, MAX_META_LINE_LEN, fptr))
+    if (fgets(buffer, MAX_META_LINE_LEN, fp))
     {
         buffer[strcspn(buffer, "\n")] = '\0';
         time_t c_time = atoll(buffer);
@@ -249,27 +281,25 @@ static bool try_parse_service_meta_file(const char *project_name, const char *se
         }
     }
 
-    fclose(fptr);
+    fclose(fp);
     return parsed == 2;
 }
 
 static FILE *open_project_meta_file(const char *project_name, const char *modes)
 {
     char *meta_file_path = get_project_meta_file_path(project_name);
-    FILE *fptr;
-    fptr = fopen(meta_file_path, modes);
+    FILE *fp = fopen(meta_file_path, modes);
     free(meta_file_path);
 
-    return fptr;
+    return fp;
 }
 
 static FILE *open_service_meta_file(const char *project_name, const char *service_name, const char *modes)
 {
     char *meta_file_path = get_service_meta_file_path(project_name, service_name);
-    FILE *fptr;
-    fptr = fopen(meta_file_path, modes);
+    FILE *fp = fopen(meta_file_path, modes);
     free(meta_file_path);
-    return fptr;
+    return fp;
 }
 
 static char *get_project_dir_path(const char *project_name)
