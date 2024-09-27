@@ -30,7 +30,7 @@ struct service_process_info
 static int ensure_project_dir_exists(const char *project_name);
 static int ensure_service_dir_exists(const char *project_name, const char *service_name);
 
-static void write_service_meta_file(const char *project_name, const char *service_name, struct service_process_info info);
+static int write_service_meta_file(const char *project_name, const char *service_name, struct service_process_info info);
 static bool try_parse_service_meta_file(const char *project_name, const char *service_name,
 					struct service_process_info *info);
 
@@ -176,7 +176,7 @@ d_service_info_get(const char *project_name, const char *service_name)
 {
 	int running_pid = get_running_service_pid(project_name, service_name);
 
-	enum d_service_status status = running_pid > 0 ? D_RUNNING : running_pid == 0 ? D_STOPPED : D_NONE;
+	enum d_service_status status;
 	if (running_pid > 0)
 		status = D_RUNNING;
 	else
@@ -210,7 +210,8 @@ d_service_start(const char *project_name, const struct service_settings service_
 		.c_time = sts.st_ctime,
 	};
 
-	write_service_meta_file(project_name, service_settings.name, info);
+	if (write_service_meta_file(project_name, service_settings.name, info) > 0)
+		return 2;
 
 	return 0;
 }
@@ -259,15 +260,19 @@ ensure_project_dir_exists(const char *project_name)
 	return result;
 }
 
-static void
+static int
 write_service_meta_file(const char *project_name, const char *service_name, struct service_process_info info)
 {
 	FILE *fp = open_service_meta_file(project_name, service_name, "w");
 	if (fp == NULL)
+	{
 		log_error("Unable to open meta file for service. Project: '%s', service: %s", project_name, service_name);
+		return 1;
+	}
 
 	fprintf(fp, "%d\n%ld", info.pid, info.c_time);
 	fclose(fp);
+	return 0;
 }
 
 #define MAX_META_LINE_LEN 1024 // This should be sufficient but probably should handle cases when it is not

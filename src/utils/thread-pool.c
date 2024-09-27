@@ -74,6 +74,7 @@ thread_pool_create(int size, int capacity, char *_name)
 	pthread_cond_t *cond = malloc(sizeof(pthread_cond_t));
 	if (pthread_cond_init(cond, NULL) != 0)
 	{
+		free(lock);
 		free(cond);
 		log_error("Unable to initialize thread_pool '%s' cond\n", name);
 		return NULL;
