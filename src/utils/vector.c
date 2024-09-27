@@ -3,6 +3,8 @@
 
 #include "vector.h"
 
+#define BYTE_PTR char *
+
 void *_vector_create(size_t init_cap, size_t stride)
 {
     size_t header_size = VECTOR_FIELDS * sizeof(size_t);
@@ -59,9 +61,7 @@ void *_vector_push(void *arr, void *xptr)
     if (vector_length(arr) >= vector_capacity(arr))
         arr = _vector_resize(arr);
 
-#pragma GCC diagnostic ignored "-Wpointer-arith"
-    memcpy(arr + vector_length(arr) * vector_stride(arr), xptr, vector_stride(arr));
-#pragma GCC diagnostic pop
+    memcpy((BYTE_PTR)arr + vector_length(arr) * vector_stride(arr), xptr, vector_stride(arr));
     _vector_field_set(arr, LENGTH, vector_length(arr) + 1);
     return arr;
 }
@@ -73,9 +73,7 @@ int _vector_pop(void *arr, void *dest)
         return 1;
 
     if (dest != NULL)
-#pragma GCC diagnostic ignored "-Wpointer-arith"
-        memcpy(dest, arr + (vector_length(arr) - 1) * vector_stride(arr), vector_stride(arr));
-#pragma GCC diagnostic pop
+        memcpy(dest, (BYTE_PTR)arr + (vector_length(arr) - 1) * vector_stride(arr), vector_stride(arr));
 
     _vector_field_set(arr, LENGTH, vector_length(arr) - 1);
     return 0;
@@ -94,12 +92,10 @@ int _vector_remove(void *arr, size_t pos, void *dest)
         return 0;
     }
 
-#pragma GCC diagnostic ignored "-Wpointer-arith"
     if (dest != NULL)
-        memcpy(dest, arr + pos * vector_stride(arr), vector_stride(arr));
+        memcpy(dest, (BYTE_PTR)arr + pos * vector_stride(arr), vector_stride(arr));
 
-    memmove(arr + (pos * vector_stride(arr)), arr + ((pos + 1) * vector_stride(arr)), vector_stride(arr) * (len - 1 - pos));
-#pragma GCC diagnostic pop
+    memmove((BYTE_PTR)arr + (pos * vector_stride(arr)), (BYTE_PTR)arr + ((pos + 1) * vector_stride(arr)), vector_stride(arr) * (len - 1 - pos));
 
     _vector_field_set(arr, LENGTH, vector_length(arr) - 1);
 
