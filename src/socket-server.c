@@ -17,8 +17,11 @@
 
 #define BUFFER_SIZE 1024
 #define MAX_WAITING_REQUESTS 10
+
 #define THREAD_POOL_CONCURRENCY 5
 #define THREAD_POOL_QUEUE_CAPACITY 1024
+
+#define TRACE_NAME "socket_server"
 
 struct server
 {
@@ -81,7 +84,7 @@ static void *server_run(void *data)
 
     log_info("Socket server started\n");
 
-    struct thread_pool *pool = thread_pool_create(THREAD_POOL_CONCURRENCY, THREAD_POOL_QUEUE_CAPACITY, "socket_server");
+    struct thread_pool *pool = thread_pool_create(THREAD_POOL_CONCURRENCY, THREAD_POOL_QUEUE_CAPACITY, TRACE_NAME);
     thread_pool_start(pool);
 
     while (server->running)
@@ -141,9 +144,9 @@ static void *client_socket_handle(void *data)
             break;
     }
 
-    log_debug("Received command '%s' from connection '%d'\n", input, client_socket);
+    log_trace(TRACE_NAME, "Received command '%s' from connection '%d'\n", input, client_socket);
     char *response = dispatch(input);
-    log_debug("Sending response '%s' to connection '%d'\n", response, client_socket);
+    log_trace(TRACE_NAME, "Sending response '%s' to connection '%d'\n", response, client_socket);
     write(client_socket, response, strlen(response) + 1); // we also want to send '\0' as a end of message indicator
 
     free(input);
