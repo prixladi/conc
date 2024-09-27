@@ -12,6 +12,8 @@
 
 #include "process.h"
 
+static const char *command_terminate = NULL;
+
 struct process_descriptor
 {
 	char *id;
@@ -76,7 +78,6 @@ static void handle_child(struct process_descriptor pd)
 	execvp(pd.command[0], pd.command);
 }
 
-static const char *command_terminate = '\0';
 static struct process_descriptor
 proccess_descriptor_create(const char *project_name, const struct service_settings settings, const char *logfile_path_i)
 {

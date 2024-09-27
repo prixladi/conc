@@ -33,7 +33,7 @@ static void project_free(struct project project);
 
 static struct project_store store;
 
-int manager_init()
+int manager_init(void)
 {
 	if (driver_mount() != 0)
 	{
@@ -89,7 +89,7 @@ int manager_init()
 	return 0;
 }
 
-void manager_stop()
+void manager_stop(void)
 {
 	pthread_mutex_lock(store.lock);
 
@@ -117,7 +117,7 @@ void manager_stop()
 	log_info("Manager stopped\n");
 }
 
-struct project_settings *projects_settings_get()
+struct project_settings *projects_settings_get(void)
 {
 	pthread_mutex_lock(store.lock);
 
@@ -136,7 +136,7 @@ struct project_settings *projects_settings_get()
 	return copy;
 }
 
-struct project_info *projects_info_get()
+struct project_info *projects_info_get(void)
 {
 	pthread_mutex_lock(store.lock);
 

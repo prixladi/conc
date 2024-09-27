@@ -26,11 +26,11 @@ struct project_info
 	struct service_info *services;
 };
 
-int manager_init();
-void manager_stop();
+int manager_init(void);
+void manager_stop(void);
 
-struct project_settings *projects_settings_get();
-struct project_info *projects_info_get();
+struct project_settings *projects_settings_get(void);
+struct project_info *projects_info_get(void);
 int project_settings_get(const char *project_name, struct project_settings *settings);
 int project_info_get(const char *project_name, struct project_info *info);
 int project_upsert(const struct project_settings settings);
