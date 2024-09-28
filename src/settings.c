@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <assert.h>
 
 #include "external/cJSON.h"
 
@@ -64,6 +65,7 @@ project_settings_parse(const char *data, struct project_settings *settings)
 
                 for (size_t i = 0; i < vec_length(settings->services); i++)
                 {
+                    assert(service.name);
                     if (strcmp(service.name, settings->services[i].name) == 0)
                     {
                         cJSON_Delete(json);

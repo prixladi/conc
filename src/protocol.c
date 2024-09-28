@@ -507,7 +507,7 @@ format_list(char **lines)
     {
         strcat(response, lines[i]);
         if (i + 1 < item_count) // last line should not be suffixed with the '\n'
-            strcat(response, "\n");
+            strncat(response, "\n", 1);
     }
 
     return response;
