@@ -55,7 +55,8 @@ static void wait_for_workers(struct thread_pool *pool);
 struct thread_pool *
 thread_pool_create(int size, int capacity, char *_name)
 {
-    char *name = STR_CONCAT(_name == NULL ? DEFAULT_THREAD_POOL_NAME : _name, DEFAULT_THREAD_POOL_NAME_SUFFIX);
+    char *prefix = _name == NULL ? DEFAULT_THREAD_POOL_NAME : _name;
+    char *name = STR_CONCAT(prefix, DEFAULT_THREAD_POOL_NAME_SUFFIX);
 
     if (size < 1)
     {

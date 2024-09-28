@@ -79,7 +79,7 @@ dispatch_command(const char *input)
 static char **
 tokenize(const char *input)
 {
-    char **result = vector_create_prealloc(char *, 8);
+    char **result = vec_create_prealloc(char *, 8);
 
     size_t len = strlen(input);
     size_t last_pos = 0;
@@ -99,7 +99,7 @@ tokenize(const char *input)
         for (size_t j = 0; j <= part_len - 1; j++)
             part[j] = input[last_pos + j];
 
-        vector_push(result, part);
+        vec_push(result, part);
         last_pos = i + 1 + ind;
     }
 
@@ -109,13 +109,13 @@ tokenize(const char *input)
 static void
 tokenize_free(char **tokens)
 {
-    for (size_t i = 0; i < vector_length(tokens); i++)
+    for (size_t i = 0; i < vec_length(tokens); i++)
     {
         free(tokens[i]);
         tokens[i] = NULL;
     }
 
-    vector_free(tokens);
+    vec_free(tokens);
 }
 
 static inline char *
@@ -124,7 +124,7 @@ match_and_handle(const char *name, char **command, size_t argc, Handler handler)
     if (strcmp(name, command[0]))
         return NULL;
 
-    size_t command_len = vector_length(command);
+    size_t command_len = vec_length(command);
 
     if (command_len - 1 != argc)
         return resp_error("invalid_argument_count");
@@ -138,23 +138,23 @@ handle_projects_names(char **_command)
 {
     assert(_command);
     struct project_settings *projects = projects_settings_get();
-    size_t projects_count = vector_length(projects);
+    size_t projects_count = vec_length(projects);
     if (projects_count == 0)
     {
-        vector_free(projects);
+        vec_free(projects);
         return resp_ok_no_content();
     }
 
-    char **lines = vector_create_prealloc(char *, projects_count);
+    char **lines = vec_create_prealloc(char *, projects_count);
 
     for (size_t i = 0; i < projects_count; i++)
-        vector_push(lines, projects[i].name);
+        vec_push(lines, projects[i].name);
 
     char *response = format_list(lines);
 
-    vector_free(lines);
-    vector_for_each(projects, project_settings_free);
-    vector_free(projects);
+    vec_free(lines);
+    vec_for_each(projects, project_settings_free);
+    vec_free(projects);
 
     char *ok_response = resp_ok(response);
     free(response);
@@ -167,30 +167,30 @@ handle_projects_settings(char **_command)
 {
     assert(_command);
     struct project_settings *projects = projects_settings_get();
-    size_t projects_count = vector_length(projects);
+    size_t projects_count = vec_length(projects);
     if (projects_count == 0)
     {
-        vector_free(projects);
+        vec_free(projects);
         return resp_ok_no_content();
     }
 
-    char **lines = vector_create_prealloc(char *, projects_count);
+    char **lines = vec_create_prealloc(char *, projects_count);
 
     for (size_t i = 0; i < projects_count; i++)
     {
         char *json = project_settings_stringify(projects[i]);
         char *line = STR_CONCAT(projects[i].name, " ", json);
         free(json);
-        vector_push(lines, line);
+        vec_push(lines, line);
     }
 
     char *response = format_list(lines);
 
-    vector_for_each(lines, free);
-    vector_free(lines);
+    vec_for_each(lines, free);
+    vec_free(lines);
 
-    vector_for_each(projects, project_settings_free);
-    vector_free(projects);
+    vec_for_each(projects, project_settings_free);
+    vec_free(projects);
 
     char *ok_response = resp_ok(response);
     free(response);
@@ -204,31 +204,31 @@ handle_projects_info(char **_command)
     assert(_command);
     struct project_info *infos = projects_info_get();
 
-    size_t project_count = vector_length(infos);
+    size_t project_count = vec_length(infos);
     if (project_count == 0)
     {
-        vector_free(infos);
+        vec_free(infos);
         return resp_ok_no_content();
     }
 
-    char **parts = vector_create(char *);
+    char **parts = vec_create(char *);
     for (size_t i = 0; i < project_count; i++)
     {
         struct project_info info = infos[i];
-        size_t service_count = vector_length(info.services);
+        size_t service_count = vec_length(info.services);
 
-        vector_push_rval(parts, str_dup(info.name));
+        vec_push_rval(parts, str_dup(info.name));
         for (size_t i = 0; i < service_count; i++)
-            vector_push_rval(parts, format_service_info(info.services[i]));
+            vec_push_rval(parts, format_service_info(info.services[i]));
     }
 
     char *response = format_list(parts);
 
-    vector_for_each(infos, project_info_free);
-    vector_free(infos);
+    vec_for_each(infos, project_info_free);
+    vec_free(infos);
 
-    vector_for_each(parts, free);
-    vector_free(parts);
+    vec_for_each(parts, free);
+    vec_free(parts);
 
     char *ok_response = resp_ok(response);
     free(response);
@@ -276,16 +276,16 @@ handle_project_info(char **command)
         }
     }
 
-    size_t service_count = vector_length(info.services);
-    char **parts = vector_create_prealloc(char *, service_count);
+    size_t service_count = vec_length(info.services);
+    char **parts = vec_create_prealloc(char *, service_count);
 
     for (size_t i = 0; i < service_count; i++)
-        vector_push_rval(parts, format_service_info(info.services[i]));
+        vec_push_rval(parts, format_service_info(info.services[i]));
     project_info_free(info);
 
     char *response = format_list(parts);
-    vector_for_each(parts, free);
-    vector_free(parts);
+    vec_for_each(parts, free);
+    vec_free(parts);
 
     char *ok_response = resp_ok(response);
     free(response);
@@ -394,21 +394,21 @@ handle_services_names(char **command)
         }
     }
 
-    size_t services_count = vector_length(project.services);
+    size_t services_count = vec_length(project.services);
     if (services_count == 0)
     {
         project_settings_free(project);
         return resp_ok_no_content();
     }
 
-    char **lines = vector_create_prealloc(char *, services_count);
+    char **lines = vec_create_prealloc(char *, services_count);
 
     for (size_t i = 0; i < services_count; i++)
-        vector_push(lines, project.services[i].name);
+        vec_push(lines, project.services[i].name);
 
     char *response = format_list(lines);
 
-    vector_free(lines);
+    vec_free(lines);
     project_settings_free(project);
 
     char *ok_response = resp_ok(response);
@@ -494,7 +494,7 @@ handle_service_stop(char **command)
 static char *
 format_list(char **lines)
 {
-    size_t item_count = vector_length(lines);
+    size_t item_count = vec_length(lines);
     if (item_count == 0)
         return str_dup("");
 
