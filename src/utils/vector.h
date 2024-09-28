@@ -6,10 +6,10 @@
 
 enum
 {
-	CAPACITY,
-	LENGTH,
-	STRIDE,
-	VECTOR_FIELDS
+    CAPACITY,
+    LENGTH,
+    STRIDE,
+    VECTOR_FIELDS
 };
 
 void *_vector_create(size_t length, size_t stride);
@@ -35,17 +35,17 @@ int _vector_remove(void *arr, size_t pos, void *dest);
 #define vector_free(arr) _vector_free(arr)
 
 #define vector_push(arr, x) \
-	do \
-	{ \
-		arr = _vector_push(arr, &x); \
-	} while (0)
+    do \
+    { \
+        arr = _vector_push(arr, &x); \
+    } while (0)
 
 #define vector_push_rval(arr, x) \
-	do \
-	{ \
-		__auto_type temp = x; \
-		arr = _vector_push(arr, &temp); \
-	} while (0)
+    do \
+    { \
+        __auto_type temp = x; \
+        arr = _vector_push(arr, &temp); \
+    } while (0)
 #define vector_pop(arr, xptr) _vector_pop(arr, xptr)
 #define vector_remove(arr, pos, xptr) _vector_remove(arr, pos, xptr)
 
@@ -54,10 +54,10 @@ int _vector_remove(void *arr, size_t pos, void *dest);
 #define vector_stride(arr) _vector_field_get(arr, STRIDE)
 
 #define vector_for_each(arr, callback) \
-	do \
-	{ \
-		for (size_t i = 0; i < vector_length(arr); i++) \
-			callback(arr[i]); \
-	} while (0)
+    do \
+    { \
+        for (size_t i = 0; i < vector_length(arr); i++) \
+            callback(arr[i]); \
+    } while (0)
 
 #endif

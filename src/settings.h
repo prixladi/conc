@@ -3,22 +3,22 @@
 
 struct env_variable
 {
-	char *key;
-	char *value;
+    char *key;
+    char *value;
 };
 
 struct service_settings
 {
-	char *name;
-	char *pwd;
-	struct env_variable *env;
-	char **command;
+    char *name;
+    char *pwd;
+    struct env_variable *env;
+    char **command;
 };
 
 struct project_settings
 {
-	char *name;
-	struct service_settings *services;
+    char *name;
+    struct service_settings *services;
 };
 
 char *project_settings_parse(const char *data, struct project_settings *settings);
