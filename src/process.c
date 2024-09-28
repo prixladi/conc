@@ -26,14 +26,14 @@ struct process_descriptor
 static void handle_child(struct process_descriptor pd);
 
 static struct process_descriptor
-proccess_descriptor_create(const char *project_name, const struct service_settings settings, const char *logfile_path);
+process_descriptor_create(const char *project_name, const struct service_settings settings, const char *logfile_path);
 
 static void process_descriptor_free(struct process_descriptor pd);
 
 int
 process_start(const char *project_name, const struct service_settings settings, const char *logfile_path)
 {
-    struct process_descriptor pd = proccess_descriptor_create(project_name, settings, logfile_path);
+    struct process_descriptor pd = process_descriptor_create(project_name, settings, logfile_path);
     pid_t pid = fork();
     if (pid == 0)
     {
@@ -81,7 +81,7 @@ handle_child(struct process_descriptor pd)
 }
 
 static struct process_descriptor
-proccess_descriptor_create(const char *project_name, const struct service_settings settings, const char *logfile_path_i)
+process_descriptor_create(const char *project_name, const struct service_settings settings, const char *logfile_path_i)
 {
     char *id = STR_CONCAT(project_name, "/", settings.name);
     char *logfile_path = str_dup(logfile_path_i);
