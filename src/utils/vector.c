@@ -21,7 +21,7 @@ void *
 _vec_dup(void *arr)
 {
     size_t header_size = VECTOR_FIELDS * sizeof(size_t);
-    size_t arr_size = vec_capacity(arr) * vector_stride(arr);
+    size_t arr_size = vec_capacity(arr) * vec_stride(arr);
     size_t total_size = header_size + arr_size;
 
     size_t *tmp = (size_t *)malloc(total_size);
@@ -53,8 +53,8 @@ _vector_resize(void *arr)
     size_t capacity = vec_capacity(arr);
     size_t new_capacity = capacity > 0 ? VECTOR_RESIZE_FACTOR * vec_capacity(arr) : VECTOR_DEFAULT_CAPACITY;
 
-    void *new_arr = _vec_create(new_capacity, vector_stride(arr));
-    memcpy(new_arr, arr, vec_length(arr) * vector_stride(arr));
+    void *new_arr = _vec_create(new_capacity, vec_stride(arr));
+    memcpy(new_arr, arr, vec_length(arr) * vec_stride(arr));
     _vector_field_set(new_arr, LENGTH, vec_length(arr));
     _vec_free(arr);
     return new_arr;
@@ -66,7 +66,7 @@ _vec_push(void *arr, void *xptr)
     if (vec_length(arr) >= vec_capacity(arr))
         arr = _vector_resize(arr);
 
-    memcpy((BYTE_PTR)arr + vec_length(arr) * vector_stride(arr), xptr, vector_stride(arr));
+    memcpy((BYTE_PTR)arr + vec_length(arr) * vec_stride(arr), xptr, vec_stride(arr));
     _vector_field_set(arr, LENGTH, vec_length(arr) + 1);
     return arr;
 }
@@ -79,7 +79,7 @@ _vec_pop(void *arr, void *dest)
         return 1;
 
     if (dest != NULL)
-        memcpy(dest, (BYTE_PTR)arr + (vec_length(arr) - 1) * vector_stride(arr), vector_stride(arr));
+        memcpy(dest, (BYTE_PTR)arr + (vec_length(arr) - 1) * vec_stride(arr), vec_stride(arr));
 
     _vector_field_set(arr, LENGTH, vec_length(arr) - 1);
     return 0;
@@ -100,10 +100,10 @@ _vec_remove(void *arr, size_t pos, void *dest)
     }
 
     if (dest != NULL)
-        memcpy(dest, (BYTE_PTR)arr + pos * vector_stride(arr), vector_stride(arr));
+        memcpy(dest, (BYTE_PTR)arr + pos * vec_stride(arr), vec_stride(arr));
 
-    memmove((BYTE_PTR)arr + (pos * vector_stride(arr)), (BYTE_PTR)arr + ((pos + 1) * vector_stride(arr)),
-            vector_stride(arr) * (len - 1 - pos));
+    memmove((BYTE_PTR)arr + (pos * vec_stride(arr)), (BYTE_PTR)arr + ((pos + 1) * vec_stride(arr)),
+            vec_stride(arr) * (len - 1 - pos));
 
     _vector_field_set(arr, LENGTH, vec_length(arr) - 1);
 

@@ -51,7 +51,7 @@ int _vec_remove(void *arr, size_t pos, void *dest);
 
 #define vec_capacity(arr) _vector_field_get(arr, CAPACITY)
 #define vec_length(arr) _vector_field_get(arr, LENGTH)
-#define vector_stride(arr) _vector_field_get(arr, STRIDE)
+#define vec_stride(arr) _vector_field_get(arr, STRIDE)
 
 #define vec_for_each(arr, callback) \
     do \

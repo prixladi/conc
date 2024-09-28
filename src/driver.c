@@ -49,7 +49,7 @@ static int get_running_service_pid(const char *proj_name, const char *serv_name)
 static bool try_get_pid_info(int pid, struct stat *sts);
 static int kill_pid(int pid);
 
-int
+enum d_result
 driver_mount(void)
 {
     mkdir(root_projects_dir, S_IRWXU | S_IRWXG | S_IRWXO);
@@ -58,19 +58,20 @@ driver_mount(void)
     if (dir == NULL)
     {
         log_critical("Driver root project dir init failed\n");
-        return 1;
+        return D_FS_ERROR;
     }
 
     closedir(dir);
 
     log_info("Driver mounted\n");
-    return 0;
+    return D_OK;
 }
 
-void
+enum d_result
 driver_unmount(void)
 {
     log_info("Driver unmounted\n");
+    return D_NO_ACTION;
 }
 
 char **
@@ -105,7 +106,7 @@ d_get_all_stored_settings(void)
     return settings_vec;
 }
 
-int
+enum d_result
 d_project_init(const struct project_settings settings)
 {
     ensure_project_dir_exists(settings.name);
@@ -114,7 +115,7 @@ d_project_init(const struct project_settings settings)
     if (fp == NULL)
     {
         log_critical("Unable to open meta file for project. Project: '%s'", settings.name);
-        return 1;
+        return D_FS_ERROR;
     }
 
     char *stringified_settings = project_settings_stringify(settings);
@@ -125,28 +126,10 @@ d_project_init(const struct project_settings settings)
     for (size_t i = 0; i < vec_length(settings.services); i++)
         ensure_service_dir_exists(settings.name, settings.services[i].name);
 
-    return 0;
+    return D_OK;
 }
 
-int
-d_project_start(const struct project_settings settings)
-{
-    int status = 0;
-    for (size_t i = 0; i < vec_length(settings.services); i++)
-        status += d_service_start(settings.name, settings.services[i]);
-    return status;
-}
-
-int
-d_project_stop(const struct project_settings settings)
-{
-    int status = 0;
-    for (size_t i = 0; i < vec_length(settings.services); i++)
-        status += d_service_stop(settings.name, settings.services[i]);
-    return status;
-}
-
-int
+enum d_result
 d_project_remove(const struct project_settings settings)
 {
     for (size_t i = 0; i < vec_length(settings.services); i++)
@@ -167,64 +150,68 @@ d_project_remove(const struct project_settings settings)
         log_error("Unable to remove project directory '%s'\n", project_dir_path);
 
     free(project_dir_path);
-    return delete_success ? 0 : 1;
+    return delete_success ? D_OK : D_FS_ERROR;
 }
 
-struct d_service_info
-d_service_info_get(const char *proj_name, const char *serv_name)
+enum d_result
+d_service_info_get(const char *proj_name, const char *serv_name, struct d_service_info *info)
 {
     int running_pid = get_running_service_pid(proj_name, serv_name);
 
-    enum d_service_status status;
     if (running_pid > 0)
-        status = D_RUNNING;
+    {
+        info->status = D_RUNNING;
+        info->pid = running_pid;
+    }
     else
-        status = running_pid == 0 ? D_STOPPED : D_NONE;
+    {
+        info->status = running_pid == 0 ? D_STOPPED : D_NONE;
+        info->pid = -1;
+    }
 
-    struct d_service_info info = {
-        .status = status,
-    };
-
-    return info;
+    return D_OK;
 }
 
-int
+enum d_result
 d_service_start(const char *proj_name, const struct service_settings service_settings)
 {
     int running_pid = get_running_service_pid(proj_name, service_settings.name);
     if (running_pid > 0)
-        return 409;
+        return D_NO_ACTION;
 
     char *logfile_path = get_service_log_file_path(proj_name, service_settings.name);
     int pid = process_start(proj_name, service_settings, logfile_path);
 
     free(logfile_path);
 
+    time_t c_time = 0;
+
     struct stat sts;
-    if (try_get_pid_info(pid, &sts) == false)
-        return 1;
+    if (try_get_pid_info(pid, &sts))
+        c_time = sts.st_ctime;
 
     struct service_process_info info = {
         .pid = pid,
-        .c_time = sts.st_ctime,
+        .c_time = c_time,
     };
 
     if (write_service_meta_file(proj_name, service_settings.name, info) > 0)
-        return 2;
+        return D_FS_ERROR;
 
-    return 0;
+    return D_OK;
 }
 
-int
+enum d_result
 d_service_stop(const char *proj_name, const struct service_settings service_settings)
 {
     int running_pid = get_running_service_pid(proj_name, service_settings.name);
     if (running_pid <= 0)
-        return 409;
+        return D_NO_ACTION;
 
-    kill_pid(running_pid);
+    if (kill_pid(running_pid) > 0)
+        return D_PROC_ERROR;
 
-    return 0;
+    return D_OK;
 }
 
 static int
