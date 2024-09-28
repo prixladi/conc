@@ -143,7 +143,7 @@ client_socket_handle(void *data)
         totalLength += len;
         input = realloc(input, sizeof(char) * totalLength + 1);
         buffer[len] = '\0';
-        strcat(input, buffer);
+        strncat(input, buffer, len);
 
         if (buffer[len - 1] == '\0')
             break;

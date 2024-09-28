@@ -33,3 +33,6 @@ install: build_release
 
 format: 
 	clang-format -i $(SOURCES) $(HEADERS)
+
+tidy: 
+	clang-tidy $(SOURCES) $(HEADERS)
