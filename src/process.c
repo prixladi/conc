@@ -25,15 +25,15 @@ struct process_descriptor
 
 static void handle_child(struct process_descriptor pd);
 
-static struct process_descriptor
-process_descriptor_create(const char *project_name, const struct service_settings settings, const char *logfile_path);
+static struct process_descriptor pd_create(const char *proj_name, const struct service_settings settings,
+                                           const char *logfile);
 
-static void process_descriptor_free(struct process_descriptor pd);
+static void pd_free(struct process_descriptor pd);
 
 int
-process_start(const char *project_name, const struct service_settings settings, const char *logfile_path)
+process_start(const char *proj_name, const struct service_settings settings, const char *logfile_path)
 {
-    struct process_descriptor pd = process_descriptor_create(project_name, settings, logfile_path);
+    struct process_descriptor pd = pd_create(proj_name, settings, logfile_path);
     pid_t pid = fork();
     if (pid == 0)
     {
@@ -41,7 +41,7 @@ process_start(const char *project_name, const struct service_settings settings, 
         log_error("Unable to execute process '%s - %d', aborting", pd.id, pid);
         exit(127);
     }
-    process_descriptor_free(pd);
+    pd_free(pd);
 
     return pid;
 }
@@ -58,13 +58,13 @@ handle_child(struct process_descriptor pd)
     if (fd <= 0)
     {
         log_error("Unable to open log file '%s' for '%s - %d', aborting.\n", pd.logfile_path, pd.id, current_pid);
-        process_descriptor_free(pd);
+        pd_free(pd);
         exit(130);
     }
 
     log_debug("Starting process '%s - %d'\n", pd.id, current_pid);
 
-    for (size_t i = 0; i < vector_length(pd.env); i++)
+    for (size_t i = 0; i < vec_length(pd.env); i++)
     {
         char **pair = pd.env[i];
         setenv(pair[0], pair[1], 1);
@@ -81,28 +81,28 @@ handle_child(struct process_descriptor pd)
 }
 
 static struct process_descriptor
-process_descriptor_create(const char *project_name, const struct service_settings settings, const char *logfile_path_i)
+pd_create(const char *proj_name, const struct service_settings settings, const char *logfile_path_i)
 {
-    char *id = STR_CONCAT(project_name, "/", settings.name);
+    char *id = STR_CONCAT(proj_name, "/", settings.name);
     char *logfile_path = str_dup(logfile_path_i);
     char *pwd = str_dup(settings.pwd);
 
-    size_t command_len = vector_length(settings.command);
-    char **command = vector_create_prealloc(char *, command_len + 1);
+    size_t command_len = vec_length(settings.command);
+    char **command = vec_create_prealloc(char *, command_len + 1);
     for (size_t i = 0; i < command_len; i++)
-        vector_push_rval(command, str_dup(settings.command[i]));
-    vector_push(command, command_terminate);
+        vec_push_rval(command, str_dup(settings.command[i]));
+    vec_push(command, command_terminate);
 
-    size_t env_len = vector_length(settings.env);
-    char ***env = vector_create_prealloc(char **, env_len);
+    size_t env_len = vec_length(settings.env);
+    char ***env = vec_create_prealloc(char **, env_len);
     for (size_t i = 0; i < env_len; i++)
     {
         char **env_pair = malloc(sizeof(char *) * 2);
         env_pair[0] = str_dup(settings.env[i].key);
         env_pair[1] = str_dup(settings.env[i].value);
-        vector_push(env, env_pair);
+        vec_push(env, env_pair);
     }
-    vector_push(command, command_terminate);
+    vec_push(command, command_terminate);
 
     struct process_descriptor proc = {
         .id = id,
@@ -116,23 +116,23 @@ process_descriptor_create(const char *project_name, const struct service_setting
 }
 
 static void
-process_descriptor_free(struct process_descriptor pd)
+pd_free(struct process_descriptor pd)
 {
     free(pd.id);
     free(pd.logfile_path);
     free(pd.pwd);
 
-    for (size_t i = 0; i < vector_length(pd.env); i++)
+    for (size_t i = 0; i < vec_length(pd.env); i++)
     {
         char **pair = pd.env[i];
         free(pair[0]);
         free(pair[1]);
         free(pair);
     }
-    vector_free(pd.env);
+    vec_free(pd.env);
 
-    vector_for_each(pd.command, free);
-    vector_free(pd.command);
+    vec_for_each(pd.command, free);
+    vec_free(pd.command);
 
     pd.id = NULL;
     pd.logfile_path = NULL;
