@@ -79,7 +79,7 @@ server_run(void *data)
 
     struct sockaddr_un server_addr;
     server_addr.sun_family = AF_UNIX;
-    strncpy(server_addr.sun_path, SOCKET_PATH, sizeof(SOCKET_PATH));
+    strcpy(server_addr.sun_path, SOCKET_PATH);
 
     unlink(SOCKET_PATH);
     bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr));

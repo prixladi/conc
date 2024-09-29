@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #include "settings.h"
 #include "driver.h"
@@ -22,8 +23,9 @@ struct project_store
     pthread_mutex_t *lock;
 };
 
-static enum d_result project_services_stop(struct project_settings project);
 static enum d_result project_services_start(struct project_settings project);
+static enum d_result project_services_stop(struct project_settings project);
+static enum d_result project_services_stop_and_remove(struct project_settings project);
 
 static bool try_find_project(const char *proj_name, struct project *project, int *pos);
 static bool try_find_service(const char *serv_name, const struct project project, struct service_settings *service);
@@ -36,13 +38,13 @@ static void project_free(struct project project);
 
 static struct project_store store;
 
-int
+enum m_result
 manager_init(void)
 {
     if (driver_mount() < D_OK)
     {
         log_critical("Unable to mount the driver.\n");
-        return 2;
+        return M_DRIVER_ERROR;
     }
 
     store.lock = malloc(sizeof(pthread_mutex_t));
@@ -51,7 +53,7 @@ manager_init(void)
         free(store.lock);
         store.lock = NULL;
         log_critical("Manager settings store mutex init has failed.\n");
-        return 1;
+        return M_ERROR;
     }
 
     pthread_mutex_lock(store.lock);
@@ -72,10 +74,11 @@ manager_init(void)
             continue;
         }
 
-        log_debug("Loaded stored project '%s'\n", settings.name);
+        log_info("Loaded stored project '%s'\n", settings.name);
         struct project project = project_create(settings);
 
         pthread_mutex_lock(project.lock);
+        // This is here in case of the application exited abruptly and cold not stop services when stopping
         project_services_stop(project.settings);
         pthread_mutex_unlock(project.lock);
 
@@ -88,11 +91,10 @@ manager_init(void)
     pthread_mutex_unlock(store.lock);
 
     log_info("Manager initialized\n");
-
-    return 0;
+    return M_OK;
 }
 
-void
+enum m_result
 manager_stop(void)
 {
     pthread_mutex_lock(store.lock);
@@ -119,6 +121,7 @@ manager_stop(void)
     store.lock = NULL;
 
     log_info("Manager stopped\n");
+    return M_OK;
 }
 
 struct project_settings *
@@ -161,7 +164,7 @@ projects_info_get(void)
     return infos;
 }
 
-int
+enum m_result
 project_settings_get(const char *proj_name, struct project_settings *settings)
 {
     pthread_mutex_lock(store.lock);
@@ -170,20 +173,21 @@ project_settings_get(const char *proj_name, struct project_settings *settings)
     if (try_find_project(proj_name, &project, NULL) == false)
     {
         pthread_mutex_unlock(store.lock);
-        return 127;
+        return M_PROJECT_NOT_FOUND;
     }
 
     pthread_mutex_lock(project.lock);
+
     pthread_mutex_unlock(store.lock);
 
     (*settings) = project_settings_dup(project.settings);
 
     pthread_mutex_unlock(project.lock);
 
-    return 0;
+    return M_OK;
 }
 
-int
+enum m_result
 project_info_get(const char *proj_name, struct project_info *info)
 {
     pthread_mutex_lock(store.lock);
@@ -192,36 +196,42 @@ project_info_get(const char *proj_name, struct project_info *info)
     if (try_find_project(proj_name, &project, NULL) == false)
     {
         pthread_mutex_unlock(store.lock);
-        return 127;
+        return M_PROJECT_NOT_FOUND;
     }
 
     pthread_mutex_lock(project.lock);
+    
     pthread_mutex_unlock(store.lock);
 
     (*info) = project_info_create(project);
 
     pthread_mutex_unlock(project.lock);
 
-    return 0;
+    return M_OK;
 }
 
-int
+enum m_result
 project_upsert(const struct project_settings settings)
 {
-    struct project new_project = project_create(project_settings_dup(settings));
-
     pthread_mutex_lock(store.lock);
 
+    sleep(2);
     for (size_t i = 0; i < vec_length(store.projects); i++)
     {
         struct project project = store.projects[i];
-        if (strcmp(new_project.settings.name, project.settings.name))
+        if (strcmp(settings.name, project.settings.name))
             continue;
 
         pthread_mutex_lock(project.lock);
 
-        project_services_stop(project.settings);
-        d_project_remove(project.settings);
+        enum d_result result = project_services_stop_and_remove(project.settings);
+        if (result < D_OK)
+        {
+            pthread_mutex_unlock(project.lock);
+            pthread_mutex_unlock(store.lock);
+            return M_DRIVER_ERROR;
+        }
+
         vec_remove(store.projects, i, NULL);
 
         pthread_mutex_unlock(project.lock);
@@ -229,19 +239,20 @@ project_upsert(const struct project_settings settings)
         project_free(project);
     }
 
+    struct project new_project = project_create(project_settings_dup(settings));
     if (d_project_init(new_project.settings) < D_OK)
     {
         pthread_mutex_unlock(store.lock);
-        return 1;
+        return M_DRIVER_ERROR;
     }
-
     vec_push(store.projects, new_project);
+    
     pthread_mutex_unlock(store.lock);
 
-    return 0;
+    return M_OK;
 }
 
-int
+enum m_result
 project_start(const char *proj_name)
 {
     pthread_mutex_lock(store.lock);
@@ -250,20 +261,21 @@ project_start(const char *proj_name)
     if (try_find_project(proj_name, &project, NULL) == false)
     {
         pthread_mutex_unlock(store.lock);
-        return 127;
+        return M_PROJECT_NOT_FOUND;
     }
 
     pthread_mutex_lock(project.lock);
+
     pthread_mutex_unlock(store.lock);
-
-    project_services_start(project.settings);
-
+    enum d_result result = project_services_start(project.settings);
     pthread_mutex_unlock(project.lock);
 
-    return 0;
+    if (result < D_OK)
+        return M_DRIVER_ERROR;
+    return M_OK;
 }
 
-int
+enum m_result
 project_stop(const char *proj_name)
 {
     pthread_mutex_lock(store.lock);
@@ -272,20 +284,21 @@ project_stop(const char *proj_name)
     if (try_find_project(proj_name, &project, NULL) == false)
     {
         pthread_mutex_unlock(store.lock);
-        return 127;
+        return M_PROJECT_NOT_FOUND;
     }
 
     pthread_mutex_lock(project.lock);
+    
     pthread_mutex_unlock(store.lock);
-
-    project_services_stop(project.settings);
-
+    enum d_result result = project_services_stop(project.settings);
     pthread_mutex_unlock(project.lock);
 
-    return 0;
+    if (result < D_OK)
+        return M_DRIVER_ERROR;
+    return M_OK;
 }
 
-int
+enum m_result
 project_remove(const char *proj_name)
 {
     pthread_mutex_lock(store.lock);
@@ -295,27 +308,26 @@ project_remove(const char *proj_name)
     if (try_find_project(proj_name, &project, &pos) == false)
     {
         pthread_mutex_unlock(store.lock);
-        return 127;
+        return M_PROJECT_NOT_FOUND;
     }
 
     pthread_mutex_lock(project.lock);
 
-    vec_remove(store.projects, pos, NULL);
-    project_services_stop(project.settings);
-    int remove_res = d_project_remove(project.settings);
+    enum d_result result = project_services_stop_and_remove(project.settings);
+    if (result >= D_OK)
+        vec_remove(store.projects, pos, NULL);
 
     pthread_mutex_unlock(project.lock);
+    pthread_mutex_unlock(store.lock);
 
     project_free(project);
 
-    pthread_mutex_unlock(store.lock);
-
-    if (remove_res < D_OK)
-        return 1;
-    return 0;
+    if (result < D_OK)
+        return M_DRIVER_ERROR;
+    return M_OK;
 }
 
-int
+enum m_result
 service_info_get(const char *proj_name, const char *serv_name, struct service_info *info)
 {
     pthread_mutex_lock(store.lock);
@@ -324,27 +336,28 @@ service_info_get(const char *proj_name, const char *serv_name, struct service_in
     if (try_find_project(proj_name, &project, NULL) == false)
     {
         pthread_mutex_unlock(store.lock);
-        return 127;
+        return M_PROJECT_NOT_FOUND;
     }
 
     pthread_mutex_lock(project.lock);
+
     pthread_mutex_unlock(store.lock);
 
     struct service_settings service;
     if (try_find_service(serv_name, project, &service) == false)
     {
         pthread_mutex_unlock(project.lock);
-        return 128;
+        return M_SERVICE_NOT_FOUND;
     }
 
     (*info) = service_info_create(project.settings.name, service.name);
 
     pthread_mutex_unlock(project.lock);
 
-    return 0;
+    return M_OK;
 }
 
-int
+enum m_result
 service_start(const char *proj_name, const char *serv_name)
 {
     pthread_mutex_lock(store.lock);
@@ -353,27 +366,32 @@ service_start(const char *proj_name, const char *serv_name)
     if (try_find_project(proj_name, &project, NULL) == false)
     {
         pthread_mutex_unlock(store.lock);
-        return 127;
+        return M_PROJECT_NOT_FOUND;
     }
 
     pthread_mutex_lock(project.lock);
+
     pthread_mutex_unlock(store.lock);
 
     struct service_settings service;
     if (try_find_service(serv_name, project, &service) == false)
     {
         pthread_mutex_unlock(project.lock);
-        return 128;
+        return M_SERVICE_NOT_FOUND;
     }
 
     enum d_result start_result = d_service_start(project.settings.name, service);
 
     pthread_mutex_unlock(project.lock);
 
-    return start_result < D_OK ? 1 : 0;
+    if (start_result < D_OK)
+        return M_DRIVER_ERROR;
+    if (start_result == D_NO_ACTION)
+        return M_NO_ACTION;
+    return M_OK;
 }
 
-int
+enum m_result
 service_stop(const char *proj_name, const char *serv_name)
 {
     pthread_mutex_lock(store.lock);
@@ -382,24 +400,29 @@ service_stop(const char *proj_name, const char *serv_name)
     if (try_find_project(proj_name, &project, NULL) == false)
     {
         pthread_mutex_unlock(store.lock);
-        return 127;
+        return M_PROJECT_NOT_FOUND;
     }
 
     pthread_mutex_lock(project.lock);
+
     pthread_mutex_unlock(store.lock);
 
     struct service_settings service;
     if (try_find_service(serv_name, project, &service) == false)
     {
         pthread_mutex_unlock(project.lock);
-        return 128;
+        return M_SERVICE_NOT_FOUND;
     }
 
     enum d_result stop_result = d_service_stop(project.settings.name, service);
 
     pthread_mutex_unlock(project.lock);
 
-    return stop_result < D_OK ? 1 : 0;
+    if (stop_result < D_OK)
+        return M_DRIVER_ERROR;
+    if (stop_result == D_NO_ACTION)
+        return M_NO_ACTION;
+    return M_OK;
 }
 
 void
@@ -424,6 +447,20 @@ project_info_free(struct project_info info)
 }
 
 static enum d_result
+project_services_start(struct project_settings project)
+{
+    enum d_result final_result = D_NO_ACTION;
+    for (size_t i = 0; i < vec_length(project.services); i++)
+    {
+        enum d_result result = d_service_start(project.name, project.services[i]);
+        if (result <= D_OK && final_result >= D_OK)
+            final_result = result;
+    }
+
+    return final_result;
+}
+
+static enum d_result
 project_services_stop(struct project_settings project)
 {
     enum d_result final_result = D_NO_ACTION;
@@ -438,17 +475,13 @@ project_services_stop(struct project_settings project)
 }
 
 static enum d_result
-project_services_start(struct project_settings project)
+project_services_stop_and_remove(struct project_settings project)
 {
-    enum d_result final_result = D_NO_ACTION;
-    for (size_t i = 0; i < vec_length(project.services); i++)
-    {
-        enum d_result result = d_service_start(project.name, project.services[i]);
-        if (result <= D_OK && final_result >= D_OK)
-            final_result = result;
-    }
+    enum d_result stop_result = project_services_stop(project);
+    if (stop_result < D_OK)
+        return stop_result;
 
-    return final_result;
+    return d_project_remove(project);
 }
 
 static bool

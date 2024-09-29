@@ -33,6 +33,7 @@ static char *handle_service_info(char **command);
 static char *handle_service_start(char **command);
 static char *handle_service_stop(char **command);
 
+static char *handle_error_results(enum m_result resp);
 static char *format_list(char **lines);
 static char *format_service_info(struct service_info info);
 
@@ -240,16 +241,8 @@ handle_project_settings(char **command)
 {
     struct project_settings settings = { 0 };
     int result = project_settings_get(command[0], &settings);
-    if (result > 0)
-    {
-        switch (result)
-        {
-        case 127:
-            return resp_error("project_not_found");
-        default:
-            return resp_error("unknown");
-        }
-    }
+    if (result < M_OK)
+        return handle_error_results(result);
 
     char *json = project_settings_stringify(settings);
 
@@ -265,16 +258,8 @@ handle_project_info(char **command)
 {
     struct project_info info = { 0 };
     int result = project_info_get(command[0], &info);
-    if (result > 0)
-    {
-        switch (result)
-        {
-        case 127:
-            return resp_error("project_not_found");
-        default:
-            return resp_error("unknown");
-        }
-    }
+    if (result < M_OK)
+        return handle_error_results(result);
 
     size_t service_count = vec_length(info.services);
     char **parts = vec_create_prealloc(char *, service_count);
@@ -306,16 +291,8 @@ handle_project_upsert(char **command)
     }
 
     int result = project_upsert(settings);
-    if (result > 0)
-    {
-        switch (result)
-        {
-        case 1:
-            return resp_error("project_upsert_failure");
-        default:
-            return resp_error("unknown");
-        }
-    }
+    if (result < M_OK)
+        return handle_error_results(result);
 
     char *info_command[1];
     info_command[0] = settings.name;
@@ -329,17 +306,8 @@ static char *
 handle_project_start(char **command)
 {
     int result = project_start(command[0]);
-    if (result > 0)
-    {
-        switch (result)
-        {
-        case 127:
-            return resp_error("project_not_found");
-        default:
-            return resp_error("unknown");
-        }
-    }
-
+    if (result < M_OK)
+        return handle_error_results(result);
     return handle_project_info(command);
 }
 
@@ -347,17 +315,8 @@ static char *
 handle_project_stop(char **command)
 {
     int result = project_stop(command[0]);
-    if (result > 0)
-    {
-        switch (result)
-        {
-        case 127:
-            return resp_error("project_not_found");
-        default:
-            return resp_error("unknown");
-        }
-    }
-
+    if (result < M_OK)
+        return handle_error_results(result);
     return handle_project_info(command);
 }
 
@@ -365,17 +324,9 @@ static char *
 handle_project_remove(char **command)
 {
     int result = project_remove(command[0]);
-    switch (result)
-    {
-    case 0:
-        return resp_ok_no_content();
-    case 2:
-        return resp_error("project_unable_to_remove");
-    case 127:
-        return resp_error("project_not_found");
-    default:
-        return resp_error("unknown");
-    }
+    if (result < M_OK)
+        return handle_error_results(result);
+    return resp_ok_no_content();
 }
 
 static char *
@@ -383,16 +334,8 @@ handle_services_names(char **command)
 {
     struct project_settings project = { 0 };
     int result = project_settings_get(command[0], &project);
-    if (result > 0)
-    {
-        switch (result)
-        {
-        case 127:
-            return resp_error("project_not_found");
-        default:
-            return resp_error("unknown");
-        }
-    }
+    if (result < M_OK)
+        return handle_error_results(result);
 
     size_t services_count = vec_length(project.services);
     if (services_count == 0)
@@ -422,19 +365,8 @@ handle_service_info(char **command)
 {
     struct service_info info;
     int result = service_info_get(command[0], command[1], &info);
-
-    if (result > 0)
-    {
-        switch (result)
-        {
-        case 127:
-            return resp_error("project_not_found");
-        case 128:
-            return resp_error("service_not_found");
-        default:
-            return resp_error("unknown");
-        }
-    }
+    if (result < M_OK)
+        return handle_error_results(result);
 
     char *formatted = format_service_info(info);
     service_info_free(info);
@@ -449,22 +381,8 @@ static char *
 handle_service_start(char **command)
 {
     int result = service_start(command[0], command[1]);
-    if (result > 0)
-    {
-        switch (result)
-        {
-        case 1:
-            return resp_error("exited");
-        case 127:
-            return resp_error("project_not_found");
-        case 128:
-            return resp_error("service_not_found");
-        case 409:
-            return resp_ok("already_running");
-        default:
-            return resp_error("unknown");
-        }
-    }
+    if (result < M_OK)
+        return handle_error_results(result);
 
     return handle_service_info(command);
 }
@@ -473,22 +391,34 @@ static char *
 handle_service_stop(char **command)
 {
     int result = service_stop(command[0], command[1]);
-    if (result > 0)
-    {
-        switch (result)
-        {
-        case 127:
-            return resp_error("project_not_found");
-        case 128:
-            return resp_error("service_not_found");
-        case 409:
-            return resp_ok("already_stoped");
-        default:
-            return resp_error("unknown");
-        }
-    }
+    if (result < M_OK)
+        return handle_error_results(result);
 
     return handle_service_info(command);
+}
+
+static char *
+handle_error_results(enum m_result resp)
+{
+    switch (resp)
+    {
+    case M_ERROR:
+        return resp_error("manager_error");
+    case M_DRIVER_ERROR:
+        return resp_error("driver_error");
+    case M_PROJECT_NOT_FOUND:
+        return resp_error("project_not_found");
+    case M_SERVICE_NOT_FOUND:
+        return resp_error("service_not_found");
+    default: {
+        char *code = int_to_str(resp);
+        char *message = STR_CONCAT("unknown-code-", code);
+        char *resp = resp_error(message);
+        free(code);
+        free(message);
+        return resp;
+    }
+    }
 }
 
 static char *
@@ -507,7 +437,7 @@ format_list(char **lines)
     {
         strcat(response, lines[i]);
         if (i + 1 < item_count) // last line should not be suffixed with the '\n'
-            strncat(response, "\n", 1);
+            strcat(response, "\n");
     }
 
     return response;

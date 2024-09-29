@@ -185,7 +185,6 @@ d_service_start(const char *proj_name, const struct service_settings service_set
     free(logfile_path);
 
     time_t c_time = 0;
-
     struct stat sts;
     if (try_get_pid_info(pid, &sts))
         c_time = sts.st_ctime;
@@ -196,7 +195,10 @@ d_service_start(const char *proj_name, const struct service_settings service_set
     };
 
     if (write_service_meta_file(proj_name, service_settings.name, info) > 0)
+    {
+        log_error("Unable to write service meta for service '%s' in project '%s'\n", service_settings.name, proj_name);
         return D_FS_ERROR;
+    }
 
     return D_OK;
 }
@@ -209,7 +211,10 @@ d_service_stop(const char *proj_name, const struct service_settings service_sett
         return D_NO_ACTION;
 
     if (kill_pid(running_pid) > 0)
+    {
+        log_error("Unable to kill PID '%d'\n", running_pid);
         return D_PROC_ERROR;
+    }
 
     return D_OK;
 }
