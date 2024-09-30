@@ -63,7 +63,8 @@
         "initializer_list": "c",
         "span": "c",
         "memory.h": "c",
-        "thread-pool.h": "c"
+        "thread-pool.h": "c",
+        "ostream": "c"
     },
     "cSpell.words": [
         "valuestring",
