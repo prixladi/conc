@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "log.h"
+#include "memory.h"
 
 static volatile enum log_level min_level = WARN;
 
@@ -18,9 +19,8 @@ log_critical(const char *format, ...)
     va_list args;
     va_start(args, format);
 
-    char *fmt = STR_CONCAT("[CRT] ", format);
+    scoped char *fmt = STR_CONCAT("[CRT] ", format);
     vfprintf(stderr, fmt, args);
-    free(fmt);
 
     va_end(args);
 }
@@ -34,9 +34,8 @@ log_error(const char *format, ...)
     va_list args;
     va_start(args, format);
 
-    char *fmt = STR_CONCAT("[ERR] ", format);
+    scoped char *fmt = STR_CONCAT("[ERR] ", format);
     vfprintf(stderr, fmt, args);
-    free(fmt);
 
     va_end(args);
 }
@@ -50,9 +49,8 @@ log_warn(const char *format, ...)
     va_list args;
     va_start(args, format);
 
-    char *fmt = STR_CONCAT("[WRN] ", format);
+    scoped char *fmt = STR_CONCAT("[WRN] ", format);
     vfprintf(stderr, fmt, args);
-    free(fmt);
 
     va_end(args);
 }
@@ -66,9 +64,8 @@ log_info(const char *format, ...)
     va_list args;
     va_start(args, format);
 
-    char *fmt = STR_CONCAT("[INF] ", format);
+    scoped char *fmt = STR_CONCAT("[INF] ", format);
     vprintf(fmt, args);
-    free(fmt);
 
     va_end(args);
 }
@@ -82,9 +79,8 @@ log_debug(const char *format, ...)
     va_list args;
     va_start(args, format);
 
-    char *fmt = STR_CONCAT("[DBG] ", format);
+    scoped char *fmt = STR_CONCAT("[DBG] ", format);
     vprintf(fmt, args);
-    free(fmt);
 
     va_end(args);
 }
@@ -98,9 +94,8 @@ log_trace(const char *trace_name, const char *format, ...)
     va_list args;
     va_start(args, format);
 
-    char *fmt = STR_CONCAT("[TRC] (", trace_name, ") ", format);
+    scoped char *fmt = STR_CONCAT("[TRC] (", trace_name, ") ", format);
     vprintf(fmt, args);
-    free(fmt);
 
     va_end(args);
 }

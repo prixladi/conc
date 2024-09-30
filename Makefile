@@ -1,11 +1,11 @@
-CC=gcc
+CC=clang
 FLAGS = -D_POSIX_C_SOURCE=200112L -W -Wall -pedantic -Werror -std=c99 -Wno-gnu-auto-type
 SOURCES = src/external/*.c src/utils/*.c src/*.c
 HEADERS = src/external/*.h src/utils/*.h src/*.h
 
 .PHONY: install
 
-run: run_debug_t
+run: run_debug
 
 build_debug: FLAGS += -fsanitize=undefined,address -g -D __DEBUG__
 build_debug: 

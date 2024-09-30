@@ -5,6 +5,7 @@
 #include "utils/log.h"
 #include "utils/vector.h"
 #include "utils/string.h"
+#include "utils/memory.h"
 
 #include "settings.h"
 #include "manager.h"
@@ -138,81 +139,60 @@ static char *
 handle_projects_names(char **_command)
 {
     assert(_command);
-    struct project_settings *projects = projects_settings_get();
+    vec_scoped struct project_settings *projects = projects_settings_get();
     size_t projects_count = vec_length(projects);
     if (projects_count == 0)
-    {
-        vec_free(projects);
         return resp_ok_no_content();
-    }
 
-    char **lines = vec_create_prealloc(char *, projects_count);
+    vec_scoped char **lines = vec_create_prealloc(char *, projects_count);
 
     for (size_t i = 0; i < projects_count; i++)
         vec_push(lines, projects[i].name);
 
-    char *response = format_list(lines);
+    scoped char *response = format_list(lines);
 
-    vec_free(lines);
     vec_for_each(projects, project_settings_free);
-    vec_free(projects);
 
-    char *ok_response = resp_ok(response);
-    free(response);
-
-    return ok_response;
+    return resp_ok(response);
 }
 
 static char *
 handle_projects_settings(char **_command)
 {
     assert(_command);
-    struct project_settings *projects = projects_settings_get();
+    vec_scoped struct project_settings *projects = projects_settings_get();
     size_t projects_count = vec_length(projects);
     if (projects_count == 0)
-    {
-        vec_free(projects);
         return resp_ok_no_content();
-    }
 
-    char **lines = vec_create_prealloc(char *, projects_count);
+    vec_scoped char **lines = vec_create_prealloc(char *, projects_count);
 
     for (size_t i = 0; i < projects_count; i++)
     {
-        char *json = project_settings_stringify(projects[i]);
+        scoped char *json = project_settings_stringify(projects[i]);
         char *line = STR_CONCAT(projects[i].name, " ", json);
-        free(json);
         vec_push(lines, line);
     }
 
-    char *response = format_list(lines);
+    scoped char *response = format_list(lines);
 
     vec_for_each(lines, free);
-    vec_free(lines);
-
     vec_for_each(projects, project_settings_free);
-    vec_free(projects);
 
-    char *ok_response = resp_ok(response);
-    free(response);
-
-    return ok_response;
+    return resp_ok(response);
 }
 
 static char *
 handle_projects_info(char **_command)
 {
     assert(_command);
-    struct project_info *infos = projects_info_get();
+    vec_scoped struct project_info *infos = projects_info_get();
 
     size_t project_count = vec_length(infos);
     if (project_count == 0)
-    {
-        vec_free(infos);
         return resp_ok_no_content();
-    }
 
-    char **parts = vec_create(char *);
+    vec_scoped char **parts = vec_create(char *);
     for (size_t i = 0; i < project_count; i++)
     {
         struct project_info info = infos[i];
@@ -223,17 +203,12 @@ handle_projects_info(char **_command)
             vec_push_rval(parts, format_service_info(info.services[i]));
     }
 
-    char *response = format_list(parts);
+    scoped char *response = format_list(parts);
 
     vec_for_each(infos, project_info_free);
-    vec_free(infos);
-
     vec_for_each(parts, free);
-    vec_free(parts);
 
-    char *ok_response = resp_ok(response);
-    free(response);
-    return ok_response;
+    return resp_ok(response);
 }
 
 static char *
@@ -244,10 +219,10 @@ handle_project_settings(char **command)
     if (result < M_OK)
         return handle_error_results(result);
 
-    char *json = project_settings_stringify(settings);
+    scoped char *json = project_settings_stringify(settings);
 
     char *ok_response = resp_ok(json);
-    free(json);
+
     project_settings_free(settings);
 
     return ok_response;
@@ -262,19 +237,16 @@ handle_project_info(char **command)
         return handle_error_results(result);
 
     size_t service_count = vec_length(info.services);
-    char **parts = vec_create_prealloc(char *, service_count);
+    vec_scoped char **parts = vec_create_prealloc(char *, service_count);
 
     for (size_t i = 0; i < service_count; i++)
         vec_push_rval(parts, format_service_info(info.services[i]));
     project_info_free(info);
 
-    char *response = format_list(parts);
+    scoped char *response = format_list(parts);
     vec_for_each(parts, free);
-    vec_free(parts);
 
-    char *ok_response = resp_ok(response);
-    free(response);
-    return ok_response;
+    return resp_ok(response);
 }
 
 static char *
@@ -344,20 +316,16 @@ handle_services_names(char **command)
         return resp_ok_no_content();
     }
 
-    char **lines = vec_create_prealloc(char *, services_count);
+    vec_scoped char **lines = vec_create_prealloc(char *, services_count);
 
     for (size_t i = 0; i < services_count; i++)
         vec_push(lines, project.services[i].name);
 
-    char *response = format_list(lines);
+    scoped char *response = format_list(lines);
 
-    vec_free(lines);
     project_settings_free(project);
 
-    char *ok_response = resp_ok(response);
-    free(response);
-
-    return ok_response;
+    return resp_ok(response);
 }
 
 static char *
@@ -368,13 +336,10 @@ handle_service_info(char **command)
     if (result < M_OK)
         return handle_error_results(result);
 
-    char *formatted = format_service_info(info);
+    scoped char *formatted = format_service_info(info);
     service_info_free(info);
 
-    char *response = resp_ok(formatted);
-    free(formatted);
-
-    return response;
+    return resp_ok(formatted);
 }
 
 static char *
@@ -411,12 +376,9 @@ handle_error_results(enum m_result resp)
     case M_SERVICE_NOT_FOUND:
         return resp_error("service_not_found");
     default: {
-        char *code = int_to_str(resp);
-        char *message = STR_CONCAT("unknown-code-", code);
-        char *resp = resp_error(message);
-        free(code);
-        free(message);
-        return resp;
+        scoped char *code = int_to_str(resp);
+        scoped char *message = STR_CONCAT("unknown-code-", code);
+        return resp_error(message);
     }
     }
 }

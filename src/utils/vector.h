@@ -15,6 +15,7 @@ enum
 void *_vec_create(size_t length, size_t stride);
 void *_vec_dup(void *arr);
 void _vec_free(void *arr);
+void _vec_scoped(void *arr);
 
 size_t _vector_field_get(void *arr, size_t field);
 void _vector_field_set(void *arr, size_t field, size_t value);
@@ -33,6 +34,7 @@ int _vec_remove(void *arr, size_t pos, void *dest);
 #define vec_dup(arr) _vec_dup(arr)
 
 #define vec_free(arr) _vec_free(arr)
+#define vec_scoped __attribute__((__cleanup__(_vec_scoped)))
 
 #define vec_push(arr, x) \
     do \

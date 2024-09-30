@@ -9,6 +9,7 @@
 #include <sys/un.h>
 
 #include "utils/log.h"
+#include "utils/memory.h"
 #include "utils/thread-pool.h"
 
 #include "socket-server.h"
@@ -133,7 +134,7 @@ client_socket_handle(void *data)
     Dispatch dispatch = opts->dispatch;
     free(opts);
 
-    char *input = calloc(1, sizeof(char));
+    scoped char *input = calloc(1, sizeof(char));
     char buffer[BUFFER_SIZE + 1];
     int totalLength = 0;
     int len = 0;
@@ -150,12 +151,9 @@ client_socket_handle(void *data)
     }
 
     log_trace(TRACE_NAME, "Received command '%s' from connection '%d'\n", input, client_socket);
-    char *response = dispatch(input);
+    scoped char *response = dispatch(input);
     log_trace(TRACE_NAME, "Sending response '%s' to connection '%d'\n", response, client_socket);
     write(client_socket, response, strlen(response) + 1); // we also want to send '\0' as a end of message indicator
-
-    free(input);
-    free(response);
 
     log_info("Closing socket connection '%d'\n", client_socket);
     close(client_socket);

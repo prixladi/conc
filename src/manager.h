@@ -12,7 +12,7 @@ enum m_result
     M_DRIVER_ERROR = -501,
     M_PROJECT_NOT_FOUND = -404,
     M_SERVICE_NOT_FOUND = -414,
-    M_ERROR = -1,
+    M_ERROR = -101,
     M_OK = 0,
     M_NO_ACTION = 204,
 };

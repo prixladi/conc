@@ -61,7 +61,9 @@
         "thread": "c",
         "set": "c",
         "initializer_list": "c",
-        "span": "c"
+        "span": "c",
+        "memory.h": "c",
+        "thread-pool.h": "c"
     },
     "cSpell.words": [
         "valuestring",
