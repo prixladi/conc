@@ -263,8 +263,10 @@ handle_project_upsert(char **command)
     }
 
     int result = project_upsert(settings);
-    if (result < M_OK)
+    if (result < M_OK) {
+        project_settings_free(settings);
         return handle_error_results(result);
+    }
 
     char *info_command[1];
     info_command[0] = settings.name;
@@ -422,5 +424,8 @@ format_service_info(const struct service_info info)
         break;
     }
 
-    return STR_CONCAT(info.name, " ", status);
+    scoped char *pid_str = int_to_str(info.pid);
+    char *log_file_path = info.log_file_path ? info.log_file_path : "-";
+
+    return STR_CONCAT(info.name, " ", status, " ", pid_str, " ", log_file_path);
 }

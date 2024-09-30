@@ -115,7 +115,7 @@ d_project_init(const struct project_settings settings)
     FILE *fp = open_project_meta_file(settings.name, "w");
     if (fp == NULL)
     {
-        log_critical("Unable to open meta file for project. Project: '%s'", settings.name);
+        log_critical("Unable to open meta file for project '%s'\n", settings.name);
         return D_FS_ERROR;
     }
 
@@ -157,15 +157,18 @@ d_service_info_get(const char *proj_name, const char *serv_name, struct d_servic
 {
     int running_pid = get_running_service_pid(proj_name, serv_name);
 
-    if (running_pid > 0)
+    if (running_pid >= 0)
     {
-        info->status = D_RUNNING;
+        info->status = running_pid == 0 ? D_STOPPED : D_RUNNING;
         info->pid = running_pid;
+        scoped char *log_path = get_service_log_file_path(proj_name, serv_name);
+        info->log_file_path = realpath(log_path, NULL);
     }
     else
     {
-        info->status = running_pid == 0 ? D_STOPPED : D_NONE;
+        info->status = D_NONE;
         info->pid = -1;
+        info->log_file_path = NULL;
     }
 
     return D_OK;
@@ -216,6 +219,14 @@ d_service_stop(const char *proj_name, const struct service_settings service_sett
     }
 
     return D_OK;
+}
+
+void
+d_service_info_free(struct d_service_info info)
+{
+    free(info.log_file_path);
+
+    info.log_file_path = NULL;
 }
 
 static int

@@ -28,6 +28,8 @@ struct service_info
 {
     char *name;
     enum service_status status;
+    char *log_file_path;
+    int pid;
 };
 
 struct project_info

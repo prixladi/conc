@@ -427,7 +427,10 @@ void
 service_info_free(struct service_info info)
 {
     free(info.name);
+    free(info.log_file_path);
+
     info.name = NULL;
+    info.log_file_path = NULL;
 }
 
 void
@@ -549,6 +552,8 @@ service_info_create(const char *proj_name, const char *serv_name)
     d_service_info_get(proj_name, serv_name, &d_info);
     enum service_status status;
 
+    char *log_file_path = d_info.log_file_path ? str_dup(d_info.log_file_path) : NULL;
+
     switch (d_info.status)
     {
     case D_RUNNING:
@@ -565,7 +570,11 @@ service_info_create(const char *proj_name, const char *serv_name)
     struct service_info info = {
         .name = str_dup(serv_name),
         .status = status,
+        .log_file_path = log_file_path,
+        .pid = d_info.pid,
     };
+
+    d_service_info_free(d_info);
 
     return info;
 }
