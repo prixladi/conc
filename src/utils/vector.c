@@ -35,6 +35,12 @@ _vec_free(void *arr)
     free((size_t *)(arr)-VECTOR_FIELDS);
 }
 
+void
+_vec_scoped(void *arr)
+{
+    _vec_free(*((void **)arr));
+}
+
 size_t
 _vector_field_get(void *arr, size_t field)
 {

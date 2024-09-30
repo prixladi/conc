@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "utils/memory.h"
+
 #include "app-config.h"
 
 #ifdef __DEBUG__
@@ -20,7 +22,7 @@ app_config_init(int argc, char **argv, struct app_config *config)
     config->log_level = DEFAULT_LOG_LEVEL;
     config->print_help = false;
 
-    char *error = NULL;
+    scoped char *error = NULL;
     for (int i = 1; i < argc && !error; i++)
     {
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
@@ -41,11 +43,7 @@ app_config_init(int argc, char **argv, struct app_config *config)
     }
 
     if (error)
-    {
-        char *error_message = error_message_create(argv[0], error);
-        free(error);
-        return error_message;
-    }
+        return error_message_create(argv[0], error);
 
     return NULL;
 }

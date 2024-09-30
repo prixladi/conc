@@ -13,6 +13,7 @@
 #include "utils/log.h"
 #include "utils/time.h"
 #include "utils/fs.h"
+#include "utils/memory.h"
 
 #include "driver.h"
 #include "process.h"
@@ -89,17 +90,17 @@ d_get_all_stored_settings(void)
         if (strncmp(entry->d_name, ".", 1) == 0 || strncmp(entry->d_name, "..", 2) == 0)
             continue;
 
-        char *settings_file_path = STR_CONCAT(root_projects_dir, "/", entry->d_name, "/", meta_file_name);
+        scoped char *settings_file_path = STR_CONCAT(root_projects_dir, "/", entry->d_name, "/", meta_file_name);
         FILE *fp = fopen(settings_file_path, "r");
         if (!fp)
-            log_error("Unable to load settings from '%s'\n", settings_file_path);
-        else
         {
-            char *content = get_file_content(fp);
-            fclose(fp);
-            vec_push(settings_vec, content);
+            log_error("Unable to load settings from '%s'\n", settings_file_path);
+            continue;
         }
-        free(settings_file_path);
+
+        char *content = get_file_content(fp);
+        fclose(fp);
+        vec_push(settings_vec, content);
     }
     closedir(projects_dir);
 
@@ -118,10 +119,9 @@ d_project_init(const struct project_settings settings)
         return D_FS_ERROR;
     }
 
-    char *stringified_settings = project_settings_stringify(settings);
+    scoped char *stringified_settings = project_settings_stringify(settings);
     fprintf(fp, "%s", stringified_settings);
     fclose(fp);
-    free(stringified_settings);
 
     for (size_t i = 0; i < vec_length(settings.services); i++)
         ensure_service_dir_exists(settings.name, settings.services[i].name);
@@ -142,14 +142,13 @@ d_project_remove(const struct project_settings settings)
 
     remove_file_f(get_project_meta_file_path(settings.name));
 
-    char *project_dir_path = get_project_dir_path(settings.name);
+    scoped char *project_dir_path = get_project_dir_path(settings.name);
     rmdir(project_dir_path);
 
     bool delete_success = !dir_exists(project_dir_path);
     if (!delete_success)
         log_error("Unable to remove project directory '%s'\n", project_dir_path);
 
-    free(project_dir_path);
     return delete_success ? D_OK : D_FS_ERROR;
 }
 
@@ -179,10 +178,8 @@ d_service_start(const char *proj_name, const struct service_settings service_set
     if (running_pid > 0)
         return D_NO_ACTION;
 
-    char *logfile_path = get_service_log_file_path(proj_name, service_settings.name);
+    scoped char *logfile_path = get_service_log_file_path(proj_name, service_settings.name);
     int pid = process_start(proj_name, service_settings, logfile_path);
-
-    free(logfile_path);
 
     time_t c_time = 0;
     struct stat sts;
@@ -210,6 +207,8 @@ d_service_stop(const char *proj_name, const struct service_settings service_sett
     if (running_pid <= 0)
         return D_NO_ACTION;
 
+    log_debug("Stopping process '%s/%s - %d'\n", proj_name, service_settings.name, running_pid);
+
     if (kill_pid(running_pid) > 0)
     {
         log_error("Unable to kill PID '%d'\n", running_pid);
@@ -236,19 +235,15 @@ get_running_service_pid(const char *proj_name, const char *serv_name)
 static int
 ensure_service_dir_exists(const char *proj_name, const char *serv_name)
 {
-    char *service_dir = STR_CONCAT(root_projects_dir, "/", proj_name, "/", serv_name);
-    int result = mkdir(service_dir, S_IRWXU | S_IRWXG | S_IRWXO);
-    free(service_dir);
-    return result;
+    scoped char *service_dir = STR_CONCAT(root_projects_dir, "/", proj_name, "/", serv_name);
+    return mkdir(service_dir, S_IRWXU | S_IRWXG | S_IRWXO);
 }
 
 static int
 ensure_project_dir_exists(const char *proj_name)
 {
-    char *project_dir = STR_CONCAT(root_projects_dir, "/", proj_name);
-    int result = mkdir(project_dir, S_IRWXU | S_IRWXG | S_IRWXO);
-    free(project_dir);
-    return result;
+    scoped char *project_dir = STR_CONCAT(root_projects_dir, "/", proj_name);
+    return mkdir(project_dir, S_IRWXU | S_IRWXG | S_IRWXO);
 }
 
 static int
@@ -306,20 +301,15 @@ try_parse_service_meta_file(const char *proj_name, const char *serv_name, struct
 static FILE *
 open_project_meta_file(const char *proj_name, const char *modes)
 {
-    char *meta_file_path = get_project_meta_file_path(proj_name);
-    FILE *fp = fopen(meta_file_path, modes);
-    free(meta_file_path);
-
-    return fp;
+    scoped char *meta_file_path = get_project_meta_file_path(proj_name);
+    return fopen(meta_file_path, modes);
 }
 
 static FILE *
 open_service_meta_file(const char *proj_name, const char *serv_name, const char *modes)
 {
-    char *meta_file_path = get_service_meta_file_path(proj_name, serv_name);
-    FILE *fp = fopen(meta_file_path, modes);
-    free(meta_file_path);
-    return fp;
+    scoped char *meta_file_path = get_service_meta_file_path(proj_name, serv_name);
+    return fopen(meta_file_path, modes);
 }
 
 static char *
@@ -353,32 +343,25 @@ get_service_log_file_path(const char *proj_name, const char *serv_name)
 }
 
 static int
-remove_file_f(char *path)
+remove_file_f(char *_path)
 {
-    int res = remove(path);
-    free(path);
-    return res;
+    scoped char *path = _path;
+    return remove(path);
 }
 
 static int
-remove_dir_f(char *path)
+remove_dir_f(char *_path)
 {
-    int res = rmdir(path);
-    free(path);
-    return res;
+    scoped char *path = _path;
+    return rmdir(path);
 }
 
 static bool
 try_get_pid_info(int pid, struct stat *sts)
 {
-    char *pid_string = int_to_str(pid);
-    char *proc = STR_CONCAT("/proc/", pid_string);
-    free(pid_string);
-
-    int result = stat(proc, sts);
-    free(proc);
-
-    return result != -1;
+    scoped char *pid_string = int_to_str(pid);
+    scoped char *proc = STR_CONCAT("/proc/", pid_string);
+    return stat(proc, sts) != -1;
 }
 
 static int

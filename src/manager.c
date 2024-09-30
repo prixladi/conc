@@ -58,7 +58,7 @@ manager_init(void)
 
     pthread_mutex_lock(store.lock);
 
-    char **stored_settings = d_get_all_stored_settings();
+    vec_scoped char **stored_settings = d_get_all_stored_settings();
     size_t settings_count = vec_length(stored_settings);
     store.projects = vec_create_prealloc(struct project, settings_count);
     for (size_t i = 0; i < settings_count; i++)
@@ -86,7 +86,6 @@ manager_init(void)
     }
 
     vec_for_each(stored_settings, free);
-    vec_free(stored_settings);
 
     pthread_mutex_unlock(store.lock);
 
@@ -200,7 +199,7 @@ project_info_get(const char *proj_name, struct project_info *info)
     }
 
     pthread_mutex_lock(project.lock);
-    
+
     pthread_mutex_unlock(store.lock);
 
     (*info) = project_info_create(project);
@@ -215,7 +214,6 @@ project_upsert(const struct project_settings settings)
 {
     pthread_mutex_lock(store.lock);
 
-    sleep(2);
     for (size_t i = 0; i < vec_length(store.projects); i++)
     {
         struct project project = store.projects[i];
@@ -246,7 +244,7 @@ project_upsert(const struct project_settings settings)
         return M_DRIVER_ERROR;
     }
     vec_push(store.projects, new_project);
-    
+
     pthread_mutex_unlock(store.lock);
 
     return M_OK;
@@ -288,7 +286,7 @@ project_stop(const char *proj_name)
     }
 
     pthread_mutex_lock(project.lock);
-    
+
     pthread_mutex_unlock(store.lock);
     enum d_result result = project_services_stop(project.settings);
     pthread_mutex_unlock(project.lock);

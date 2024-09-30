@@ -38,11 +38,12 @@ process_start(const char *proj_name, const struct service_settings settings, con
     if (pid == 0)
     {
         handle_child(pd);
-        log_error("Unable to execute process '%s - %d', aborting", pd.id, pid);
+        log_critical("Unable to execute process '%s - %d', aborting", pd.id, pid);
+        pd_free(pd);
         exit(127);
     }
-    pd_free(pd);
 
+    pd_free(pd);
     return pid;
 }
 
@@ -58,8 +59,7 @@ handle_child(struct process_descriptor pd)
     if (fd <= 0)
     {
         log_error("Unable to open log file '%s' for '%s - %d', aborting.\n", pd.logfile_path, pd.id, current_pid);
-        pd_free(pd);
-        exit(130);
+        return;
     }
 
     log_debug("Starting process '%s - %d'\n", pd.id, current_pid);
