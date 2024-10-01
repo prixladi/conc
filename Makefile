@@ -29,7 +29,7 @@ run_release: build_release
 	./build/conc
 
 install: build_release
-	sudo ./install.sh
+	./install.sh
 
 format: 
 	clang-format -i $(SOURCES) $(HEADERS)

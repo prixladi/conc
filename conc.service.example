@@ -3,7 +3,7 @@ Description=Process manager service
 
 [Service]
 User=<user>
-WorkingDirectory=/home/<user>/rep/conc
+WorkingDirectory=/home/<user>/.conc
 ExecStart=/usr/local/bin/conc
 # optional items below
 Restart=always
