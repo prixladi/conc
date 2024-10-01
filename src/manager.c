@@ -240,6 +240,7 @@ project_upsert(const struct project_settings settings)
     struct project new_project = project_create(project_settings_dup(settings));
     if (d_project_init(new_project.settings) < D_OK)
     {
+        project_free(new_project);
         pthread_mutex_unlock(store.lock);
         return M_DRIVER_ERROR;
     }
