@@ -38,6 +38,9 @@ main(int argc, char **argv)
         return config.is_daemon ? 1 : 0; // deamon should never ask for help
     }
 
+    if (config.work_dir)
+        chdir(config.work_dir);
+
     log_init(config.log_level);
 
     signal(SIGCHLD, SIG_IGN);
@@ -46,8 +49,6 @@ main(int argc, char **argv)
     signal(SIGINT, graceful_stop_handler);
     // systemd sends 'hang up' with expectation of a restart
     signal(SIGHUP, config.is_daemon ? restart_handler : graceful_stop_handler);
-
-    chdir("./run");
 
     while (running)
     {
