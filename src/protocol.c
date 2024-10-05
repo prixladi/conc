@@ -10,8 +10,8 @@
 #include "settings.h"
 #include "manager.h"
 
-#define resp_error(msg) STR_CONCAT("ERROR\n", msg)
-#define resp_ok(msg) STR_CONCAT("OK\n", msg)
+#define resp_error(msg) str_concat("ERROR\n", msg)
+#define resp_ok(msg) str_concat("OK\n", msg)
 #define resp_ok_no_content() str_dup("OK")
 
 static char **tokenize(const char *input);
@@ -170,7 +170,7 @@ handle_projects_settings(char **_command)
     for (size_t i = 0; i < projects_count; i++)
     {
         scoped char *json = project_settings_stringify(projects[i]);
-        char *line = STR_CONCAT(projects[i].name, " ", json);
+        char *line = str_printf("%s %s", projects[i].name, json);
         vec_push(lines, line);
     }
 
@@ -263,7 +263,8 @@ handle_project_upsert(char **command)
     }
 
     int result = project_upsert(settings);
-    if (result < M_OK) {
+    if (result < M_OK)
+    {
         project_settings_free(settings);
         return handle_error_results(result);
     }
@@ -378,8 +379,7 @@ handle_error_results(enum m_result resp)
     case M_SERVICE_NOT_FOUND:
         return resp_error("service_not_found");
     default: {
-        scoped char *code = int_to_str(resp);
-        scoped char *message = STR_CONCAT("unknown-code-", code);
+        scoped char *message = str_printf("unknown-code-%d", resp);
         return resp_error(message);
     }
     }
@@ -424,8 +424,6 @@ format_service_info(const struct service_info info)
         break;
     }
 
-    scoped char *pid_str = int_to_str(info.pid);
     char *log_file_path = info.log_file_path ? info.log_file_path : "-";
-
-    return STR_CONCAT(info.name, " ", status, " ", pid_str, " ", log_file_path);
+    return str_printf("%s %s %d %s", info.name, status, info.pid, log_file_path);
 }

@@ -41,7 +41,7 @@ app_config_init(int argc, char **argv, struct app_config *config)
             if (was_last)
                 error = str_dup("Expected a log level");
             else if (!try_parse_log_level(argv[i], &config->log_level))
-                error = STR_CONCAT("Invalid log level '", argv[i], "'");
+                error = str_printf("Invalid log level '%s'", argv[i]);
         }
         else if (strcmp(argv[i], "-w") == 0 || strcmp(argv[i], "--work-dir") == 0)
         {
@@ -55,7 +55,7 @@ app_config_init(int argc, char **argv, struct app_config *config)
                 config->work_dir = argv[i];
         }
         else
-            error = STR_CONCAT("Invalid argument '", argv[i], "'");
+            error = str_printf("Invalid argument '%s'", argv[i]);
 
         if (error)
             return error_message_create(argv[0], error);
@@ -67,7 +67,7 @@ app_config_init(int argc, char **argv, struct app_config *config)
 char *
 get_help_message(char *app_name)
 {
-    char *str = "Usage: %s [options]...\n\
+    return str_printf("Usage: %s [options]...\n\
 Process manager service.\n\n\
 Flags:\n\
     -l, --log-level <T|D|I|W|E|C>     Changes default log level\n\
@@ -78,25 +78,14 @@ Examples:\n\
     %s --log-level I                  Starts services with log level set to INFO\n\
     %s --log-level E                  Starts services with log level set to ERROR\n\
     %s --work-dir /var/lib/conc       Starts services with root work directory in /var/lib/conc\n\
-    %s --daemon                       Starts services as a daemon\n";
-
-    int len = snprintf(NULL, 0, str, app_name, app_name, app_name, app_name, app_name);
-    char *buff = malloc(sizeof(char *) * len + 1);
-    snprintf(buff, len + 1, str, app_name, app_name, app_name, app_name, app_name);
-
-    return buff;
+    %s --daemon                       Starts services as a daemon\n",
+                      app_name, app_name, app_name, app_name, app_name);
 }
 
 static char *
 error_message_create(char *app_name, char *error)
 {
-    char *str = "%s\nUsage: %s [options]..., run again with flag --help for more details\n";
-
-    int len = snprintf(NULL, 0, str, error, app_name);
-    char *buff = malloc(sizeof(char *) * len + 1);
-    snprintf(buff, len + 1, str, error, app_name);
-
-    return buff;
+    return str_printf("%s\nUsage: %s [options]..., run again with flag --help for more details\n", error, app_name);
 }
 
 static bool
