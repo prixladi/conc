@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include "string.h"
+
 char *
 str_dup(const char *str)
 {
@@ -18,21 +20,34 @@ str_dup(const char *str)
 }
 
 char *
+str_printf(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+
+    int len = vsnprintf(NULL, 0, format, args);
+    char *buff = malloc(sizeof(char *) * len + 1);
+
+    va_end(args);
+    va_start(args, format);
+
+    vsnprintf(buff, len + 1, format, args);
+
+    va_end(args);
+
+    return buff;
+}
+
+char *
 int_to_str(int i)
 {
-    int length = snprintf(NULL, 0, "%d", i);
-    char *str = malloc(length + 1);
-    snprintf(str, length + 1, "%d", i);
-    return str;
+    return str_printf("%d", i);
 }
 
 char *
 unsigned_long_to_str(unsigned long i)
 {
-    int length = snprintf(NULL, 0, "%lu", i);
-    char *str = malloc(length + 1);
-    snprintf(str, length + 1, "%lu", i);
-    return str;
+    return str_printf("%lu", i);
 }
 
 char *

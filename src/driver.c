@@ -90,7 +90,7 @@ d_get_all_stored_settings(void)
         if (strncmp(entry->d_name, ".", 1) == 0 || strncmp(entry->d_name, "..", 2) == 0)
             continue;
 
-        scoped char *settings_file_path = STR_CONCAT(root_projects_dir, "/", entry->d_name, "/", meta_file_name);
+        scoped char *settings_file_path = str_printf("%s/%s/%s", root_projects_dir, entry->d_name, meta_file_name);
         FILE *fp = fopen(settings_file_path, "r");
         if (!fp)
         {
@@ -246,14 +246,14 @@ get_running_service_pid(const char *proj_name, const char *serv_name)
 static int
 ensure_service_dir_exists(const char *proj_name, const char *serv_name)
 {
-    scoped char *service_dir = STR_CONCAT(root_projects_dir, "/", proj_name, "/", serv_name);
+    scoped char *service_dir = str_printf("%s/%s/%s", root_projects_dir, proj_name, serv_name);
     return mkdir(service_dir, S_IRWXU | S_IRWXG | S_IRWXO);
 }
 
 static int
 ensure_project_dir_exists(const char *proj_name)
 {
-    scoped char *project_dir = STR_CONCAT(root_projects_dir, "/", proj_name);
+    scoped char *project_dir = str_printf("%s/%s", root_projects_dir, proj_name);
     return mkdir(project_dir, S_IRWXU | S_IRWXG | S_IRWXO);
 }
 
@@ -326,31 +326,31 @@ open_service_meta_file(const char *proj_name, const char *serv_name, const char 
 static char *
 get_project_dir_path(const char *proj_name)
 {
-    return STR_CONCAT(root_projects_dir, "/", proj_name);
+    return str_printf("%s/%s", root_projects_dir, proj_name);
 }
 
 static char *
 get_project_meta_file_path(const char *proj_name)
 {
-    return STR_CONCAT(root_projects_dir, "/", proj_name, "/", meta_file_name);
+    return str_printf("%s/%s/%s", root_projects_dir, proj_name, meta_file_name);
 }
 
 static char *
 get_service_dir_path(const char *proj_name, const char *serv_name)
 {
-    return STR_CONCAT(root_projects_dir, "/", proj_name, "/", serv_name);
+    return str_printf("%s/%s/%s", root_projects_dir, proj_name, serv_name);
 }
 
 static char *
 get_service_meta_file_path(const char *proj_name, const char *serv_name)
 {
-    return STR_CONCAT(root_projects_dir, "/", proj_name, "/", serv_name, "/", meta_file_name);
+    return str_printf("%s/%s/%s/%s", root_projects_dir, proj_name, serv_name, meta_file_name);
 }
 
 static char *
 get_service_log_file_path(const char *proj_name, const char *serv_name)
 {
-    return STR_CONCAT(root_projects_dir, "/", proj_name, "/", serv_name, "/", log_file_name);
+    return str_printf("%s/%s/%s/%s", root_projects_dir, proj_name, serv_name, log_file_name);
 }
 
 static int
@@ -370,8 +370,7 @@ remove_dir_f(char *_path)
 static bool
 try_get_pid_info(int pid, struct stat *sts)
 {
-    scoped char *pid_string = int_to_str(pid);
-    scoped char *proc = STR_CONCAT("/proc/", pid_string);
+    scoped char *proc = str_printf("/proc/%d", pid);
     return stat(proc, sts) != -1;
 }
 

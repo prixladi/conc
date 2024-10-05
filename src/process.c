@@ -83,7 +83,7 @@ handle_child(struct process_descriptor pd)
 static struct process_descriptor
 pd_create(const char *proj_name, const struct service_settings settings, const char *logfile_path_i)
 {
-    char *id = STR_CONCAT(proj_name, "/", settings.name);
+    char *id = str_printf("%s/%s", proj_name, settings.name);
     char *logfile_path = str_dup(logfile_path_i);
     char *pwd = str_dup(settings.pwd);
 
