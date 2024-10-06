@@ -67,6 +67,8 @@
         "ostream": "c"
     },
     "cSpell.words": [
+        "journalctl",
+        "libc",
         "valuestring",
         "Wpointer"
     ]
