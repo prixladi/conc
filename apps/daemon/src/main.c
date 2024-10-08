@@ -44,6 +44,7 @@ main(int argc, char **argv)
     log_init(config.log_level);
 
     signal(SIGCHLD, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
 
     signal(SIGTERM, graceful_stop_handler);
     signal(SIGINT, graceful_stop_handler);
