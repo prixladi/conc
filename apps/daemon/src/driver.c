@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <dirent.h>
 
@@ -30,6 +31,7 @@ struct service_process_info
 
 static int ensure_project_dir_exists(const char *proj_name);
 static int ensure_service_dir_exists(const char *proj_name, const char *serv_name);
+static int ensure_service_log_file_exists(const char *proj_name, const char *serv_name);
 
 static int write_service_meta_file(const char *proj_name, const char *serv_name, struct service_process_info info);
 static bool try_parse_service_meta_file(const char *proj_name, const char *serv_name, struct service_process_info *info);
@@ -46,7 +48,7 @@ static char *get_service_log_file_path(const char *proj_name, const char *serv_n
 static int remove_file_f(char *path);
 static int remove_dir_f(char *path);
 
-static int get_running_service_pid(const char *proj_name, const char *serv_name);
+static int get_service_pid(const char *proj_name, const char *serv_name);
 static bool try_get_pid_info(int pid, struct stat *sts);
 static int kill_pid(int pid);
 
@@ -124,7 +126,10 @@ d_project_init(const struct project_settings settings)
     fclose(fp);
 
     for (size_t i = 0; i < vec_length(settings.services); i++)
+    {
         ensure_service_dir_exists(settings.name, settings.services[i].name);
+        ensure_service_log_file_exists(settings.name, settings.services[i].name);
+    }
 
     return D_OK;
 }
@@ -155,21 +160,12 @@ d_project_remove(const struct project_settings settings)
 enum d_result
 d_service_info_get(const char *proj_name, const char *serv_name, struct d_service_info *info)
 {
-    int running_pid = get_running_service_pid(proj_name, serv_name);
+    int running_pid = get_service_pid(proj_name, serv_name);
 
-    if (running_pid >= 0)
-    {
-        info->status = running_pid == 0 ? D_STOPPED : D_RUNNING;
-        info->pid = running_pid;
-        scoped char *log_path = get_service_log_file_path(proj_name, serv_name);
-        info->log_file_path = realpath(log_path, NULL);
-    }
-    else
-    {
-        info->status = D_NONE;
-        info->pid = -1;
-        info->log_file_path = NULL;
-    }
+    info->status = running_pid > 0 ? D_RUNNING : running_pid == 0 ? D_STOPPED : D_NONE;
+    scoped char *log_path = get_service_log_file_path(proj_name, serv_name);
+    info->log_file_path = realpath(log_path, NULL);
+    info->pid = running_pid;
 
     return D_OK;
 }
@@ -177,7 +173,7 @@ d_service_info_get(const char *proj_name, const char *serv_name, struct d_servic
 enum d_result
 d_service_start(const char *proj_name, const struct service_settings service_settings)
 {
-    int running_pid = get_running_service_pid(proj_name, service_settings.name);
+    int running_pid = get_service_pid(proj_name, service_settings.name);
     if (running_pid > 0)
         return D_NO_ACTION;
 
@@ -206,7 +202,7 @@ d_service_start(const char *proj_name, const struct service_settings service_set
 enum d_result
 d_service_stop(const char *proj_name, const struct service_settings service_settings)
 {
-    int running_pid = get_running_service_pid(proj_name, service_settings.name);
+    int running_pid = get_service_pid(proj_name, service_settings.name);
     if (running_pid <= 0)
         return D_NO_ACTION;
 
@@ -230,7 +226,7 @@ d_service_info_free(struct d_service_info info)
 }
 
 static int
-get_running_service_pid(const char *proj_name, const char *serv_name)
+get_service_pid(const char *proj_name, const char *serv_name)
 {
     struct service_process_info info = { 0 };
     if (try_parse_service_meta_file(proj_name, serv_name, &info) == false)
@@ -244,17 +240,26 @@ get_running_service_pid(const char *proj_name, const char *serv_name)
 }
 
 static int
+ensure_project_dir_exists(const char *proj_name)
+{
+    scoped char *project_dir = get_project_dir_path(proj_name);
+    return mkdir(project_dir, S_IRWXU | S_IRWXG | S_IRWXO);
+}
+
+static int
 ensure_service_dir_exists(const char *proj_name, const char *serv_name)
 {
-    scoped char *service_dir = str_printf("%s/%s/%s", root_projects_dir, proj_name, serv_name);
+    scoped char *service_dir = get_service_dir_path(proj_name, serv_name);
     return mkdir(service_dir, S_IRWXU | S_IRWXG | S_IRWXO);
 }
 
 static int
-ensure_project_dir_exists(const char *proj_name)
+ensure_service_log_file_exists(const char *proj_name, const char *serv_name)
 {
-    scoped char *project_dir = str_printf("%s/%s", root_projects_dir, proj_name);
-    return mkdir(project_dir, S_IRWXU | S_IRWXG | S_IRWXO);
+    scoped char *log_file_path = get_service_log_file_path(proj_name, serv_name);
+    int fd = open(log_file_path, O_APPEND | O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    close(fd);
+    return fd > 0 ? 0 : 1;
 }
 
 static int
