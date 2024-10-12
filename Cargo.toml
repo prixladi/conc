@@ -1,6 +1,7 @@
 [workspace]
 members = ["apps/*", "crates/*"]
 exclude = ["apps/daemon"]
+resolver = "2"
 
 [profile.dev]
 opt-level = 0
