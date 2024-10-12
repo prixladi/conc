@@ -1,6 +1,6 @@
 #! /bin/env bash
 
-mkdir -p $HOME/.conc
+mkdir -p $HOME/.conc/run
 
 sudo cp -f ./build/conc /usr/local/bin/conc
 
@@ -10,7 +10,7 @@ Description=Conc service daemon
 
 [Service]
 User=$USER
-WorkingDirectory=/home/$USER/.conc
+WorkingDirectory=/home/$USER/.conc/run
 ExecStart=/usr/local/bin/conc
 # optional items below
 Restart=always

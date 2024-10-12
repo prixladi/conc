@@ -9,10 +9,8 @@
 
 #ifdef __DEBUG__
 #define DEFAULT_LOG_LEVEL DEBUG
-#define DEFAULT_WORK_DIR "./tmp"
 #else
 #define DEFAULT_LOG_LEVEL INFO
-#define DEFAULT_WORK_DIR NULL
 #endif
 
 static char *error_message_create(char *app_name, char *error);
@@ -24,7 +22,7 @@ app_config_init(int argc, char **argv, struct app_config *config)
     config->is_daemon = !isatty(STDOUT_FILENO);
     config->log_level = DEFAULT_LOG_LEVEL;
     config->print_help = false;
-    config->work_dir = DEFAULT_WORK_DIR;
+    config->work_dir = NULL;
 
     for (int i = 1; i < argc; i++)
     {
