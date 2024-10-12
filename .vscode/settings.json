@@ -1,0 +1,16 @@
+{
+  "cSpell.words": [
+    "concc",
+    "journalctl",
+    "libc",
+    "Outputable",
+    "pids",
+    "valuestring",
+    "Wpointer"
+  ],
+  "files.associations": {
+    "unistd.h": "c",
+    "wait.h": "c",
+    "string.h": "c"
+  }
+}

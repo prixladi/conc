@@ -3,7 +3,7 @@ use std::{convert::From, convert::TryFrom, vec};
 #[derive(Debug)]
 pub enum ErrorResponse {
     Client(String),
-    Server(String),
+    Daemon(String),
     Malformed(String),
     ProjectNotFound(String),
     ServiceNotFound(String),
@@ -28,7 +28,7 @@ impl From<Vec<String>> for ErrorResponse {
                 Self::Client(raw)
             }
             x if x.starts_with("unknown-code-") || x == "driver_error" || x == "manager_error" => {
-                Self::Server(raw)
+                Self::Daemon(raw)
             }
             _ => Self::Malformed(raw),
         }
@@ -199,7 +199,7 @@ impl TryFrom<Vec<String>> for NoContentResponse {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ServiceStatus {
     IDLE,
     RUNNING,
@@ -219,7 +219,7 @@ impl TryFrom<&str> for ServiceStatus {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ServiceInfo {
     pub name: String,
     pub status: ServiceStatus,
