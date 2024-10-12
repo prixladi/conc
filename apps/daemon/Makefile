@@ -3,32 +3,30 @@ FLAGS = -D_GNU_SOURCE -D_POSIX_C_SOURCE=200112L -W -Wall -pedantic -Werror -std=
 SOURCES = src/external/*.c src/utils/*.c src/*.c
 HEADERS = src/external/*.h src/utils/*.h src/*.h
 
-.PHONY: install
+.PHONY: build install run
 
-run: run_debug
-
-build_debug: FLAGS += -fsanitize=undefined,address -g -D __DEBUG__
-build_debug: 
+build_debug_address: FLAGS += -fsanitize=undefined,address -g -D __DEBUG__
+build_debug_address: 
 	$(CC) $(FLAGS) $(SOURCES) -o ./build/conc-debug
 
-run_debug: build_debug
-	./build/conc-debug
+run_debug_address: build_debug_address
+	./build/conc-debug -w ./run
 
-build_debug_t: FLAGS += -fsanitize=undefined,thread -g -D __DEBUG__
-build_debug_t: 
+build_debug_thread: FLAGS += -fsanitize=undefined,thread -g -D __DEBUG__
+build_debug_thread: 
 	$(CC) $(FLAGS) $(SOURCES) -o ./build/conc-debug
 
-run_debug_t: build_debug_t
-	./build/conc-debug
+run_debug_thread: build_debug_thread
+	./build/conc-debug -w ./run
 
 build: FLAGS += -O2
-build_release: 
+build: 
 	$(CC) $(FLAGS) $(SOURCES) -o ./build/conc
 
-run_release: build_release
-	./build/conc
+run: build
+	./build/conc -w ./run
 
-install: build_release
+install: build
 	./install.sh
 
 format: 

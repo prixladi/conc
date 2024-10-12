@@ -78,8 +78,7 @@ server_run(void *data)
 
     int server_socket = socket(AF_UNIX, SOCK_STREAM, 0);
 
-    struct sockaddr_un server_addr;
-    server_addr.sun_family = AF_UNIX;
+    struct sockaddr_un server_addr = { .sun_family = AF_UNIX };
     strcpy(server_addr.sun_path, SOCKET_PATH);
 
     unlink(SOCKET_PATH);
@@ -98,9 +97,7 @@ server_run(void *data)
         FD_ZERO(&read_fds);
         FD_SET(server_socket, &read_fds);
 
-        struct timeval timeout;
-        timeout.tv_sec = 0;
-        timeout.tv_usec = 1000 * 100;
+        struct timeval timeout = { .tv_sec = 0, .tv_usec = 1000 * 100 };
 
         // TODO: Use pselect or other fd for instant interruption, this causes delay of the timeout duration on exit
         int select_status = select(server_socket + 1, &read_fds, NULL, NULL, &timeout);
@@ -129,10 +126,9 @@ server_run(void *data)
 static void *
 client_socket_handle(void *data)
 {
-    struct handler_options *opts = data;
+    scoped struct handler_options *opts = data;
     int client_socket = opts->client_socket;
     Dispatch dispatch = opts->dispatch;
-    free(opts);
 
     scoped char *input = calloc(1, sizeof(char));
     char buffer[BUFFER_SIZE + 1];
@@ -156,7 +152,8 @@ client_socket_handle(void *data)
     write(client_socket, response, strlen(response) + 1); // we also want to send '\0' as a end of message indicator
 
     log_info("Closing socket connection '%d'\n", client_socket);
-    close(client_socket);
+    if (close(client_socket) > 0)
+        log_error("Unable to close client socket '%d'\n", client_socket);
 
     return NULL;
 }
