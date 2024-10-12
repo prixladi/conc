@@ -6,7 +6,7 @@ use std::str;
 use std::{fs, vec};
 
 pub struct SocketClient {
-    socket_path: String,
+    pub socket_path: String,
 }
 
 impl SocketClient {
@@ -17,9 +17,19 @@ impl SocketClient {
     }
 
     pub fn is_alive(&self) -> bool {
-        fs::metadata(&self.socket_path)
+        let socket_exists = fs::metadata(&self.socket_path)
             .map(|stat| stat.file_type().is_socket())
-            .unwrap_or(false)
+            .unwrap_or(false);
+
+        if !socket_exists {
+            return false;
+        }
+
+        let health_check = self.send(b"\0");
+        match health_check {
+            Ok(res) => res.is_empty(),
+            Err(_) => false,
+        }
     }
 
     pub fn send(&self, message: &[u8]) -> anyhow::Result<String> {

@@ -38,6 +38,7 @@ struct handler_options
 };
 
 static void *client_socket_handle(void *data);
+static char *read_input(int client_socket, int *totalLength);
 
 static void *server_run(void *data);
 
@@ -127,18 +128,46 @@ static void *
 client_socket_handle(void *data)
 {
     scoped struct handler_options *opts = data;
-    int client_socket = opts->client_socket;
-    Dispatch dispatch = opts->dispatch;
 
-    scoped char *input = calloc(1, sizeof(char));
+    int total_length = 0;
+    scoped char *input = read_input(opts->client_socket, &total_length);
+
+    // one character message containing just '\0' is threated as a health check
+    bool is_health_check = input[0] == '\0';
+    char *response = NULL;
+    if (is_health_check)
+    {
+        log_trace(TRACE_NAME, "Received health check from connection '%d'\n", opts->client_socket);
+        response = calloc(1, sizeof(char));
+    }
+    else
+    {
+        log_trace(TRACE_NAME, "Received command '%s' from connection '%d'\n", input, opts->client_socket);
+        response = opts->dispatch(input);
+        log_trace(TRACE_NAME, "Sending response '%s' to connection '%d'\n", response, opts->client_socket);
+    }
+
+    write(opts->client_socket, response, strlen(response) + 1); // we also want to send '\0' as a end of message indicator
+
+    log_info("Closing socket connection '%d'\n", opts->client_socket);
+    if (close(opts->client_socket) > 0)
+        log_error("Unable to close client socket '%d'\n", opts->client_socket);
+
+    free(response);
+    return NULL;
+}
+
+static char *
+read_input(int client_socket, int *totalLength)
+{
+    char *input = calloc(1, sizeof(char));
     char buffer[BUFFER_SIZE + 1];
-    int totalLength = 0;
     int len = 0;
 
     while ((len = read(client_socket, buffer, BUFFER_SIZE)) > 0)
     {
-        totalLength += len;
-        input = realloc(input, sizeof(char) * totalLength + 1);
+        (*totalLength) += len;
+        input = realloc(input, sizeof(char) * (*totalLength) + 1);
         buffer[len] = '\0';
         strncat(input, buffer, len);
 
@@ -146,14 +175,5 @@ client_socket_handle(void *data)
             break;
     }
 
-    log_trace(TRACE_NAME, "Received command '%s' from connection '%d'\n", input, client_socket);
-    scoped char *response = dispatch(input);
-    log_trace(TRACE_NAME, "Sending response '%s' to connection '%d'\n", response, client_socket);
-    write(client_socket, response, strlen(response) + 1); // we also want to send '\0' as a end of message indicator
-
-    log_info("Closing socket connection '%d'\n", client_socket);
-    if (close(client_socket) > 0)
-        log_error("Unable to close client socket '%d'\n", client_socket);
-
-    return NULL;
+    return input;
 }
