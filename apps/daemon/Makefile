@@ -7,24 +7,24 @@ HEADERS = src/external/*.h src/utils/*.h src/*.h
 
 build_debug_address: FLAGS += -fsanitize=undefined,address -g -D __DEBUG__
 build_debug_address: 
-	$(CC) $(FLAGS) $(SOURCES) -o ./build/conc-debug
+	$(CC) $(FLAGS) $(SOURCES) -o ./build/concd-debug
 
 run_debug_address: build_debug_address
-	./build/conc-debug -w ./run
+	./build/concd-debug -w ./run
 
 build_debug_thread: FLAGS += -fsanitize=undefined,thread -g -D __DEBUG__
 build_debug_thread: 
-	$(CC) $(FLAGS) $(SOURCES) -o ./build/conc-debug
+	$(CC) $(FLAGS) $(SOURCES) -o ./build/concd-debug
 
 run_debug_thread: build_debug_thread
-	./build/conc-debug -w ./run
+	./build/concd-debug -w ./run
 
 build: FLAGS += -O2
 build: 
-	$(CC) $(FLAGS) $(SOURCES) -o ./build/conc
+	$(CC) $(FLAGS) $(SOURCES) -o ./build/concd
 
 run: build
-	./build/conc -w ./run
+	./build/concd -w ./run
 
 install: build
 	./install.sh
