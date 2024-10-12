@@ -319,11 +319,13 @@ project_remove(const char *proj_name)
     pthread_mutex_unlock(project.lock);
     pthread_mutex_unlock(store.lock);
 
-    project_free(project);
+    if (result >= D_OK)
+    {
+        project_free(project);
+        return M_OK;
+    }
 
-    if (result < D_OK)
-        return M_DRIVER_ERROR;
-    return M_OK;
+    return M_DRIVER_ERROR;
 }
 
 enum m_result
