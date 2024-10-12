@@ -26,82 +26,82 @@ impl Request for ProjectsInfoRequest {
     }
 }
 
-pub(crate) struct ProjectSettingsRequest {
-    pub(crate) project_name: String,
+pub(crate) struct ProjectSettingsRequest<'a> {
+    pub(crate) project_name: &'a str,
 }
 
-impl Request for ProjectSettingsRequest {
+impl<'a> Request for ProjectSettingsRequest<'a> {
     fn serialize(&self) -> String {
         format!("{}\n{}", "PROJECT-SETTINGS", self.project_name)
     }
 }
 
-pub(crate) struct ProjectInfoRequest {
-    pub(crate) project_name: String,
+pub(crate) struct ProjectInfoRequest<'a> {
+    pub(crate) project_name: &'a str,
 }
 
-impl Request for ProjectInfoRequest {
+impl<'a> Request for ProjectInfoRequest<'a> {
     fn serialize(&self) -> String {
         format!("{}\n{}", "PROJECT-INFO", self.project_name)
     }
 }
 
-pub(crate) struct ProjectUpsertRequest {
-    pub(crate) settings_json: String,
+pub(crate) struct ProjectUpsertRequest<'a> {
+    pub(crate) settings_json: &'a str,
 }
 
-impl Request for ProjectUpsertRequest {
+impl<'a> Request for ProjectUpsertRequest<'a> {
     fn serialize(&self) -> String {
         format!("{}\n{}", "PROJECT-UPSERT", self.settings_json)
     }
 }
 
-pub(crate) struct ProjectStartRequest {
-    pub(crate) project_name: String,
+pub(crate) struct ProjectStartRequest<'a> {
+    pub(crate) project_name: &'a str,
 }
 
-impl Request for ProjectStartRequest {
+impl<'a> Request for ProjectStartRequest<'a> {
     fn serialize(&self) -> String {
         format!("{}\n{}", "PROJECT-START", self.project_name)
     }
 }
 
-pub(crate) struct ProjectStopRequest {
-    pub(crate) project_name: String,
+pub(crate) struct ProjectStopRequest<'a> {
+    pub(crate) project_name: &'a str,
 }
 
-impl Request for ProjectStopRequest {
+impl<'a> Request for ProjectStopRequest<'a> {
     fn serialize(&self) -> String {
         format!("{}\n{}", "PROJECT-STOP", self.project_name)
     }
 }
 
-pub(crate) struct ProjectRemoveRequest {
-    pub(crate) project_name: String,
+pub(crate) struct ProjectRemoveRequest<'a> {
+    pub(crate) project_name: &'a str,
 }
 
-impl Request for ProjectRemoveRequest {
+impl<'a> Request for ProjectRemoveRequest<'a> {
     fn serialize(&self) -> String {
         format!("{}\n{}", "PROJECT-REMOVE", self.project_name)
     }
 }
 
-pub(crate) struct ServicesNamesRequest {
-    pub(crate) project_name: String,
+pub(crate) struct ServicesNamesRequest<'a> {
+    pub(crate) project_name: &'a str,
 }
 
-impl Request for ServicesNamesRequest {
+impl<'a> Request for ServicesNamesRequest<'a> {
     fn serialize(&self) -> String {
         format!("{}\n{}", "SERVICES-NAMES", self.project_name)
     }
 }
 
-pub(crate) struct ServiceInfoRequest {
-    pub(crate) project_name: String,
-    pub(crate) service_name: String,
+pub(crate) struct ServiceInfoRequest<'a> {
+    pub(crate) project_name: &'a str,
+    pub(crate) service_name: &'a str,
 }
 
-impl Request for ServiceInfoRequest {
+impl<'a> Request for ServiceInfoRequest<'a> {
     fn serialize(&self) -> String {
         format!(
             "{}\n{}\n{}",
@@ -110,12 +110,12 @@ impl Request for ServiceInfoRequest {
     }
 }
 
-pub(crate) struct ServiceStartRequest {
-    pub(crate) project_name: String,
-    pub(crate) service_name: String,
+pub(crate) struct ServiceStartRequest<'a> {
+    pub(crate) project_name: &'a str,
+    pub(crate) service_name: &'a str,
 }
 
-impl Request for ServiceStartRequest {
+impl<'a> Request for ServiceStartRequest<'a> {
     fn serialize(&self) -> String {
         format!(
             "{}\n{}\n{}",
@@ -124,12 +124,12 @@ impl Request for ServiceStartRequest {
     }
 }
 
-pub(crate) struct ServiceStopRequest {
-    pub(crate) project_name: String,
-    pub(crate) service_name: String,
+pub(crate) struct ServiceStopRequest<'a> {
+    pub(crate) project_name: &'a str,
+    pub(crate) service_name: &'a str,
 }
 
-impl Request for ServiceStopRequest {
+impl<'a> Request for ServiceStopRequest<'a> {
     fn serialize(&self) -> String {
         format!(
             "{}\n{}\n{}",
