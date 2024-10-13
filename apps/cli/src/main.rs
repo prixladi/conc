@@ -11,11 +11,11 @@ mod output;
 #[derive(Debug, Parser)]
 struct Cli {
     #[command(subcommand)]
-    command: Commands,
+    command: Command,
 }
 
 #[derive(Debug, Subcommand)]
-enum Commands {
+enum Command {
     /// Creates new project or replaces existing
     Upsert,
     /// Get status of all projects, single project or a service
@@ -27,6 +27,13 @@ enum Commands {
     },
     /// Starts a project or a service
     Start {
+        /// name of the project
+        project_name: String,
+        /// name of the service
+        service_name: Option<String>,
+    },
+    /// Restarts a project or a service
+    Restart {
         /// name of the project
         project_name: String,
         /// name of the service
@@ -57,7 +64,7 @@ fn main() {
     let requester = Requester::new(&socket_client);
 
     let output: Output = match parsed.command {
-        Commands::Upsert => {
+        Command::Upsert => {
             let json = "";
             let settings = ProjectSettings::try_from(json);
 
@@ -67,7 +74,7 @@ fn main() {
             }
             requester.upsert_project(&json).into()
         }
-        Commands::Ps {
+        Command::Ps {
             project_name,
             service_name,
         } => match project_name {
@@ -77,21 +84,28 @@ fn main() {
             },
             None => requester.get_projects_info().into(),
         },
-        Commands::Start {
+        Command::Start {
             project_name,
             service_name,
         } => match service_name {
             Some(s_name) => requester.start_service(&project_name, &s_name).into(),
             None => requester.start_project(&project_name).into(),
         },
-        Commands::Stop {
+        Command::Restart {
+            project_name,
+            service_name,
+        } => match service_name {
+            Some(s_name) => requester.restart_service(&project_name, &s_name).into(),
+            None => requester.restart_project(&project_name).into(),
+        },
+        Command::Stop {
             project_name,
             service_name,
         } => match service_name {
             Some(s_name) => requester.stop_service(&project_name, &s_name).into(),
             None => requester.stop_project(&project_name).into(),
         },
-        Commands::Rm { project_name } => requester.remove_project(&project_name).into(),
+        Command::Rm { project_name } => requester.remove_project(&project_name).into(),
     };
 
     match output {

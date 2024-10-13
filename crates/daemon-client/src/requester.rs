@@ -1,5 +1,3 @@
-use std::convert::TryFrom;
-
 use crate::{
     protocol::{
         requests::{
@@ -14,10 +12,10 @@ use crate::{
             ServiceInfoResponse,
         },
     },
-    socket_client::SocketClient,
+    socket_client::SocketClient, Response,
 };
 
-type Response<T> = Result<T, ErrorResponse>;
+type Res<T> = Result<T, ErrorResponse>;
 
 pub struct Requester<'a> {
     socket_client: &'a SocketClient,
@@ -28,43 +26,49 @@ impl<'a> Requester<'a> {
         Self { socket_client }
     }
 
-    pub fn get_projects_names(&self) -> Response<NameListResponse> {
+    pub fn get_projects_names(&self) -> Res<NameListResponse> {
         self.send_request(ProjectsNamesRequest)
     }
 
-    pub fn get_projects_settings(&self) -> Response<ProjectsSettingsResponse> {
+    pub fn get_projects_settings(&self) -> Res<ProjectsSettingsResponse> {
         self.send_request(ProjectsSettingsRequest)
     }
 
-    pub fn get_projects_info(&self) -> Response<ProjectsInfoResponse> {
+    pub fn get_projects_info(&self) -> Res<ProjectsInfoResponse> {
         self.send_request(ProjectsInfoRequest)
     }
 
-    pub fn upsert_project(&self, settings_json: &str) -> Response<ProjectInfoResponse> {
+    pub fn upsert_project(&self, settings_json: &str) -> Res<ProjectInfoResponse> {
         self.send_request(ProjectUpsertRequest { settings_json })
     }
 
-    pub fn get_project_settings(&self, project_name: &str) -> Response<ProjectSettingsResponse> {
+    pub fn get_project_settings(&self, project_name: &str) -> Res<ProjectSettingsResponse> {
         self.send_request(ProjectSettingsRequest { project_name })
     }
 
-    pub fn get_project_info(&self, project_name: &str) -> Response<ProjectInfoResponse> {
+    pub fn get_project_info(&self, project_name: &str) -> Res<ProjectInfoResponse> {
         self.send_request(ProjectInfoRequest { project_name })
     }
 
-    pub fn start_project(&self, project_name: &str) -> Response<ProjectInfoResponse> {
+    pub fn start_project(&self, project_name: &str) -> Res<ProjectInfoResponse> {
         self.send_request(ProjectStartRequest { project_name })
     }
 
-    pub fn stop_project(&self, project_name: &str) -> Response<ProjectInfoResponse> {
+    // TODO: Implement restart project command natively in daemon
+    pub fn restart_project(&self, project_name: &str) -> Res<ProjectInfoResponse> {
+        self.send_request(ProjectStopRequest { project_name })
+            .and_then(|_| self.send_request(ProjectStartRequest { project_name }))
+    }
+
+    pub fn stop_project(&self, project_name: &str) -> Res<ProjectInfoResponse> {
         self.send_request(ProjectStopRequest { project_name })
     }
 
-    pub fn remove_project(&self, project_name: &str) -> Response<NoContentResponse> {
+    pub fn remove_project(&self, project_name: &str) -> Res<NoContentResponse> {
         self.send_request(ProjectRemoveRequest { project_name })
     }
 
-    pub fn get_services_names(&self, project_name: &str) -> Response<NameListResponse> {
+    pub fn get_services_names(&self, project_name: &str) -> Res<NameListResponse> {
         self.send_request(ServicesNamesRequest { project_name })
     }
 
@@ -72,7 +76,7 @@ impl<'a> Requester<'a> {
         &self,
         project_name: &str,
         service_name: &str,
-    ) -> Response<ServiceInfoResponse> {
+    ) -> Res<ServiceInfoResponse> {
         self.send_request(ServiceInfoRequest {
             project_name,
             service_name,
@@ -83,25 +87,39 @@ impl<'a> Requester<'a> {
         &self,
         project_name: &str,
         service_name: &str,
-    ) -> Response<ServiceInfoResponse> {
+    ) -> Res<ServiceInfoResponse> {
         self.send_request(ServiceStartRequest {
             project_name,
             service_name,
         })
     }
 
-    pub fn stop_service(
+    // TODO: Implement restart service command natively in daemon
+    pub fn restart_service(
         &self,
         project_name: &str,
         service_name: &str,
-    ) -> Response<ServiceInfoResponse> {
+    ) -> Res<ServiceInfoResponse> {
+        self.send_request(ServiceStopRequest {
+            project_name,
+            service_name,
+        })
+        .and_then(|_| {
+            self.send_request(ServiceStartRequest {
+                project_name,
+                service_name,
+            })
+        })
+    }
+
+    pub fn stop_service(&self, project_name: &str, service_name: &str) -> Res<ServiceInfoResponse> {
         self.send_request(ServiceStopRequest {
             project_name,
             service_name,
         })
     }
 
-    fn send_request<R: TryFrom<Vec<String>>>(&self, req: impl Request) -> Response<R> {
+    fn send_request<R: Response>(&self, req: impl Request<R>) -> Res<R> {
         let req_string = req.serialize();
         let resp = self.socket_client.send(req_string.as_bytes())?;
         let parts: Vec<String> = resp.split("\n").map(String::from).collect();
