@@ -3,6 +3,7 @@ use std::process::exit;
 use clap::{Parser, Subcommand};
 use daemon_client::{Requester, SocketClient};
 use output::Outputable;
+use project_settings::ProjectSettings;
 
 mod output;
 
@@ -57,7 +58,17 @@ fn main() {
 
     let output = match parsed.command {
         Commands::Upsert => {
-            todo!()
+            let json = "";
+            let settings = ProjectSettings::try_from(json);
+
+            match settings {
+                Ok(res) => println!("{}", res.name),
+                Err(e) => eprintln!("Error while trying to deserialize settings: {}", e),
+            }
+            requester
+                .upsert_project(&json)
+                .unwrap()
+                .map(|e| e.to_output())
         }
         Commands::Ps {
             project_name,

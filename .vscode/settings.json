@@ -5,6 +5,7 @@
     "libc",
     "Outputable",
     "pids",
+    "thiserror",
     "valuestring",
     "Wpointer"
   ],
