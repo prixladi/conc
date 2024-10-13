@@ -2,7 +2,7 @@ use std::process::exit;
 
 use clap::{Parser, Subcommand};
 use daemon_client::{Requester, SocketClient};
-use output::Outputable;
+use output::Output;
 use project_settings::ProjectSettings;
 
 mod output;
@@ -56,7 +56,7 @@ fn main() {
     }
     let requester = Requester::new(&socket_client);
 
-    let output = match parsed.command {
+    let output: Output = match parsed.command {
         Commands::Upsert => {
             let json = "";
             let settings = ProjectSettings::try_from(json);
@@ -65,72 +65,42 @@ fn main() {
                 Ok(res) => println!("{}", res.name),
                 Err(e) => eprintln!("Error while trying to deserialize settings: {}", e),
             }
-            requester
-                .upsert_project(&json)
-                .unwrap()
-                .map(|e| e.to_output())
+            requester.upsert_project(&json).into()
         }
         Commands::Ps {
             project_name,
             service_name,
         } => match project_name {
             Some(p_name) => match service_name {
-                Some(s_name) => requester
-                    .get_services_info(&p_name, &s_name)
-                    .unwrap()
-                    .map(|e| e.to_output()),
-                None => requester
-                    .get_project_info(&p_name)
-                    .unwrap()
-                    .map(|e| e.to_output()),
+                Some(s_name) => requester.get_services_info(&p_name, &s_name).into(),
+                None => requester.get_project_info(&p_name).into(),
             },
-            None => requester
-                .get_projects_info()
-                .unwrap()
-                .map(|e| e.to_output()),
+            None => requester.get_projects_info().into(),
         },
         Commands::Start {
             project_name,
             service_name,
         } => match service_name {
-            Some(s_name) => requester
-                .start_service(&project_name, &s_name)
-                .unwrap()
-                .map(|e| e.to_output()),
-            None => requester
-                .start_project(&project_name)
-                .unwrap()
-                .map(|e| e.to_output()),
+            Some(s_name) => requester.start_service(&project_name, &s_name).into(),
+            None => requester.start_project(&project_name).into(),
         },
         Commands::Stop {
             project_name,
             service_name,
         } => match service_name {
-            Some(s_name) => requester
-                .stop_service(&project_name, &s_name)
-                .unwrap()
-                .map(|e| e.to_output()),
-            None => requester
-                .stop_project(&project_name)
-                .unwrap()
-                .map(|e| e.to_output()),
+            Some(s_name) => requester.stop_service(&project_name, &s_name).into(),
+            None => requester.stop_project(&project_name).into(),
         },
-        Commands::Rm { project_name } => requester
-            .remove_project(&project_name)
-            .unwrap()
-            .map(|e| e.to_output()),
+        Commands::Rm { project_name } => requester.remove_project(&project_name).into(),
     };
 
-    let was_success = output.is_ok();
-    let output_str = output.unwrap_or_else(|e| e.to_output());
-
-    match was_success {
-        true => {
-            println!("{}", output_str);
+    match output {
+        Output::Ok(res) => {
+            println!("{}", res);
             exit(0);
         }
-        false => {
-            eprintln!("{}", output_str);
+        Output::Err(res) => {
+            eprintln!("{}", res);
             exit(-1);
         }
     }

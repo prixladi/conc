@@ -2,11 +2,18 @@ use std::{convert::From, convert::TryFrom, vec};
 
 #[derive(Debug)]
 pub enum ErrorResponse {
+    Socket { error: std::io::Error },
     Client(String),
     Daemon(String),
     Malformed(String),
     ProjectNotFound(String),
     ServiceNotFound(String),
+}
+
+impl From<std::io::Error> for  ErrorResponse {
+    fn from(error: std::io::Error) -> Self {
+        Self::Socket { error }
+    }
 }
 
 impl From<Vec<String>> for ErrorResponse {

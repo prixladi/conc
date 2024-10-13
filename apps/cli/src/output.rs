@@ -4,53 +4,66 @@ use daemon_client::{
 };
 use std::vec;
 
-pub trait Outputable {
-    fn to_output(self) -> String;
+pub enum Output {
+    Ok(String),
+    Err(String)
 }
 
-impl Outputable for NoContentResponse {
-    fn to_output(self) -> String {
-        String::from("success")
+impl From<Result<NoContentResponse, ErrorResponse>> for Output {
+    fn from(value: Result<NoContentResponse, ErrorResponse>) -> Self {
+        match value {
+            Ok(_) => Self::Ok(String::from("success")),
+            Err(err) => Self::Err(format_error_response(err)),
+        }
     }
 }
 
-impl Outputable for ServiceInfoResponse {
-    fn to_output(self) -> String {
-        format_services_info(vec![self.value])
+impl From<Result<ServiceInfoResponse, ErrorResponse>> for Output {
+    fn from(value: Result<ServiceInfoResponse, ErrorResponse>) -> Self {
+        match value {
+            Ok(res) => Self::Ok(format_services_info(vec![res.value])),
+            Err(err) => Self::Err(format_error_response(err)),
+        }
     }
 }
 
-impl Outputable for ProjectInfoResponse {
-    fn to_output(self) -> String {
-        format_services_info(self.values)
+impl From<Result<ProjectInfoResponse, ErrorResponse>> for Output {
+    fn from(value: Result<ProjectInfoResponse, ErrorResponse>) -> Self {
+        match value {
+            Ok(res) => Self::Ok(format_services_info(res.values)),
+            Err(err) => Self::Err(format_error_response(err)),
+        }
     }
 }
 
-impl Outputable for ProjectsInfoResponse {
-    fn to_output(self) -> String {
-        format_projects_info(self.values)
-    }
-}
-
-impl Outputable for ErrorResponse {
-    fn to_output(self) -> String {
-        format_error_response(self)
+impl From<Result<ProjectsInfoResponse, ErrorResponse>> for Output {
+    fn from(value: Result<ProjectsInfoResponse, ErrorResponse>) -> Self {
+        match value {
+            Ok(res) => Self::Ok(format_projects_info(res.values)),
+            Err(err) => Self::Err(format_error_response(err)),
+        }
     }
 }
 
 fn format_error_response(response: ErrorResponse) -> String {
     match response {
+        ErrorResponse::Socket { error } => {
+            format!(
+                "Error occurred while trying to communicate with daemon socket:\n{}",
+                error
+            )
+        }
         ErrorResponse::Client(raw) => {
-            format!("{}\n{}", "Unexpected error ocurred in the cli:", raw)
+            format!("Unexpected error ocurred in the cli:\n{}", raw)
         }
         ErrorResponse::Daemon(raw) => format!(
-            "{}\n{}",
-            "Unexpected error ocurred in the daemon, check its logs for more info:", raw
+            "Unexpected error ocurred in the daemon, check its logs for more info:\n{}",
+            raw
         ),
-        ErrorResponse::Malformed(raw) => format!("{}\n{}", "Unable to parse daemon response:", raw),
-        ErrorResponse::ProjectNotFound(_) => format!("{}", "Provided project was not found."),
+        ErrorResponse::Malformed(raw) => format!("Unable to parse daemon response:\n{}", raw),
+        ErrorResponse::ProjectNotFound(_) => format!("Provided project was not found."),
         ErrorResponse::ServiceNotFound(_) => {
-            format!("{}", "Provided service was not found in provided project.")
+            format!("Provided service was not found in provided project.")
         }
     }
 }

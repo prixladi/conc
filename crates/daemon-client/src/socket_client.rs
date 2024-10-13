@@ -1,4 +1,4 @@
-use std::io::{Read, Write};
+use std::io::{self, Read, Write};
 use std::net::Shutdown;
 use std::os::unix::fs::FileTypeExt;
 use std::os::unix::net::UnixStream;
@@ -32,7 +32,7 @@ impl SocketClient {
         }
     }
 
-    pub fn send(&self, message: &[u8]) -> anyhow::Result<String> {
+    pub fn send(&self, message: &[u8]) -> io::Result<String> {
         let mut unix_stream = UnixStream::connect(&self.socket_path)?;
 
         unix_stream.write(message)?;
@@ -58,7 +58,8 @@ impl SocketClient {
         if response.len() > 0 && response[response.len() - 1] == 0 {
             response.pop();
         }
-        let response_string = String::from_utf8(response)?;
+        let response_string =
+            String::from_utf8(response).expect("Expected utf8 string as a response from daemon");
         Ok(response_string)
     }
 }

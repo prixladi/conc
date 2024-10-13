@@ -28,64 +28,43 @@ impl<'a> Requester<'a> {
         Self { socket_client }
     }
 
-    pub fn get_projects_names(&self) -> anyhow::Result<Response<NameListResponse>> {
+    pub fn get_projects_names(&self) -> Response<NameListResponse> {
         self.send_request(ProjectsNamesRequest)
     }
 
-    pub fn get_projects_settings(&self) -> anyhow::Result<Response<ProjectsSettingsResponse>> {
+    pub fn get_projects_settings(&self) -> Response<ProjectsSettingsResponse> {
         self.send_request(ProjectsSettingsRequest)
     }
 
-    pub fn get_projects_info(&self) -> anyhow::Result<Response<ProjectsInfoResponse>> {
+    pub fn get_projects_info(&self) -> Response<ProjectsInfoResponse> {
         self.send_request(ProjectsInfoRequest)
     }
 
-    pub fn upsert_project(
-        &self,
-        settings_json: &str,
-    ) -> anyhow::Result<Response<ProjectInfoResponse>> {
+    pub fn upsert_project(&self, settings_json: &str) -> Response<ProjectInfoResponse> {
         self.send_request(ProjectUpsertRequest { settings_json })
     }
 
-    pub fn get_project_settings(
-        &self,
-        project_name: &str,
-    ) -> anyhow::Result<Response<ProjectSettingsResponse>> {
+    pub fn get_project_settings(&self, project_name: &str) -> Response<ProjectSettingsResponse> {
         self.send_request(ProjectSettingsRequest { project_name })
     }
 
-    pub fn get_project_info(
-        &self,
-        project_name: &str,
-    ) -> anyhow::Result<Response<ProjectInfoResponse>> {
+    pub fn get_project_info(&self, project_name: &str) -> Response<ProjectInfoResponse> {
         self.send_request(ProjectInfoRequest { project_name })
     }
 
-    pub fn start_project(
-        &self,
-        project_name: &str,
-    ) -> anyhow::Result<Response<ProjectInfoResponse>> {
+    pub fn start_project(&self, project_name: &str) -> Response<ProjectInfoResponse> {
         self.send_request(ProjectStartRequest { project_name })
     }
 
-    pub fn stop_project(
-        &self,
-        project_name: &str,
-    ) -> anyhow::Result<Response<ProjectInfoResponse>> {
+    pub fn stop_project(&self, project_name: &str) -> Response<ProjectInfoResponse> {
         self.send_request(ProjectStopRequest { project_name })
     }
 
-    pub fn remove_project(
-        &self,
-        project_name: &str,
-    ) -> anyhow::Result<Response<NoContentResponse>> {
+    pub fn remove_project(&self, project_name: &str) -> Response<NoContentResponse> {
         self.send_request(ProjectRemoveRequest { project_name })
     }
 
-    pub fn get_services_names(
-        &self,
-        project_name: &str,
-    ) -> anyhow::Result<Response<NameListResponse>> {
+    pub fn get_services_names(&self, project_name: &str) -> Response<NameListResponse> {
         self.send_request(ServicesNamesRequest { project_name })
     }
 
@@ -93,7 +72,7 @@ impl<'a> Requester<'a> {
         &self,
         project_name: &str,
         service_name: &str,
-    ) -> anyhow::Result<Response<ServiceInfoResponse>> {
+    ) -> Response<ServiceInfoResponse> {
         self.send_request(ServiceInfoRequest {
             project_name,
             service_name,
@@ -104,7 +83,7 @@ impl<'a> Requester<'a> {
         &self,
         project_name: &str,
         service_name: &str,
-    ) -> anyhow::Result<Response<ServiceInfoResponse>> {
+    ) -> Response<ServiceInfoResponse> {
         self.send_request(ServiceStartRequest {
             project_name,
             service_name,
@@ -115,21 +94,17 @@ impl<'a> Requester<'a> {
         &self,
         project_name: &str,
         service_name: &str,
-    ) -> anyhow::Result<Response<ServiceInfoResponse>> {
+    ) -> Response<ServiceInfoResponse> {
         self.send_request(ServiceStopRequest {
             project_name,
             service_name,
         })
     }
 
-    fn send_request<R: TryFrom<Vec<String>>>(
-        &self,
-        req: impl Request,
-    ) -> anyhow::Result<Response<R>> {
+    fn send_request<R: TryFrom<Vec<String>>>(&self, req: impl Request) -> Response<R> {
         let req_string = req.serialize();
-        self.socket_client.send(req_string.as_bytes()).map(|data| {
-            let parts: Vec<String> = data.split("\n").map(String::from).collect();
-            R::try_from(parts.clone()).map_err(|_| ErrorResponse::from(parts))
-        })
+        let resp = self.socket_client.send(req_string.as_bytes())?;
+        let parts: Vec<String> = resp.split("\n").map(String::from).collect();
+        R::try_from(parts.clone()).map_err(|_| ErrorResponse::from(parts))
     }
 }
