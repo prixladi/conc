@@ -21,7 +21,7 @@ enum d_service_status
 struct d_service_info
 {
     enum d_service_status status;
-    char *log_file_path;
+    char *logfile_path;
     int pid;
 };
 
@@ -34,7 +34,7 @@ enum d_result d_project_init(const struct project_settings settings);
 enum d_result d_project_remove(const struct project_settings settings);
 
 enum d_result d_service_info_get(const char *proj_name, const char *serv_name, struct d_service_info *info);
-enum d_result d_service_start(const char *proj_name, const struct service_settings service_settings);
+enum d_result d_service_start(const struct project_settings project, const struct service_settings service_settings);
 enum d_result d_service_stop(const char *proj_name, const struct service_settings service_settings);
 
 void d_service_info_free(struct d_service_info info);

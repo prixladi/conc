@@ -18,6 +18,8 @@ struct service_settings
 struct project_settings
 {
     char *name;
+    char *cwd;
+    struct env_variable *env;
     struct service_settings *services;
 };
 
@@ -25,9 +27,7 @@ char *project_settings_parse(const char *data, struct project_settings *settings
 char *project_settings_stringify(const struct project_settings settings);
 
 struct project_settings project_settings_dup(const struct project_settings settings);
-struct service_settings service_settings_dup(const struct service_settings settings);
 
 void project_settings_free(struct project_settings settings);
-void service_settings_free(struct service_settings settings);
 
 #endif

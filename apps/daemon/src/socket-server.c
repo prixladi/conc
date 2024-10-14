@@ -134,7 +134,7 @@ client_socket_handle(void *data)
 
     // one character message containing just '\0' is threated as a health check
     bool is_health_check = input[0] == '\0';
-    char *response = NULL;
+    scoped char *response = NULL;
     if (is_health_check)
     {
         log_trace(TRACE_NAME, "Received health check from connection '%d'\n", opts->client_socket);
@@ -153,7 +153,6 @@ client_socket_handle(void *data)
     if (close(opts->client_socket) > 0)
         log_error("Unable to close client socket '%d'\n", opts->client_socket);
 
-    free(response);
     return NULL;
 }
 

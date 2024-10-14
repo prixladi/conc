@@ -20,7 +20,7 @@
 #include "process.h"
 
 static const char *root_projects_dir = "./projects";
-static const char *log_file_name = "log";
+static const char *logfile_name = "log";
 static const char *meta_file_name = "meta";
 
 struct service_process_info
@@ -31,7 +31,7 @@ struct service_process_info
 
 static int ensure_project_dir_exists(const char *proj_name);
 static int ensure_service_dir_exists(const char *proj_name, const char *serv_name);
-static int ensure_service_log_file_exists(const char *proj_name, const char *serv_name);
+static int ensure_service_logfile_exists(const char *proj_name, const char *serv_name);
 
 static int write_service_meta_file(const char *proj_name, const char *serv_name, struct service_process_info info);
 static bool try_parse_service_meta_file(const char *proj_name, const char *serv_name, struct service_process_info *info);
@@ -43,7 +43,7 @@ static char *get_project_dir_path(const char *proj_name);
 static char *get_project_meta_file_path(const char *proj_name);
 static char *get_service_dir_path(const char *proj_name, const char *serv_name);
 static char *get_service_meta_file_path(const char *proj_name, const char *serv_name);
-static char *get_service_log_file_path(const char *proj_name, const char *serv_name);
+static char *get_service_logfile_path(const char *proj_name, const char *serv_name);
 
 static int remove_file_f(char *path);
 static int remove_dir_f(char *path);
@@ -128,7 +128,7 @@ d_project_init(const struct project_settings settings)
     for (size_t i = 0; i < vec_length(settings.services); i++)
     {
         ensure_service_dir_exists(settings.name, settings.services[i].name);
-        ensure_service_log_file_exists(settings.name, settings.services[i].name);
+        ensure_service_logfile_exists(settings.name, settings.services[i].name);
     }
 
     return D_OK;
@@ -141,7 +141,7 @@ d_project_remove(const struct project_settings settings)
     {
         struct service_settings service = settings.services[i];
         remove_file_f(get_service_meta_file_path(settings.name, service.name));
-        remove_file_f(get_service_log_file_path(settings.name, service.name));
+        remove_file_f(get_service_logfile_path(settings.name, service.name));
         remove_dir_f(get_service_dir_path(settings.name, service.name));
     }
 
@@ -163,22 +163,22 @@ d_service_info_get(const char *proj_name, const char *serv_name, struct d_servic
     int running_pid = get_service_pid(proj_name, serv_name);
 
     info->status = running_pid > 0 ? D_RUNNING : running_pid == 0 ? D_STOPPED : D_NONE;
-    scoped char *log_path = get_service_log_file_path(proj_name, serv_name);
-    info->log_file_path = realpath(log_path, NULL);
+    scoped char *log_path = get_service_logfile_path(proj_name, serv_name);
+    info->logfile_path = realpath(log_path, NULL);
     info->pid = running_pid;
 
     return D_OK;
 }
 
 enum d_result
-d_service_start(const char *proj_name, const struct service_settings service_settings)
+d_service_start(const struct project_settings project, const struct service_settings service_settings)
 {
-    int running_pid = get_service_pid(proj_name, service_settings.name);
+    int running_pid = get_service_pid(project.name, service_settings.name);
     if (running_pid > 0)
         return D_NO_ACTION;
 
-    scoped char *logfile_path = get_service_log_file_path(proj_name, service_settings.name);
-    int pid = process_start(proj_name, service_settings, logfile_path);
+    scoped char *logfile_path = get_service_logfile_path(project.name, service_settings.name);
+    int pid = process_start(project, service_settings, logfile_path);
 
     time_t c_time = 0;
     struct stat sts;
@@ -190,9 +190,9 @@ d_service_start(const char *proj_name, const struct service_settings service_set
         .c_time = c_time,
     };
 
-    if (write_service_meta_file(proj_name, service_settings.name, info) > 0)
+    if (write_service_meta_file(project.name, service_settings.name, info) > 0)
     {
-        log_error("Unable to write service meta for service '%s' in project '%s'\n", service_settings.name, proj_name);
+        log_error("Unable to write service meta for service '%s' in project '%s'\n", service_settings.name, project.name);
         return D_FS_ERROR;
     }
 
@@ -220,9 +220,9 @@ d_service_stop(const char *proj_name, const struct service_settings service_sett
 void
 d_service_info_free(struct d_service_info info)
 {
-    free(info.log_file_path);
+    free(info.logfile_path);
 
-    info.log_file_path = NULL;
+    info.logfile_path = NULL;
 }
 
 static int
@@ -254,10 +254,10 @@ ensure_service_dir_exists(const char *proj_name, const char *serv_name)
 }
 
 static int
-ensure_service_log_file_exists(const char *proj_name, const char *serv_name)
+ensure_service_logfile_exists(const char *proj_name, const char *serv_name)
 {
-    scoped char *log_file_path = get_service_log_file_path(proj_name, serv_name);
-    int fd = open(log_file_path, O_APPEND | O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    scoped char *logfile_path = get_service_logfile_path(proj_name, serv_name);
+    int fd = open(logfile_path, O_APPEND | O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     close(fd);
     return fd > 0 ? 0 : 1;
 }
@@ -353,9 +353,9 @@ get_service_meta_file_path(const char *proj_name, const char *serv_name)
 }
 
 static char *
-get_service_log_file_path(const char *proj_name, const char *serv_name)
+get_service_logfile_path(const char *proj_name, const char *serv_name)
 {
-    return str_printf("%s/%s/%s/%s", root_projects_dir, proj_name, serv_name, log_file_name);
+    return str_printf("%s/%s/%s/%s", root_projects_dir, proj_name, serv_name, logfile_name);
 }
 
 static int

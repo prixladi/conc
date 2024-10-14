@@ -64,7 +64,6 @@ manager_init(void)
     for (size_t i = 0; i < settings_count; i++)
     {
         struct project_settings settings = { 0 };
-
         char *parse_error = project_settings_parse(stored_settings[i], &settings);
         if (parse_error)
         {
@@ -381,7 +380,7 @@ service_start(const char *proj_name, const char *serv_name)
         return M_SERVICE_NOT_FOUND;
     }
 
-    enum d_result start_result = d_service_start(project.settings.name, service);
+    enum d_result start_result = d_service_start(project.settings, service);
 
     pthread_mutex_unlock(project.lock);
 
@@ -430,10 +429,10 @@ void
 service_info_free(struct service_info info)
 {
     free(info.name);
-    free(info.log_file_path);
+    free(info.logfile_path);
 
     info.name = NULL;
-    info.log_file_path = NULL;
+    info.logfile_path = NULL;
 }
 
 void
@@ -456,7 +455,7 @@ project_services_start(struct project_settings project)
     enum d_result final_result = D_NO_ACTION;
     for (size_t i = 0; i < vec_length(project.services); i++)
     {
-        enum d_result result = d_service_start(project.name, project.services[i]);
+        enum d_result result = d_service_start(project, project.services[i]);
         if (result <= D_OK && final_result >= D_OK)
             final_result = result;
     }
@@ -555,7 +554,7 @@ service_info_create(const char *proj_name, const char *serv_name)
     d_service_info_get(proj_name, serv_name, &d_info);
     enum service_status status;
 
-    char *log_file_path = d_info.log_file_path ? str_dup(d_info.log_file_path) : NULL;
+    char *logfile_path = d_info.logfile_path ? str_dup(d_info.logfile_path) : NULL;
 
     switch (d_info.status)
     {
@@ -573,7 +572,7 @@ service_info_create(const char *proj_name, const char *serv_name)
     struct service_info info = {
         .name = str_dup(serv_name),
         .status = status,
-        .log_file_path = log_file_path,
+        .logfile_path = logfile_path,
         .pid = d_info.pid,
     };
 

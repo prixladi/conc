@@ -28,7 +28,7 @@ struct service_info
 {
     char *name;
     enum service_status status;
-    char *log_file_path;
+    char *logfile_path;
     int pid;
 };
 

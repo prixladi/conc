@@ -424,6 +424,6 @@ format_service_info(const struct service_info info)
         break;
     }
 
-    char *log_file_path = info.log_file_path ? info.log_file_path : "-";
-    return str_printf("%s %s %d %s", info.name, status, info.pid, log_file_path);
+    char *logfile_path = info.logfile_path ? info.logfile_path : "-";
+    return str_printf("%s %s %d %s", info.name, status, info.pid, logfile_path);
 }

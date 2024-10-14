@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -7,6 +8,7 @@
 #include <sys/stat.h>
 
 #include "utils/log.h"
+#include "utils/fs.h"
 #include "utils/string.h"
 #include "utils/vector.h"
 
@@ -25,20 +27,21 @@ struct process_descriptor
 
 static void handle_child(struct process_descriptor pd);
 
-static struct process_descriptor pd_create(const char *proj_name, const struct service_settings settings,
+static struct process_descriptor pd_create(const struct project_settings project, const struct service_settings service,
                                            const char *logfile);
+static char **env_pair_create(struct env_variable var);
 
 static void pd_free(struct process_descriptor pd);
 
 int
-process_start(const char *proj_name, const struct service_settings settings, const char *logfile_path)
+process_start(const struct project_settings project, const struct service_settings settings, const char *logfile_path)
 {
-    struct process_descriptor pd = pd_create(proj_name, settings, logfile_path);
+    struct process_descriptor pd = pd_create(project, settings, logfile_path);
     pid_t pid = fork();
     if (pid == 0)
     {
         handle_child(pd);
-        log_critical("Unable to execute process '%s - %d', aborting", pd.id, pid);
+        log_critical("Unable to execute process '%s' with pid %d and pwd '%s', aborting", pd.id, pid, pd.pwd);
         pd_free(pd);
         exit(127);
     }
@@ -81,38 +84,49 @@ handle_child(struct process_descriptor pd)
 }
 
 static struct process_descriptor
-pd_create(const char *proj_name, const struct service_settings settings, const char *logfile_path_i)
+pd_create(const struct project_settings project, const struct service_settings service, const char *logfile_path_i)
 {
-    char *id = str_printf("%s/%s", proj_name, settings.name);
-    char *logfile_path = str_dup(logfile_path_i);
-    char *pwd = str_dup(settings.pwd);
-
-    size_t command_len = vec_length(settings.command);
-    char **command = vec_create_prealloc(char *, command_len + 1);
-    for (size_t i = 0; i < command_len; i++)
-        vec_push_rval(command, str_dup(settings.command[i]));
+    char **command = vec_create(char *);
+    for (size_t i = 0; i < vec_length(service.command); i++)
+        vec_push_rval(command, str_dup(service.command[i]));
     vec_push(command, command_terminate);
 
-    size_t env_len = vec_length(settings.env);
-    char ***env = vec_create_prealloc(char **, env_len);
-    for (size_t i = 0; i < env_len; i++)
+    char ***env = vec_create(char **);
+    for (size_t i = 0; i < vec_length(service.env); i++)
     {
-        char **env_pair = malloc(sizeof(char *) * 2);
-        env_pair[0] = str_dup(settings.env[i].key);
-        env_pair[1] = str_dup(settings.env[i].value);
+        char **env_pair = env_pair_create(service.env[i]);
         vec_push(env, env_pair);
     }
-    vec_push(command, command_terminate);
+    for (size_t i = 0; i < vec_length(project.env); i++)
+    {
+        for (size_t j = 0; j < vec_length(env); j++)
+            if (strcmp(env[j][0], project.env[i].key) == 0)
+                continue;
+        char **env_pair = env_pair_create(project.env[i]);
+        vec_push(env, env_pair);
+    }
+
+    char *pwd = service.pwd && is_path_absolute(service.pwd) ? str_dup(service.pwd)
+                                                             : paths_join(project.cwd, service.pwd);
 
     struct process_descriptor proc = {
-        .id = id,
-        .logfile_path = logfile_path,
+        .id = str_printf("%s/%s", project.name, service.name),
+        .logfile_path = str_dup(logfile_path_i),
         .command = command,
-        .pwd = pwd,
         .env = env,
+        .pwd = pwd,
     };
 
     return proc;
+}
+
+static char **
+env_pair_create(struct env_variable env)
+{
+    char **env_pair = malloc(sizeof(char *) * 2);
+    env_pair[0] = str_dup(env.key);
+    env_pair[1] = str_dup(env.value);
+    return env_pair;
 }
 
 static void

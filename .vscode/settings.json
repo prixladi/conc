@@ -12,6 +12,23 @@
   "files.associations": {
     "unistd.h": "c",
     "wait.h": "c",
-    "string.h": "c"
+    "string.h": "c",
+    "fs.h": "c",
+    "stdlib.h": "c",
+    "log.h": "c",
+    "numbers": "c",
+    "text_encoding": "c",
+    "typeinfo": "c",
+    "charconv": "c",
+    "optional": "c",
+    "format": "c",
+    "ratio": "c",
+    "system_error": "c",
+    "array": "c",
+    "functional": "c",
+    "tuple": "c",
+    "type_traits": "c",
+    "utility": "c",
+    "thread": "c"
   }
 }
