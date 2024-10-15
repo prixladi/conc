@@ -1,10 +1,11 @@
 use crate::{
     protocol::{
         requests::{
-            ProjectInfoRequest, ProjectRemoveRequest, ProjectSettingsRequest, ProjectStartRequest,
-            ProjectStopRequest, ProjectUpsertRequest, ProjectsInfoRequest, ProjectsNamesRequest,
-            ProjectsSettingsRequest, Request, ServiceInfoRequest, ServiceStartRequest,
-            ServiceStopRequest, ServicesNamesRequest,
+            ProjectInfoRequest, ProjectRemoveRequest, ProjectRestartRequest,
+            ProjectSettingsRequest, ProjectStartRequest, ProjectStopRequest, ProjectUpsertRequest,
+            ProjectsInfoRequest, ProjectsNamesRequest, ProjectsSettingsRequest, Request,
+            ServiceInfoRequest, ServiceRestartRequest, ServiceStartRequest, ServiceStopRequest,
+            ServicesNamesRequest,
         },
         responses::{
             ErrorResponse, NameListResponse, NoContentResponse, ProjectInfoResponse,
@@ -55,10 +56,8 @@ impl<'a> Requester<'a> {
         self.send_request(ProjectStartRequest { project_name })
     }
 
-    // TODO: Implement restart project command natively in daemon
     pub fn restart_project(&self, project_name: &str) -> Res<ProjectInfoResponse> {
-        self.send_request(ProjectStopRequest { project_name })
-            .and_then(|_| self.send_request(ProjectStartRequest { project_name }))
+        self.send_request(ProjectRestartRequest { project_name })
     }
 
     pub fn stop_project(&self, project_name: &str) -> Res<ProjectInfoResponse> {
@@ -95,21 +94,14 @@ impl<'a> Requester<'a> {
         })
     }
 
-    // TODO: Implement restart service command natively in daemon
     pub fn restart_service(
         &self,
         project_name: &str,
         service_name: &str,
     ) -> Res<ServiceInfoResponse> {
-        self.send_request(ServiceStopRequest {
+        self.send_request(ServiceRestartRequest {
             project_name,
             service_name,
-        })
-        .and_then(|_| {
-            self.send_request(ServiceStartRequest {
-                project_name,
-                service_name,
-            })
         })
     }
 

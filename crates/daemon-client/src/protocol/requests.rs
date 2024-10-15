@@ -71,6 +71,16 @@ impl<'a> Request<ProjectInfoResponse> for ProjectStartRequest<'a> {
     }
 }
 
+pub(crate) struct ProjectRestartRequest<'a> {
+    pub(crate) project_name: &'a str,
+}
+
+impl<'a> Request<ProjectInfoResponse> for ProjectRestartRequest<'a> {
+    fn serialize(&self) -> String {
+        format!("{}\n{}", "PROJECT-RESTART", self.project_name)
+    }
+}
+
 pub(crate) struct ProjectStopRequest<'a> {
     pub(crate) project_name: &'a str,
 }
@@ -125,6 +135,20 @@ impl<'a> Request<ServiceInfoResponse> for ServiceStartRequest<'a> {
         format!(
             "{}\n{}\n{}",
             "SERVICE-START", self.project_name, self.service_name
+        )
+    }
+}
+
+pub(crate) struct ServiceRestartRequest<'a> {
+    pub(crate) project_name: &'a str,
+    pub(crate) service_name: &'a str,
+}
+
+impl<'a> Request<ServiceInfoResponse> for ServiceRestartRequest<'a> {
+    fn serialize(&self) -> String {
+        format!(
+            "{}\n{}\n{}",
+            "SERVICE-RESTART", self.project_name, self.service_name
         )
     }
 }

@@ -274,6 +274,38 @@ project_start(const char *proj_name)
 }
 
 enum m_result
+project_restart(const char *proj_name)
+{
+    pthread_mutex_lock(store.lock);
+
+    struct project project;
+    if (try_find_project(proj_name, &project, NULL) == false)
+    {
+        pthread_mutex_unlock(store.lock);
+        return M_PROJECT_NOT_FOUND;
+    }
+
+    pthread_mutex_lock(project.lock);
+
+    pthread_mutex_unlock(store.lock);
+    enum d_result result = project_services_stop(project.settings);
+
+    if (result < D_OK)
+    {
+        pthread_mutex_unlock(project.lock);
+        return M_DRIVER_ERROR;
+    }
+
+    result = project_services_start(project.settings);
+
+    pthread_mutex_unlock(project.lock);
+
+    if (result < D_OK)
+        return M_DRIVER_ERROR;
+    return M_OK;
+}
+
+enum m_result
 project_stop(const char *proj_name)
 {
     pthread_mutex_lock(store.lock);
@@ -388,6 +420,45 @@ service_start(const char *proj_name, const char *serv_name)
         return M_DRIVER_ERROR;
     if (start_result == D_NO_ACTION)
         return M_NO_ACTION;
+    return M_OK;
+}
+
+enum m_result
+service_restart(const char *proj_name, const char *serv_name)
+{
+    pthread_mutex_lock(store.lock);
+
+    struct project project;
+    if (try_find_project(proj_name, &project, NULL) == false)
+    {
+        pthread_mutex_unlock(store.lock);
+        return M_PROJECT_NOT_FOUND;
+    }
+
+    pthread_mutex_lock(project.lock);
+
+    pthread_mutex_unlock(store.lock);
+
+    struct service_settings service;
+    if (try_find_service(serv_name, project, &service) == false)
+    {
+        pthread_mutex_unlock(project.lock);
+        return M_SERVICE_NOT_FOUND;
+    }
+
+    enum d_result result = d_service_stop(project.settings.name, service);
+    if (result < D_OK)
+    {
+        pthread_mutex_unlock(project.lock);
+        return M_DRIVER_ERROR;
+    }
+
+    result = d_service_start(project.settings, service);
+
+    pthread_mutex_unlock(project.lock);
+
+    if (result < D_OK)
+        return M_DRIVER_ERROR;
     return M_OK;
 }
 

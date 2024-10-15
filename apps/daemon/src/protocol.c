@@ -27,11 +27,13 @@ static char *handle_projects_info(char **command);
 static char *handle_project_settings(char **command);
 static char *handle_project_info(char **command);
 static char *handle_project_start(char **command);
+static char *handle_project_restart(char **command);
 static char *handle_project_stop(char **command);
 static char *handle_project_remove(char **command);
 static char *handle_services_names(char **command);
 static char *handle_service_info(char **command);
 static char *handle_service_start(char **command);
+static char *handle_service_restart(char **command);
 static char *handle_service_stop(char **command);
 
 static char *handle_error_results(enum m_result resp);
@@ -59,6 +61,8 @@ dispatch_command(const char *input)
     if (response == NULL)
         response = match_and_handle("PROJECT-START", command, 1, handle_project_start);
     if (response == NULL)
+        response = match_and_handle("PROJECT-RESTART", command, 1, handle_project_restart);
+    if (response == NULL)
         response = match_and_handle("PROJECT-STOP", command, 1, handle_project_stop);
     if (response == NULL)
         response = match_and_handle("PROJECT-REMOVE", command, 1, handle_project_remove);
@@ -68,6 +72,8 @@ dispatch_command(const char *input)
         response = match_and_handle("SERVICE-INFO", command, 2, handle_service_info);
     if (response == NULL)
         response = match_and_handle("SERVICE-START", command, 2, handle_service_start);
+    if (response == NULL)
+        response = match_and_handle("SERVICE-RESTART", command, 2, handle_service_restart);
     if (response == NULL)
         response = match_and_handle("SERVICE-STOP", command, 2, handle_service_stop);
 
@@ -287,6 +293,15 @@ handle_project_start(char **command)
 }
 
 static char *
+handle_project_restart(char **command)
+{
+    int result = project_restart(command[0]);
+    if (result < M_OK)
+        return handle_error_results(result);
+    return handle_project_info(command);
+}
+
+static char *
 handle_project_stop(char **command)
 {
     int result = project_stop(command[0]);
@@ -349,6 +364,16 @@ static char *
 handle_service_start(char **command)
 {
     int result = service_start(command[0], command[1]);
+    if (result < M_OK)
+        return handle_error_results(result);
+
+    return handle_service_info(command);
+}
+
+static char *
+handle_service_restart(char **command)
+{
+    int result = service_restart(command[0], command[1]);
     if (result < M_OK)
         return handle_error_results(result);
 
