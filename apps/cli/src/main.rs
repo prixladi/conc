@@ -3,9 +3,11 @@ use std::process::exit;
 use clap::{Parser, Subcommand};
 use daemon_client::{Requester, SocketClient};
 use output::Output;
+use process::execute_tail;
 use project_settings::ProjectSettings;
 
 mod output;
+mod process;
 
 /// Simple process manager
 #[derive(Debug, Parser)]
@@ -28,28 +30,38 @@ enum Command {
         /// name of the service
         service_name: Option<String>,
     },
-    /// Starts a project or a service
+    /// Open logs for a project or a service in 'tail -f' command
+    Logs {
+        /// name of the project
+        project_name: String,
+        /// name of the service
+        service_name: Option<String>,
+        /// if specified programs returns logfile path(s) instead of running tail on them
+        #[clap(long, short, action)]
+        raw: bool,
+    },
+    /// Start a project or a service
     Start {
         /// name of the project
         project_name: String,
         /// name of the service
         service_name: Option<String>,
     },
-    /// Restarts a project or a service
+    /// Restart a project or a service
     Restart {
         /// name of the project
         project_name: String,
         /// name of the service
         service_name: Option<String>,
     },
-    /// Stops a project or a service
+    /// Stop a project or a service
     Stop {
         /// name of the project
         project_name: String,
         /// name of the service
         service_name: Option<String>,
     },
-    /// Removes a project
+    /// Remove a project
     Rm {
         /// name of the project
         project_name: String,
@@ -93,6 +105,36 @@ fn main() {
             },
             None => requester.get_projects_info().into(),
         },
+        Command::Logs {
+            project_name,
+            service_name,
+            raw,
+        } => {
+            let res = match service_name {
+                Some(service_name) => requester
+                    .get_services_info(&project_name, &service_name)
+                    .map(|res| vec![res.value.logfile_path]),
+                None => requester.get_project_info(&project_name).map(|res| {
+                    res.values
+                        .into_iter()
+                        .map(|val| val.logfile_path)
+                        .collect::<Vec<String>>()
+                }),
+            };
+
+            match res {
+                Ok(res) => {
+                    if raw {
+                        Output::Stdout(res.join(" "))
+                    } else {
+                        let error = execute_tail(res);
+                        // Should never reach here because execute replaces executable
+                        Output::Stderr(error.to_string())
+                    }
+                }
+                Err(err) => err.into(),
+            }
+        }
         Command::Start {
             project_name,
             service_name,

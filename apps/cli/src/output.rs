@@ -10,11 +10,26 @@ pub enum Output {
     Stderr(String),
 }
 
+impl From<ErrorResponse> for Output {
+    fn from(value: ErrorResponse) -> Self {
+        Self::Stderr(format_error_response(value))
+    }
+}
+
+impl From<Result<String, ErrorResponse>> for Output {
+    fn from(value: Result<String, ErrorResponse>) -> Self {
+        match value {
+            Ok(value) => Self::Stdout(value),
+            Err(err) => err.into(),
+        }
+    }
+}
+
 impl From<Result<NoContentResponse, ErrorResponse>> for Output {
     fn from(value: Result<NoContentResponse, ErrorResponse>) -> Self {
         match value {
             Ok(_) => Self::Stdout(String::from("success")),
-            Err(err) => Self::Stderr(format_error_response(err)),
+            Err(err) => err.into(),
         }
     }
 }
@@ -23,7 +38,7 @@ impl From<Result<ServiceInfoResponse, ErrorResponse>> for Output {
     fn from(value: Result<ServiceInfoResponse, ErrorResponse>) -> Self {
         match value {
             Ok(res) => Self::Stdout(format_services_info(vec![res.value])),
-            Err(err) => Self::Stderr(format_error_response(err)),
+            Err(err) => err.into(),
         }
     }
 }
@@ -32,7 +47,7 @@ impl From<Result<ProjectInfoResponse, ErrorResponse>> for Output {
     fn from(value: Result<ProjectInfoResponse, ErrorResponse>) -> Self {
         match value {
             Ok(res) => Self::Stdout(format_services_info(res.values)),
-            Err(err) => Self::Stderr(format_error_response(err)),
+            Err(err) => err.into(),
         }
     }
 }
@@ -41,7 +56,7 @@ impl From<Result<ProjectsInfoResponse, ErrorResponse>> for Output {
     fn from(value: Result<ProjectsInfoResponse, ErrorResponse>) -> Self {
         match value {
             Ok(res) => Self::Stdout(format_projects_info(res.values)),
-            Err(err) => Self::Stderr(format_error_response(err)),
+            Err(err) => err.into(),
         }
     }
 }
@@ -54,7 +69,7 @@ impl From<ProjectSettingsError> for Output {
 
 fn format_error_response(response: ErrorResponse) -> String {
     match response {
-        ErrorResponse::Socket { error } => {
+        ErrorResponse::Socket { inner: error } => {
             format!(
                 "Error occurred while trying to communicate with daemon socket:\n{}",
                 error

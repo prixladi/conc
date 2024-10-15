@@ -2,7 +2,7 @@ use std::{convert::From, convert::TryFrom, vec};
 
 #[derive(Debug)]
 pub enum ErrorResponse {
-    Socket { error: std::io::Error },
+    Socket { inner: std::io::Error },
     Client(String),
     Daemon(String),
     Malformed(String),
@@ -12,7 +12,7 @@ pub enum ErrorResponse {
 
 impl From<std::io::Error> for ErrorResponse {
     fn from(error: std::io::Error) -> Self {
-        Self::Socket { error }
+        Self::Socket { inner: error }
     }
 }
 
@@ -239,7 +239,7 @@ impl TryFrom<&str> for ServiceStatus {
 pub struct ServiceInfo {
     pub name: String,
     pub status: ServiceStatus,
-    pub logfile_path: Option<String>,
+    pub logfile_path: String,
     pub pid: i32,
 }
 
@@ -255,16 +255,16 @@ impl TryFrom<&str> for ServiceInfo {
         let status = ServiceStatus::try_from(parts[1])?;
         let pid = parts[2].parse::<i32>().map_err(|_| ())?;
 
-        let logfile_path = if parts[3] != "-" {
-            Some(String::from(parts[3]))
+        let logfile_path = if parts[3] == "-" {
+            "/dev/null"
         } else {
-            None
+            parts[3]
         };
 
         Ok(Self {
             name: String::from(parts[0]),
             status,
-            logfile_path,
+            logfile_path: String::from(logfile_path),
             pid,
         })
     }
