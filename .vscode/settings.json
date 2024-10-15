@@ -3,10 +3,12 @@
     "concc",
     "journalctl",
     "libc",
+    "logfile",
     "Outputable",
     "pids",
     "thiserror",
     "valuestring",
+    "workdir",
     "Wpointer"
   ],
   "files.associations": {

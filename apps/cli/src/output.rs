@@ -2,11 +2,12 @@ use daemon_client::{
     ErrorResponse, NoContentResponse, ProjectInfoResponse, ProjectsInfoResponse, ServiceInfo,
     ServiceInfoResponse, ServiceStatus,
 };
+use project_settings::ProjectSettingsError;
 use std::vec;
 
 pub enum Output {
     Ok(String),
-    Err(String)
+    Err(String),
 }
 
 impl From<Result<NoContentResponse, ErrorResponse>> for Output {
@@ -42,6 +43,12 @@ impl From<Result<ProjectsInfoResponse, ErrorResponse>> for Output {
             Ok(res) => Self::Ok(format_projects_info(res.values)),
             Err(err) => Self::Err(format_error_response(err)),
         }
+    }
+}
+
+impl From<ProjectSettingsError> for Output {
+    fn from(value: ProjectSettingsError) -> Self {
+        Self::Err(value.to_string())
     }
 }
 

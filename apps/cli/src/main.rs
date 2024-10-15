@@ -17,7 +17,10 @@ struct Cli {
 #[derive(Debug, Subcommand)]
 enum Command {
     /// Creates new project or replaces existing
-    Upsert,
+    Upsert {
+        /// path to the settings file or directory containing the settings file (conc.json), defaults to current dir
+        settings_path: Option<String>,
+    },
     /// Get status of all projects, single project or a service
     Ps {
         /// name of the project
@@ -56,31 +59,37 @@ enum Command {
 fn main() {
     let parsed = Cli::parse();
 
-    let socket_client = SocketClient::new("/home/prixladi/rep/conc/apps/daemon/run/conc.sock");
+    let socket_client = SocketClient::new("../daemon/run/conc.sock");
     if !socket_client.is_alive() {
-        eprintln!("Cannot connect to the Conc daemon at unix://{}.\nDaemon is not running or is using different work directory.", socket_client.socket_path);
+        eprintln!("Cannot connect to the Conc daemon at unix://{}. Daemon is not running or is using different work directory.", socket_client.socket_path);
         exit(-2)
     }
-    let requester = Requester::new(&socket_client);
 
+    let requester = Requester::new(&socket_client);
     let output: Output = match parsed.command {
-        Command::Upsert => {
-            let json = "";
-            let settings = ProjectSettings::try_from(json);
+        Command::Upsert { settings_path } => {
+            let settings = ProjectSettings::find_parse_and_populate(settings_path);
 
             match settings {
-                Ok(res) => println!("{}", res.name),
-                Err(e) => eprintln!("Error while trying to deserialize settings: {}", e),
+                Ok(settings) => {
+                    let json = String::try_from(&settings);
+                    match json {
+                        Ok(json) => requester.upsert_project(&json).into(),
+                        Err(err) => err.into(),
+                    }
+                }
+                Err(err) => err.into(),
             }
-            requester.upsert_project(&json).into()
         }
         Command::Ps {
             project_name,
             service_name,
         } => match project_name {
-            Some(p_name) => match service_name {
-                Some(s_name) => requester.get_services_info(&p_name, &s_name).into(),
-                None => requester.get_project_info(&p_name).into(),
+            Some(project_name) => match service_name {
+                Some(service_name) => requester
+                    .get_services_info(&project_name, &service_name)
+                    .into(),
+                None => requester.get_project_info(&project_name).into(),
             },
             None => requester.get_projects_info().into(),
         },
@@ -88,21 +97,23 @@ fn main() {
             project_name,
             service_name,
         } => match service_name {
-            Some(s_name) => requester.start_service(&project_name, &s_name).into(),
+            Some(service_name) => requester.start_service(&project_name, &service_name).into(),
             None => requester.start_project(&project_name).into(),
         },
         Command::Restart {
             project_name,
             service_name,
         } => match service_name {
-            Some(s_name) => requester.restart_service(&project_name, &s_name).into(),
+            Some(service_name) => requester
+                .restart_service(&project_name, &service_name)
+                .into(),
             None => requester.restart_project(&project_name).into(),
         },
         Command::Stop {
             project_name,
             service_name,
         } => match service_name {
-            Some(s_name) => requester.stop_service(&project_name, &s_name).into(),
+            Some(service_name) => requester.stop_service(&project_name, &service_name).into(),
             None => requester.stop_project(&project_name).into(),
         },
         Command::Rm { project_name } => requester.remove_project(&project_name).into(),

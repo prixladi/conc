@@ -239,7 +239,7 @@ impl TryFrom<&str> for ServiceStatus {
 pub struct ServiceInfo {
     pub name: String,
     pub status: ServiceStatus,
-    pub log_filepath: Option<String>,
+    pub logfile_path: Option<String>,
     pub pid: i32,
 }
 
@@ -255,7 +255,7 @@ impl TryFrom<&str> for ServiceInfo {
         let status = ServiceStatus::try_from(parts[1])?;
         let pid = parts[2].parse::<i32>().map_err(|_| ())?;
 
-        let log_filepath = if parts[3] != "-" {
+        let logfile_path = if parts[3] != "-" {
             Some(String::from(parts[3]))
         } else {
             None
@@ -264,7 +264,7 @@ impl TryFrom<&str> for ServiceInfo {
         return Ok(Self {
             name: String::from(parts[0]),
             status,
-            log_filepath,
+            logfile_path,
             pid,
         });
     }
