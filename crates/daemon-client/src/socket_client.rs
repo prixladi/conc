@@ -35,8 +35,8 @@ impl SocketClient {
     pub fn send(&self, message: &[u8]) -> io::Result<String> {
         let mut unix_stream = UnixStream::connect(&self.socket_path)?;
 
-        unix_stream.write(message)?;
-        unix_stream.write(b"\0")?;
+        unix_stream.write_all(message)?;
+        unix_stream.write_all(b"\0")?;
         unix_stream.shutdown(Shutdown::Write)?;
 
         // TODO: this whole block could be avoided by using 'unix_stream.read_to_string'
@@ -55,7 +55,7 @@ impl SocketClient {
             }
         }
 
-        if response.len() > 0 && response[response.len() - 1] == 0 {
+        if !response.is_empty() && response[response.len() - 1] == 0 {
             response.pop();
         }
         let response_string =

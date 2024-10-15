@@ -12,7 +12,8 @@ use crate::{
             ServiceInfoResponse,
         },
     },
-    socket_client::SocketClient, Response,
+    socket_client::SocketClient,
+    Response,
 };
 
 type Res<T> = Result<T, ErrorResponse>;

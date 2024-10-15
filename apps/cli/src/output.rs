@@ -6,15 +6,15 @@ use project_settings::ProjectSettingsError;
 use std::vec;
 
 pub enum Output {
-    Ok(String),
-    Err(String),
+    Stdout(String),
+    Stderr(String),
 }
 
 impl From<Result<NoContentResponse, ErrorResponse>> for Output {
     fn from(value: Result<NoContentResponse, ErrorResponse>) -> Self {
         match value {
-            Ok(_) => Self::Ok(String::from("success")),
-            Err(err) => Self::Err(format_error_response(err)),
+            Ok(_) => Self::Stdout(String::from("success")),
+            Err(err) => Self::Stderr(format_error_response(err)),
         }
     }
 }
@@ -22,8 +22,8 @@ impl From<Result<NoContentResponse, ErrorResponse>> for Output {
 impl From<Result<ServiceInfoResponse, ErrorResponse>> for Output {
     fn from(value: Result<ServiceInfoResponse, ErrorResponse>) -> Self {
         match value {
-            Ok(res) => Self::Ok(format_services_info(vec![res.value])),
-            Err(err) => Self::Err(format_error_response(err)),
+            Ok(res) => Self::Stdout(format_services_info(vec![res.value])),
+            Err(err) => Self::Stderr(format_error_response(err)),
         }
     }
 }
@@ -31,8 +31,8 @@ impl From<Result<ServiceInfoResponse, ErrorResponse>> for Output {
 impl From<Result<ProjectInfoResponse, ErrorResponse>> for Output {
     fn from(value: Result<ProjectInfoResponse, ErrorResponse>) -> Self {
         match value {
-            Ok(res) => Self::Ok(format_services_info(res.values)),
-            Err(err) => Self::Err(format_error_response(err)),
+            Ok(res) => Self::Stdout(format_services_info(res.values)),
+            Err(err) => Self::Stderr(format_error_response(err)),
         }
     }
 }
@@ -40,15 +40,15 @@ impl From<Result<ProjectInfoResponse, ErrorResponse>> for Output {
 impl From<Result<ProjectsInfoResponse, ErrorResponse>> for Output {
     fn from(value: Result<ProjectsInfoResponse, ErrorResponse>) -> Self {
         match value {
-            Ok(res) => Self::Ok(format_projects_info(res.values)),
-            Err(err) => Self::Err(format_error_response(err)),
+            Ok(res) => Self::Stdout(format_projects_info(res.values)),
+            Err(err) => Self::Stderr(format_error_response(err)),
         }
     }
 }
 
 impl From<ProjectSettingsError> for Output {
     fn from(value: ProjectSettingsError) -> Self {
-        Self::Err(value.to_string())
+        Self::Stderr(value.to_string())
     }
 }
 
@@ -68,9 +68,9 @@ fn format_error_response(response: ErrorResponse) -> String {
             raw
         ),
         ErrorResponse::Malformed(raw) => format!("Unable to parse daemon response:\n{}", raw),
-        ErrorResponse::ProjectNotFound(_) => format!("Provided project was not found."),
+        ErrorResponse::ProjectNotFound(_) => "Provided project was not found.".to_string(),
         ErrorResponse::ServiceNotFound(_) => {
-            format!("Provided service was not found in provided project.")
+            "Provided service was not found in provided project.".to_string()
         }
     }
 }
@@ -82,7 +82,7 @@ fn format_projects_info(projects: Vec<(String, Vec<ServiceInfo>)>) -> String {
         output.push(format_project_info(project));
     }
 
-    if output.len() == 0 {
+    if output.is_empty() {
         return String::from("No project was found.");
     }
 
@@ -134,7 +134,7 @@ fn format_service_status(service_status: ServiceStatus) -> String {
 }
 
 fn format_table(columns: Vec<Vec<String>>) -> String {
-    if columns.len() == 0 {
+    if columns.is_empty() {
         return String::new();
     };
 

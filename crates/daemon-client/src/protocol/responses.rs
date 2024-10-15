@@ -20,7 +20,7 @@ impl From<Vec<String>> for ErrorResponse {
     fn from(data: Vec<String>) -> Self {
         let raw = data.join("\n");
 
-        if data.len() == 0 || data[0] != "ERROR" {
+        if data.is_empty() || data[0] != "ERROR" {
             return Self::Malformed(raw);
         }
 
@@ -53,7 +53,7 @@ impl TryFrom<Vec<String>> for NameListResponse {
     type Error = ();
 
     fn try_from(data: Vec<String>) -> Result<Self, Self::Error> {
-        if data.len() < 1 || data[0] != "OK" {
+        if data.is_empty() || data[0] != "OK" {
             return Err(());
         }
 
@@ -94,14 +94,14 @@ impl TryFrom<Vec<String>> for ProjectsSettingsResponse {
     type Error = ();
 
     fn try_from(data: Vec<String>) -> Result<Self, Self::Error> {
-        if data.len() < 1 || data[0] != "OK" {
+        if data.is_empty() || data[0] != "OK" {
             return Err(());
         }
 
         let lines = &data[1..];
         let mut values = vec![];
 
-        for line in lines.into_iter() {
+        for line in lines.iter() {
             let parts: Vec<&str> = line.split("").collect();
             if parts.len() != 2 {
                 return Err(());
@@ -143,14 +143,14 @@ impl TryFrom<Vec<String>> for ProjectInfoResponse {
     type Error = ();
 
     fn try_from(data: Vec<String>) -> Result<Self, Self::Error> {
-        if data.len() < 1 || data[0] != "OK" {
+        if data.is_empty() || data[0] != "OK" {
             return Err(());
         }
 
         let lines = &data[1..];
         let mut values = vec![];
 
-        for line in lines.into_iter() {
+        for line in lines.iter() {
             let service_info = ServiceInfo::try_from(line.as_str())?;
             values.push(service_info);
         }
@@ -169,14 +169,14 @@ impl TryFrom<Vec<String>> for ProjectsInfoResponse {
     type Error = ();
 
     fn try_from(data: Vec<String>) -> Result<Self, Self::Error> {
-        if data.len() < 1 || data[0] != "OK" {
+        if data.is_empty() || data[0] != "OK" {
             return Err(());
         }
 
         let lines = &data[1..];
         let mut values = vec![];
 
-        for (i, line) in lines.into_iter().enumerate() {
+        for (i, line) in lines.iter().enumerate() {
             let project_name_opt = if line.contains(" ") { None } else { Some(line) };
 
             if let Some(project_name) = project_name_opt {
@@ -206,11 +206,11 @@ impl TryFrom<Vec<String>> for NoContentResponse {
     type Error = ();
 
     fn try_from(data: Vec<String>) -> Result<Self, Self::Error> {
-        if data.len() < 1 || data[0] != "OK" {
+        if data.is_empty() || data[0] != "OK" {
             return Err(());
         }
 
-        return Ok(Self);
+        Ok(Self)
     }
 }
 impl Response for NoContentResponse {}
@@ -261,11 +261,11 @@ impl TryFrom<&str> for ServiceInfo {
             None
         };
 
-        return Ok(Self {
+        Ok(Self {
             name: String::from(parts[0]),
             status,
             logfile_path,
             pid,
-        });
+        })
     }
 }

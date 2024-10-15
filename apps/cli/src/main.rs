@@ -120,11 +120,11 @@ fn main() {
     };
 
     match output {
-        Output::Ok(res) => {
+        Output::Stdout(res) => {
             println!("{}", res);
             exit(0);
         }
-        Output::Err(res) => {
+        Output::Stderr(res) => {
             eprintln!("{}", res);
             exit(-1);
         }
