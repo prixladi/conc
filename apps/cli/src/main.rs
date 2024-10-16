@@ -1,5 +1,3 @@
-use std::process::exit;
-
 use clap::{Parser, Subcommand};
 use config::CliConfig;
 use daemon_client::{Requester, SocketClient};
@@ -28,16 +26,16 @@ enum Command {
     /// Get status of all projects, single project or a service
     Ps {
         /// name of the project
-        project_name: Option<String>,
+        project: Option<String>,
         /// name of the service
-        service_name: Option<String>,
+        service: Option<String>,
     },
     /// Open logs for a project or a service in 'tail -f' command
     Logs {
         /// name of the project
-        project_name: String,
+        project: String,
         /// name of the service
-        service_name: Option<String>,
+        service: Option<String>,
         /// if specified programs returns logfile path(s) instead of running tail on them
         #[clap(long, short, action)]
         raw: bool,
@@ -45,45 +43,45 @@ enum Command {
     /// Start a project or a service
     Start {
         /// name of the project
-        project_name: String,
+        project: String,
         /// name of the service
-        service_name: Option<String>,
+        service: Option<String>,
     },
     /// Restart a project or a service
     Restart {
         /// name of the project
-        project_name: String,
+        project: String,
         /// name of the service
-        service_name: Option<String>,
+        service: Option<String>,
     },
     /// Stop a project or a service
     Stop {
         /// name of the project
-        project_name: String,
+        project: String,
         /// name of the service
-        service_name: Option<String>,
+        service: Option<String>,
     },
     /// Remove a project
     Rm {
         /// name of the project
-        project_name: String,
+        project: String,
     },
 }
 
 fn main() {
-    match application() {
+    match run() {
         Output::Stdout(res) => {
             println!("{}", res);
-            exit(0);
+            std::process::exit(0);
         }
         Output::Stderr(res) => {
             eprintln!("{}", res);
-            exit(-1);
+            std::process::exit(-1);
         }
     }
 }
 
-fn application() -> Output {
+fn run() -> Output {
     let config = match CliConfig::new() {
         Ok(config) => config,
         Err(err) => return err.into(),
@@ -98,47 +96,78 @@ fn application() -> Output {
 
     let requester = Requester::new(socket_client);
     match cli.command {
+        Command::Ps {
+            project: Some(project),
+            service: Some(service),
+        } => requester.get_services_info(&project, &service).into(),
+
+        Command::Ps {
+            project: Some(project),
+            service: None,
+        } => requester.get_project_info(&project).into(),
+
+        Command::Ps {
+            project: None,
+            service: _,
+        } => requester.get_projects_info().into(),
+
+        Command::Start {
+            project,
+            service: Some(service),
+        } => requester.start_service(&project, &service).into(),
+
+        Command::Start {
+            project,
+            service: None,
+        } => requester.start_project(&project).into(),
+
+        Command::Restart {
+            project,
+            service: Some(service),
+        } => requester.restart_service(&project, &service).into(),
+
+        Command::Restart {
+            project,
+            service: None,
+        } => requester.restart_project(&project).into(),
+
+        Command::Stop {
+            project,
+            service: Some(service),
+        } => requester.stop_service(&project, &service).into(),
+
+        Command::Stop {
+            project,
+            service: None,
+        } => requester.stop_project(&project).into(),
+
+        Command::Rm { project } => requester.remove_project(&project).into(),
+
         Command::Upsert { settings_path } => {
-            let settings = ProjectSettings::find_parse_and_populate(settings_path);
+            let settings = ProjectSettings::find_parse_and_populate(settings_path)
+                .and_then(|settings| String::try_from(&settings));
 
             match settings {
-                Ok(settings) => {
-                    let json = String::try_from(&settings);
-                    match json {
-                        Ok(json) => requester.upsert_project(&json).into(),
-                        Err(err) => err.into(),
-                    }
-                }
+                Ok(json) => requester.upsert_project(&json).into(),
                 Err(err) => err.into(),
             }
         }
-        Command::Ps {
-            project_name,
-            service_name,
-        } => match project_name {
-            Some(project_name) => match service_name {
-                Some(service_name) => requester
-                    .get_services_info(&project_name, &service_name)
-                    .into(),
-                None => requester.get_project_info(&project_name).into(),
-            },
-            None => requester.get_projects_info().into(),
-        },
+
         Command::Logs {
-            project_name,
-            service_name,
+            project,
+            service,
             raw,
         } => {
-            let res = match service_name {
-                Some(service_name) => requester
-                    .get_services_info(&project_name, &service_name)
+            let res = match service {
+                Some(service) => requester
+                    .get_services_info(&project, &service)
                     .map(|res| vec![res.value.logfile_path]),
-                None => requester.get_project_info(&project_name).map(|res| {
+                None => requester.get_project_info(&project).map(|res| {
                     res.value
                         .services
                         .into_iter()
                         .map(|val| val.logfile_path)
-                        .collect::<Vec<String>>()
+                        .collect()
                 }),
             };
 
@@ -155,29 +184,5 @@ fn application() -> Output {
                 Err(err) => err.into(),
             }
         }
-        Command::Start {
-            project_name,
-            service_name,
-        } => match service_name {
-            Some(service_name) => requester.start_service(&project_name, &service_name).into(),
-            None => requester.start_project(&project_name).into(),
-        },
-        Command::Restart {
-            project_name,
-            service_name,
-        } => match service_name {
-            Some(service_name) => requester
-                .restart_service(&project_name, &service_name)
-                .into(),
-            None => requester.restart_project(&project_name).into(),
-        },
-        Command::Stop {
-            project_name,
-            service_name,
-        } => match service_name {
-            Some(service_name) => requester.stop_service(&project_name, &service_name).into(),
-            None => requester.stop_project(&project_name).into(),
-        },
-        Command::Rm { project_name } => requester.remove_project(&project_name).into(),
     }
 }
