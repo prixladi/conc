@@ -60,7 +60,6 @@ server_run_async(struct server_options opts)
 void
 server_stop(struct server *server)
 {
-    log_info("Socket server stopping\n");
     server->running = false;
 }
 
@@ -117,6 +116,8 @@ server_run(void *data)
             thread_pool_queue_job(pool, NULL, client_socket_handle, handler_opts);
         }
     }
+    
+    log_info("Socket server stopping\n");
 
     thread_pool_stop_and_wait(pool);
     thread_pool_free(pool);

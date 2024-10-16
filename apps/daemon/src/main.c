@@ -75,14 +75,18 @@ main(int argc, char **argv)
 static void
 graceful_stop_handler(int signal)
 {
+    (void)signal;
     running = false;
-    log_info("Received '%d' signal, exiting gracefully\n", signal);
+    // Intentionally not using 'log_*' or 'printf' because it uses non-async-signal-safe functions
+    write(STDOUT_FILENO, "[SGN] Received terminate signal, stopping\n", 43);
     server_stop(server);
 }
 
 static void
 restart_handler(int signal)
 {
-    log_info("Received '%d' signal, restarting\n", signal);
+    (void)signal;
+    // Intentionally not using 'log_*' or 'printf' because it uses non-async-signal-safe functions
+    write(STDOUT_FILENO, "[SGN] Received restart signal, restarting\n", 43);
     server_stop(server);
 }
