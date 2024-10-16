@@ -1,12 +1,14 @@
 {
   "cSpell.words": [
     "concc",
+    "concd",
     "journalctl",
     "libc",
     "logfile",
     "Outputable",
     "pids",
     "thiserror",
+    "unistd",
     "valuestring",
     "workdir",
     "Wpointer"

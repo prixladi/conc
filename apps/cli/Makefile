@@ -1,4 +1,4 @@
-.PHONY: build install run
+.PHONY: build install
 
 build: 
 	cargo build --release

@@ -1,22 +1,30 @@
 #! /bin/env bash
 
-mkdir -p $HOME/.conc/run
+BIN=/usr/local/bin/concd
 
-sudo cp -f ./build/concd /usr/local/bin/concd
+echo "[Daemon] Installing into ${BIN}..."
 
-SERVICE="
+mkdir -p "$HOME/.conc/run"
+sudo cp -f ./build/concd "$BIN"
+
+SERVICE_CONFIG="
 [Unit]
 Description=Conc service daemon
 
 [Service]
 User=$USER
 WorkingDirectory=$HOME/.conc/run
-ExecStart=/usr/local/bin/concd
+ExecStart=$BIN
 # optional items below
 Restart=always
 RestartSec=3
 
 [Install]
 WantedBy=multi-user.target"
+SERVICE_CONFIG_LOCATION=/usr/lib/systemd/system/concd.service
 
-echo "$SERVICE" | sudo tee /usr/lib/systemd/system/concd.service >/dev/null
+echo "[Daemon] Creating systemd service '$SERVICE_CONFIG_LOCATION'"
+echo "$SERVICE_CONFIG" | sudo tee "$SERVICE_CONFIG_LOCATION" >/dev/null
+
+echo "[Daemon] Before you can start using conc you need to start the concd service 'sudo systemctl start concd'"
+echo "[Daemon] Installed!"
