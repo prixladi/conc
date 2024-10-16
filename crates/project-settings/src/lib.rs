@@ -37,14 +37,21 @@ impl From<std::io::Error> for ProjectSettingsError {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum EnvValue {
+    Value(String),
+    FromEnv { from_env: String },
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ProjectSettings {
     pub name: String,
-    pub services: Vec<ServiceSettings>,
     #[serde(default = "String::new", skip_deserializing)]
     pub cwd: String,
+    pub services: Vec<ServiceSettings>,
     #[serde(default = "HashMap::new")]
-    pub env: HashMap<String, String>,
+    pub env: HashMap<String, EnvValue>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -53,7 +60,7 @@ pub struct ServiceSettings {
     pub pwd: Option<String>,
     pub command: Vec<String>,
     #[serde(default = "HashMap::new")]
-    pub env: HashMap<String, String>,
+    pub env: HashMap<String, EnvValue>,
 }
 
 impl TryFrom<&ProjectSettings> for String {
@@ -68,17 +75,15 @@ impl TryFrom<&ProjectSettings> for String {
 impl ProjectSettings {
     pub fn find_parse_and_populate(pwd: Option<String>) -> Result<Self, ProjectSettingsError> {
         let (cwd, json) = resolve_cwd_and_json(pwd)?;
-        let mut setting = try_parse(json.as_str())?;
-        setting.cwd = cwd;
+        let mut settings = try_parse(json.as_str())?;
+        settings.cwd = cwd;
+        settings.env = populate_env(settings.env);
 
-        const PATH_VAR_NAME: &str = "PATH";
-        if !setting.env.contains_key(PATH_VAR_NAME) {
-            if let Ok(path) = std::env::var(PATH_VAR_NAME) {
-                setting.env.insert(String::from(PATH_VAR_NAME), path);
-            }
+        for service in &mut settings.services {
+            service.env = populate_env(service.env.clone());
         }
 
-        Ok(setting)
+        Ok(settings)
     }
 }
 
@@ -141,4 +146,17 @@ fn resolve_cwd_and_json(pwd: Option<String>) -> Result<(String, String), Project
         .map_err(|_| ProjectSettingsError::NotFound {
             path: String::from(path.to_str().unwrap_or_default()),
         })
+}
+
+fn populate_env(envs: HashMap<String, EnvValue>) -> HashMap<String, EnvValue> {
+    envs.into_iter()
+        .map(|(key, value)| {
+            let val = match value {
+                EnvValue::Value(value) => value,
+                EnvValue::FromEnv { from_env } => std::env::var(from_env).unwrap_or_default(),
+            };
+
+            (key, EnvValue::Value(val))
+        })
+        .collect()
 }
