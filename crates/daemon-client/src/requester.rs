@@ -19,12 +19,12 @@ use crate::{
 
 type Res<T> = Result<T, ErrorResponse>;
 
-pub struct Requester<'a> {
-    socket_client: &'a SocketClient,
+pub struct Requester {
+    socket_client: SocketClient,
 }
 
-impl<'a> Requester<'a> {
-    pub fn new(socket_client: &'a SocketClient) -> Self {
+impl Requester {
+    pub fn new(socket_client: SocketClient) -> Self {
         Self { socket_client }
     }
 

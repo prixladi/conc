@@ -77,7 +77,7 @@ fn main() {
         exit(-2)
     }
 
-    let requester = Requester::new(&socket_client);
+    let requester = Requester::new(socket_client);
     let output: Output = match parsed.command {
         Command::Upsert { settings_path } => {
             let settings = ProjectSettings::find_parse_and_populate(settings_path);
@@ -115,7 +115,7 @@ fn main() {
                     .get_services_info(&project_name, &service_name)
                     .map(|res| vec![res.value.logfile_path]),
                 None => requester.get_project_info(&project_name).map(|res| {
-                    res.values
+                    res.value.services
                         .into_iter()
                         .map(|val| val.logfile_path)
                         .collect::<Vec<String>>()

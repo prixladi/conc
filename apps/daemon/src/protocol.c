@@ -243,8 +243,9 @@ handle_project_info(char **command)
         return handle_error_results(result);
 
     size_t service_count = vec_length(info.services);
-    vec_scoped char **parts = vec_create_prealloc(char *, service_count);
+    vec_scoped char **parts = vec_create_prealloc(char *, service_count + 1);
 
+    vec_push_rval(parts, str_dup(info.name));
     for (size_t i = 0; i < service_count; i++)
         vec_push_rval(parts, format_service_info(info.services[i]));
     project_info_free(info);

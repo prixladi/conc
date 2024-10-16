@@ -1,6 +1,6 @@
 use daemon_client::{
-    ErrorResponse, NoContentResponse, ProjectInfoResponse, ProjectsInfoResponse, ServiceInfo,
-    ServiceInfoResponse, ServiceStatus,
+    ErrorResponse, NoContentResponse, ProjectInfo, ProjectInfoResponse, ProjectsInfoResponse,
+    ServiceInfo, ServiceInfoResponse, ServiceStatus,
 };
 use project_settings::ProjectSettingsError;
 use std::vec;
@@ -46,7 +46,7 @@ impl From<Result<ServiceInfoResponse, ErrorResponse>> for Output {
 impl From<Result<ProjectInfoResponse, ErrorResponse>> for Output {
     fn from(value: Result<ProjectInfoResponse, ErrorResponse>) -> Self {
         match value {
-            Ok(res) => Self::Stdout(format_services_info(res.values)),
+            Ok(res) => Self::Stdout(format_project_info(res.value)),
             Err(err) => err.into(),
         }
     }
@@ -83,14 +83,14 @@ fn format_error_response(response: ErrorResponse) -> String {
             raw
         ),
         ErrorResponse::Malformed(raw) => format!("Unable to parse daemon response:\n{}", raw),
-        ErrorResponse::ProjectNotFound(_) => "Provided project was not found.".to_string(),
+        ErrorResponse::ProjectNotFound(_) => String::from("Provided project was not found."),
         ErrorResponse::ServiceNotFound(_) => {
-            "Provided service was not found in provided project.".to_string()
+            String::from("Provided service was not found in provided project.")
         }
     }
 }
 
-fn format_projects_info(projects: Vec<(String, Vec<ServiceInfo>)>) -> String {
+fn format_projects_info(projects: Vec<ProjectInfo>) -> String {
     let mut output = vec![];
 
     for project in projects {
@@ -104,19 +104,19 @@ fn format_projects_info(projects: Vec<(String, Vec<ServiceInfo>)>) -> String {
     output.join("\n\n")
 }
 
-fn format_project_info(project: (String, Vec<ServiceInfo>)) -> String {
-    let (project_name, services) = project;
-    let services_count = services.len();
-    let running_services_count = services
+fn format_project_info(project: ProjectInfo) -> String {
+    let services_count = project.services.len();
+    let running_services_count = project
+        .services
         .iter()
         .filter(|service| service.status == ServiceStatus::RUNNING)
         .count();
 
     let mut output = format!(
         "Project: {}, {}/{} Running\n",
-        project_name, running_services_count, services_count
+        project.name, running_services_count, services_count
     );
-    let service_table = format_services_info(services);
+    let service_table = format_services_info(project.services);
     output.push_str(&service_table);
 
     output

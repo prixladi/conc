@@ -136,33 +136,39 @@ impl Response for ServiceInfoResponse {}
 
 #[derive(Debug)]
 pub struct ProjectInfoResponse {
-    pub values: Vec<ServiceInfo>,
+    pub value: ProjectInfo,
 }
 
 impl TryFrom<Vec<String>> for ProjectInfoResponse {
     type Error = ();
 
     fn try_from(data: Vec<String>) -> Result<Self, Self::Error> {
-        if data.is_empty() || data[0] != "OK" {
+        if data.len() < 2 || data[0] != "OK" {
             return Err(());
         }
 
-        let lines = &data[1..];
-        let mut values = vec![];
-
-        for line in lines.iter() {
-            let service_info = ServiceInfo::try_from(line.as_str())?;
-            values.push(service_info);
+        if data[1].contains(" ") {
+            return Err(());
         }
 
-        Ok(Self { values })
+        let mut value = ProjectInfo {
+            name: data[1].clone(),
+            services: vec![]
+        };
+
+        for line in &data[2..] {
+            let service_info = ServiceInfo::try_from(line.as_str())?;
+            value.services.push(service_info);
+        }
+
+        Ok(Self { value })
     }
 }
 impl Response for ProjectInfoResponse {}
 
 #[derive(Debug)]
 pub struct ProjectsInfoResponse {
-    pub values: Vec<(String, Vec<ServiceInfo>)>,
+    pub values: Vec<ProjectInfo>,
 }
 
 impl TryFrom<Vec<String>> for ProjectsInfoResponse {
@@ -173,25 +179,25 @@ impl TryFrom<Vec<String>> for ProjectsInfoResponse {
             return Err(());
         }
 
-        let lines = &data[1..];
         let mut values = vec![];
-
-        for (i, line) in lines.iter().enumerate() {
-            let project_name_opt = if line.contains(" ") { None } else { Some(line) };
-
-            if let Some(project_name) = project_name_opt {
-                values.push((String::from(project_name), vec![]));
+        for line in &data[1..] {
+            if !line.contains(" ") {
+                let project_info = ProjectInfo {
+                    name: String::from(line),
+                    services: vec![],
+                };
+                values.push(project_info);
                 continue;
             }
 
-            // if this is the first element we should never reach this branch because first element must be project name
-            if i == 0 {
+            // first element should always be a project name so if we reach this message is malformed
+            if values.is_empty() {
                 return Err(());
             }
 
             let service_info = ServiceInfo::try_from(line.as_str())?;
             let current_index = values.len() - 1;
-            values[current_index].1.push(service_info);
+            values[current_index].services.push(service_info);
         }
 
         Ok(Self { values })
@@ -233,6 +239,12 @@ impl TryFrom<&str> for ServiceStatus {
             _ => Err(()),
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct ProjectInfo {
+    pub name: String,
+    pub services: Vec<ServiceInfo>,
 }
 
 #[derive(Debug, Clone)]
