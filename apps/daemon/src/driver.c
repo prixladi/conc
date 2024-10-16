@@ -387,18 +387,17 @@ kill_pid(int pid)
         return 0;
 
     int attempt = 0;
-    while (attempt < 10)
+    do
     {
-        if (attempt)
-            sleep_ms(50);
+        if (attempt < 10 || attempt % 50 == 0)
+            kill(pid, attempt >= 400 ? SIGKILL : SIGTERM);
 
-        kill(pid, attempt > 6 ? SIGKILL : SIGTERM);
+        if (attempt)
+            sleep_ms(5);
 
         if (try_get_pid_info(pid, &sts) == false)
             return 0;
-
-        attempt++;
-    }
+    } while (++attempt < 700);
 
     return attempt;
 }
