@@ -153,7 +153,7 @@ impl TryFrom<Vec<String>> for ProjectInfoResponse {
 
         let mut value = ProjectInfo {
             name: data[1].clone(),
-            services: vec![]
+            services: vec![],
         };
 
         for line in &data[2..] {

@@ -98,6 +98,9 @@ dependencies = [
  "clap",
  "daemon-client",
  "project-settings",
+ "serde",
+ "serde_json",
+ "thiserror",
 ]
 
 [[package]]

@@ -5,9 +5,20 @@ use daemon_client::{
 use project_settings::ProjectSettingsError;
 use std::vec;
 
+use crate::config::CliConfigError;
+
 pub enum Output {
     Stdout(String),
     Stderr(String),
+}
+
+impl Output {
+    pub fn socket_not_alive(socket_path: &str) -> Self {
+        Self::Stderr(format!(
+            "Cannot connect to the Conc daemon at unix://{}. Daemon is not running or is using different work directory.",
+            socket_path
+        ))
+    }
 }
 
 impl From<ErrorResponse> for Output {
@@ -63,6 +74,12 @@ impl From<Result<ProjectsInfoResponse, ErrorResponse>> for Output {
 
 impl From<ProjectSettingsError> for Output {
     fn from(value: ProjectSettingsError) -> Self {
+        Self::Stderr(value.to_string())
+    }
+}
+
+impl From<CliConfigError> for Output {
+    fn from(value: CliConfigError) -> Self {
         Self::Stderr(value.to_string())
     }
 }

@@ -1,11 +1,13 @@
 use std::process::exit;
 
 use clap::{Parser, Subcommand};
+use config::CliConfig;
 use daemon_client::{Requester, SocketClient};
 use output::Output;
 use process::execute_tail;
 use project_settings::ProjectSettings;
 
+mod config;
 mod output;
 mod process;
 
@@ -69,16 +71,33 @@ enum Command {
 }
 
 fn main() {
-    let parsed = Cli::parse();
+    match application() {
+        Output::Stdout(res) => {
+            println!("{}", res);
+            exit(0);
+        }
+        Output::Stderr(res) => {
+            eprintln!("{}", res);
+            exit(-1);
+        }
+    }
+}
 
-    let socket_client = SocketClient::new("../daemon/run/conc.sock");
+fn application() -> Output {
+    let config = match CliConfig::new() {
+        Ok(config) => config,
+        Err(err) => return err.into(),
+    };
+
+    let cli = Cli::parse();
+
+    let socket_client = SocketClient::new(&config.daemon_socket_path);
     if !socket_client.is_alive() {
-        eprintln!("Cannot connect to the Conc daemon at unix://{}. Daemon is not running or is using different work directory.", socket_client.socket_path);
-        exit(-2)
+        return Output::socket_not_alive(&socket_client.socket_path);
     }
 
     let requester = Requester::new(socket_client);
-    let output: Output = match parsed.command {
+    match cli.command {
         Command::Upsert { settings_path } => {
             let settings = ProjectSettings::find_parse_and_populate(settings_path);
 
@@ -115,7 +134,8 @@ fn main() {
                     .get_services_info(&project_name, &service_name)
                     .map(|res| vec![res.value.logfile_path]),
                 None => requester.get_project_info(&project_name).map(|res| {
-                    res.value.services
+                    res.value
+                        .services
                         .into_iter()
                         .map(|val| val.logfile_path)
                         .collect::<Vec<String>>()
@@ -159,16 +179,5 @@ fn main() {
             None => requester.stop_project(&project_name).into(),
         },
         Command::Rm { project_name } => requester.remove_project(&project_name).into(),
-    };
-
-    match output {
-        Output::Stdout(res) => {
-            println!("{}", res);
-            exit(0);
-        }
-        Output::Stderr(res) => {
-            eprintln!("{}", res);
-            exit(-1);
-        }
     }
 }

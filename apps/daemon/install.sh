@@ -10,7 +10,7 @@ Description=Conc service daemon
 
 [Service]
 User=$USER
-WorkingDirectory=/home/$USER/.conc/run
+WorkingDirectory=$HOME/.conc/run
 ExecStart=/usr/local/bin/concd
 # optional items below
 Restart=always
