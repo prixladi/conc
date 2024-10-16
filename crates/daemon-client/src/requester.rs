@@ -28,7 +28,7 @@ impl Requester {
         Self { socket_client }
     }
 
-    pub fn get_projects_names(&self) -> Res<NameListResponse> {
+    pub fn get_project_names(&self) -> Res<NameListResponse> {
         self.send_request(ProjectsNamesRequest)
     }
 
@@ -68,7 +68,7 @@ impl Requester {
         self.send_request(ProjectRemoveRequest { project_name })
     }
 
-    pub fn get_services_names(&self, project_name: &str) -> Res<NameListResponse> {
+    pub fn get_service_names(&self, project_name: &str) -> Res<NameListResponse> {
         self.send_request(ServicesNamesRequest { project_name })
     }
 

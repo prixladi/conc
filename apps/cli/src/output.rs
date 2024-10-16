@@ -1,6 +1,6 @@
 use daemon_client::{
-    ErrorResponse, NoContentResponse, ProjectInfo, ProjectInfoResponse, ProjectsInfoResponse,
-    ServiceInfo, ServiceInfoResponse, ServiceStatus,
+    ErrorResponse, NameListResponse, NoContentResponse, ProjectInfo, ProjectInfoResponse,
+    ProjectSettingsResponse, ProjectsInfoResponse, ServiceInfo, ServiceInfoResponse, ServiceStatus,
 };
 use project_settings::ProjectSettingsError;
 use std::vec;
@@ -40,6 +40,24 @@ impl From<Result<NoContentResponse, ErrorResponse>> for Output {
     fn from(value: Result<NoContentResponse, ErrorResponse>) -> Self {
         match value {
             Ok(_) => Self::Stdout(String::from("success")),
+            Err(err) => err.into(),
+        }
+    }
+}
+
+impl From<Result<ProjectSettingsResponse, ErrorResponse>> for Output {
+    fn from(value: Result<ProjectSettingsResponse, ErrorResponse>) -> Self {
+        match value {
+            Ok(res) => Self::Stdout(res.value),
+            Err(err) => err.into(),
+        }
+    }
+}
+
+impl From<Result<NameListResponse, ErrorResponse>> for Output {
+    fn from(value: Result<NameListResponse, ErrorResponse>) -> Self {
+        match value {
+            Ok(res) => Self::Stdout(res.values.join(" ")),
             Err(err) => err.into(),
         }
     }

@@ -18,10 +18,17 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
-    /// Creates new project or replaces existing
+    /// Create new project or replaces existing
     Upsert {
         /// path to the settings file or directory containing the settings file (conc.json), defaults to current dir
         settings_path: Option<String>,
+    },
+    /// Get space delimited list of all project
+    Projects,
+    /// Get space delimited list of all service under project
+    Services {
+        /// name of the project
+        project: String,
     },
     /// Get status of all projects, single project or a service
     Ps {
@@ -61,6 +68,11 @@ enum Command {
         /// name of the service
         service: Option<String>,
     },
+    /// Get project settings
+    Settings {
+        /// name of the project
+        project: String,
+    },
     /// Remove a project
     Rm {
         /// name of the project
@@ -96,6 +108,10 @@ fn run() -> Output {
 
     let requester = Requester::new(socket_client);
     match cli.command {
+        Command::Projects => requester.get_project_names().into(),
+
+        Command::Services { project } => requester.get_service_names(&project).into(),
+
         Command::Ps {
             project: Some(project),
             service: Some(service),
@@ -140,6 +156,8 @@ fn run() -> Output {
             project,
             service: None,
         } => requester.stop_project(&project).into(),
+
+        Command::Settings { project } => requester.get_project_settings(&project).into(),
 
         Command::Rm { project } => requester.remove_project(&project).into(),
 
