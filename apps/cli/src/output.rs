@@ -23,7 +23,7 @@ impl Output {
 
 impl From<ErrorResponse> for Output {
     fn from(value: ErrorResponse) -> Self {
-        Self::Stderr(format_error_response(value))
+        Self::Stderr(value.to_string())
     }
 }
 
@@ -99,29 +99,6 @@ impl From<ProjectSettingsError> for Output {
 impl From<CliConfigError> for Output {
     fn from(value: CliConfigError) -> Self {
         Self::Stderr(value.to_string())
-    }
-}
-
-fn format_error_response(response: ErrorResponse) -> String {
-    match response {
-        ErrorResponse::Socket { inner: error } => {
-            format!(
-                "Error occurred while trying to communicate with daemon socket:\n{}",
-                error
-            )
-        }
-        ErrorResponse::Client(raw) => {
-            format!("Unexpected error ocurred in the cli:\n{}", raw)
-        }
-        ErrorResponse::Daemon(raw) => format!(
-            "Unexpected error ocurred in the daemon, check its logs for more info:\n{}",
-            raw
-        ),
-        ErrorResponse::Malformed(raw) => format!("Unable to parse daemon response:\n{}", raw),
-        ErrorResponse::ProjectNotFound(_) => String::from("Provided project was not found."),
-        ErrorResponse::ServiceNotFound(_) => {
-            String::from("Provided service was not found in provided project.")
-        }
     }
 }
 
