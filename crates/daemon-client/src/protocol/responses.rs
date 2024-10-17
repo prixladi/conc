@@ -1,12 +1,18 @@
 use std::{convert::From, convert::TryFrom, vec};
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum ErrorResponse {
+    #[error("Error occurred while trying to communicate with daemon socket: {inner}")]
     Socket { inner: std::io::Error },
+    #[error("Unexpected error ocurred on the client side: {0}")]
     Client(String),
+    #[error("Unexpected error ocurred in the daemon, check its logs for more info: {0}")]
     Daemon(String),
+    #[error("Unable to parse daemon response: {0}")]
     Malformed(String),
+    #[error("Provided project was not found.")]
     ProjectNotFound(String),
+    #[error("Provided service was not found in provided project.")]
     ServiceNotFound(String),
 }
 

@@ -3,5 +3,12 @@ use std::os::unix::process::CommandExt;
 use std::process::Command;
 
 pub fn execute_tail(files: Vec<String>) -> Error {
-    Command::new("tail").arg("-f").args(files).exec()
+    let n = if files.len() > 1 { 10 } else { 100 };
+
+    Command::new("tail")
+        .arg("-n")
+        .arg(n.to_string())
+        .arg("-f")
+        .args(files)
+        .exec()
 }
