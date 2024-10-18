@@ -28,6 +28,10 @@ impl Requester {
         Self { socket_client }
     }
 
+    pub fn client(&self) -> &SocketClient {
+        &self.socket_client
+    }
+
     pub fn get_project_names(&self) -> Res<NameListResponse> {
         self.send_request(ProjectsNamesRequest)
     }
