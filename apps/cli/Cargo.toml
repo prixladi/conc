@@ -11,3 +11,4 @@ thiserror = "1.0.64"
 # local crates
 daemon-client.workspace = true
 project-settings.workspace = true
+app-config.workspace = true

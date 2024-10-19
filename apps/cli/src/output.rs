@@ -1,11 +1,10 @@
+use app_config::CliConfigError;
 use daemon_client::{
     ErrorResponse, NameListResponse, NoContentResponse, ProjectInfo, ProjectInfoResponse,
     ProjectSettingsResponse, ProjectsInfoResponse, ServiceInfo, ServiceInfoResponse, ServiceStatus,
 };
 use project_settings::ProjectSettingsError;
 use std::vec;
-
-use crate::config::CliConfigError;
 
 pub enum Output {
     Stdout(String),

@@ -5,6 +5,8 @@ use std::{
     path::Path,
 };
 
+const SETTINGS_FILE_RELATIVE_NAME: &str = "conc.json";
+
 #[derive(Debug, thiserror::Error)]
 pub enum ProjectSettingsError {
     #[error("error while interacting with file system:{inner}")]
@@ -133,7 +135,7 @@ fn resolve_cwd_and_json(pwd: Option<String>) -> Result<(String, String), Project
     }?;
 
     if path.is_dir() {
-        path = path.join("conc.json");
+        path = path.join(SETTINGS_FILE_RELATIVE_NAME);
     };
 
     std::fs::read_to_string(&path)

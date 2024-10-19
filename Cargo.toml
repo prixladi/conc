@@ -11,5 +11,6 @@ opt-level = 3
 
 [workspace.dependencies]
 # local crates
-daemon-client = { path = "./crates/daemon-client", version = "0.0.0" }
-project-settings = { path = "./crates/project-settings", version = "0.0.0" }
+daemon-client = { path = "./crates/daemon-client", version = "0.1.0" }
+project-settings = { path = "./crates/project-settings", version = "0.1.0" }
+app-config = { path = "./crates/app-config", version = "0.1.0" }

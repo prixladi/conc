@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use app_config::CliConfig;
 use chrono::{DateTime, Local};
 use components::{Menu, StatusErrorBar, StatusInfoBar};
 use daemon_client::{Requester, SocketClient};
@@ -14,9 +15,11 @@ mod message;
 mod pages;
 
 pub fn main() -> iced::Result {
+    let config = CliConfig::new().unwrap();
+
     iced::application(App::title, App::update, App::view)
         .theme(|_| App::theme())
-        .run_with(App::new)
+        .run_with(|| App::new(config))
 }
 
 struct App {
@@ -28,8 +31,8 @@ struct App {
 }
 
 impl App {
-    fn new() -> (Self, Task<Message>) {
-        let socket_client = SocketClient::new("../daemon/run/conc.sock");
+    fn new(config: CliConfig) -> (Self, Task<Message>) {
+        let socket_client = SocketClient::new(&config.daemon_socket_path);
         let requester = Requester::new(socket_client);
 
         let app = Self {

@@ -7,7 +7,7 @@ echo "[CLI] Installing into ${BIN}..."
 sudo cp -f ../../target/release/cli "$BIN"
 
 CONFIG="{\"daemon_socket_path\": \"$HOME/.conc/run/conc.sock\"}"
-CONFIG_PATH="$HOME/.conc/cli-conf.json"
+CONFIG_PATH="$HOME/.conc/conf.json"
 
 echo "[CLI] Creating cli config '$CONFIG_PATH'"
 

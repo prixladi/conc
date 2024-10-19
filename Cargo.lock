@@ -155,6 +155,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "app-config"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "approx"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -587,6 +596,7 @@ checksum = "1462739cb27611015575c0c11df5df7601141071f07518d56fcc1be504cbec97"
 name = "cli"
 version = "0.1.0"
 dependencies = [
+ "app-config",
  "clap",
  "daemon-client",
  "project-settings",
@@ -881,7 +891,7 @@ dependencies = [
 
 [[package]]
 name = "daemon-client"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "thiserror",
 ]
@@ -1435,6 +1445,7 @@ dependencies = [
 name = "gui"
 version = "0.1.0"
 dependencies = [
+ "app-config",
  "chrono",
  "daemon-client",
  "iced",
@@ -2637,7 +2648,7 @@ checksum = "afbdc74edc00b6f6a218ca6a5364d6226a259d4b8ea1af4a0ea063f27e179f4d"
 
 [[package]]
 name = "project-settings"
-version = "0.0.0"
+version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",

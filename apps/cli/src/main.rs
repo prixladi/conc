@@ -1,11 +1,10 @@
+use app_config::CliConfig;
 use clap::{Parser, Subcommand};
-use config::CliConfig;
 use daemon_client::{Requester, SocketClient};
 use output::Output;
 use process::execute_tail;
 use project_settings::ProjectSettings;
 
-mod config;
 mod output;
 mod process;
 

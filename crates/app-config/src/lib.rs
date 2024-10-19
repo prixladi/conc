@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 
 const HOME_ENV_VAR: &str = "HOME";
-const CLI_CONF_RELATIVE_LOCATION: &str = ".conc/cli-conf.json";
-const CLI_CONF_DEBUG_LOCATION: &str = "../daemon/run/conc.sock";
+const CONF_RELATIVE_LOCATION: &str = ".conc/conf.json";
+const SOCKET_DEBUG_LOCATION: &str = "../daemon/run/conc.sock";
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CliConfig {
@@ -27,14 +27,14 @@ impl CliConfig {
     pub fn new() -> Result<Self, CliConfigError> {
         if cfg!(debug_assertions) {
             return Ok(Self {
-                daemon_socket_path: String::from(CLI_CONF_DEBUG_LOCATION),
+                daemon_socket_path: String::from(SOCKET_DEBUG_LOCATION),
             });
         }
 
         let home_dir =
             std::env::var(HOME_ENV_VAR).map_err(|e| CliConfigError::HomeNotFound { inner: e })?;
         let conc_config = Path::new(&home_dir)
-            .join(CLI_CONF_RELATIVE_LOCATION)
+            .join(CONF_RELATIVE_LOCATION)
             .to_str()
             .unwrap()
             .to_string();
