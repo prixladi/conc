@@ -11,6 +11,7 @@ mod process;
 
 /// Simple process manager
 #[derive(Debug, Parser)]
+#[command(version)]
 struct Cli {
     #[command(subcommand)]
     command: Command,
