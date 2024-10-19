@@ -1,5 +1,5 @@
 use daemon_client::{ProjectInfo, Requester, ServiceStatus};
-use iced::widget::{button, center, column, container, row, scrollable, text, Column};
+use iced::widget::{button, center, column, container, row, scrollable, text};
 use iced::{alignment, Element, Length, Padding};
 
 use crate::message::Message;
@@ -52,18 +52,20 @@ impl PageView for ProjectsPage {
                 .filter(|service| service.status == ServiceStatus::RUNNING)
                 .count();
 
-            let name = cell(column![text(&project.name).size(18)]);
-            let status = cell(column![text(format!(
-                "{}/{} services running",
-                running_services_count, services_count
-            ))
-            .size(18)]);
+            let name = cell(text(&project.name).size(18));
+            let status = cell(
+                text(format!(
+                    "{}/{} services running",
+                    running_services_count, services_count
+                ))
+                .size(18),
+            );
 
             let action_row = project_actions(project, services_count, running_services_count);
 
             names = names.push(name);
             statuses = statuses.push(status);
-            actions = actions.push(cell(column![action_row]));
+            actions = actions.push(cell(action_row));
         }
 
         let rows = scrollable(row![names, statuses, actions].spacing(16));
@@ -120,7 +122,7 @@ fn project_actions<'a>(
         .into()
 }
 
-fn cell(content: Column<'_, Message>) -> Element<'_, Message> {
+fn cell<'a>(content: impl Into<Element<'a, Message>>) -> Element<'a, Message> {
     container(content)
         .height(Length::Fill)
         .align_y(alignment::Vertical::Bottom)
