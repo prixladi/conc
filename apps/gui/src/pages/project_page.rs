@@ -26,7 +26,7 @@ impl PageView for ProjectPage {
     fn page(&self) -> Page {
         Page::Project(self.project_name.clone())
     }
-    
+
     fn title(&self) -> String {
         format!("Project - {}", self.project_name)
     }

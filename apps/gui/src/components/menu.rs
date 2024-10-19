@@ -5,6 +5,8 @@ use iced::{
 
 use crate::{message::Message, pages::Page};
 
+use super::Section;
+
 pub struct Menu {
     projects: Vec<String>,
     current_page: Page,
@@ -42,13 +44,13 @@ impl<'a> Menu {
             ));
         }
 
-        scrollable(
+        let content = scrollable(
             container(panel)
                 .style(container_style)
-                .padding(16)
-                .width(200),
-        )
-        .into()
+                .padding([16, 8])
+                .width(250),
+        );
+        Section::new().render(content)
     }
 
     fn button(

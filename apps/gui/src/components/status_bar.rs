@@ -19,12 +19,8 @@ impl StatusErrorBar {
 
     pub fn render<'a, Message: 'a>(self) -> Element<'a, Message> {
         let is_error = self.status.is_err();
-        let formatted_date = text(
-            self.last_action_at
-                .format("%d/%m/%Y %H:%M:%S")
-                .to_string(),
-        )
-        .size(16);
+        let formatted_date =
+            text(self.last_action_at.format("%d/%m/%Y %H:%M:%S").to_string()).size(16);
 
         let mut status_bar = row![formatted_date, "-"]
             .height(32)

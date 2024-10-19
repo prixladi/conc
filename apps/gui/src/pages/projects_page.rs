@@ -1,7 +1,8 @@
 use daemon_client::{ProjectInfo, Requester, ServiceStatus};
-use iced::widget::{button, center, column, container, row, scrollable, text};
+use iced::widget::{button, column, container, horizontal_space, row, scrollable, text};
 use iced::{alignment, Element, Length, Padding};
 
+use crate::components::Section;
 use crate::message::Message;
 
 use super::{Page, PageView};
@@ -68,22 +69,24 @@ impl PageView for ProjectsPage {
             actions = actions.push(cell(action_row));
         }
 
-        let rows = scrollable(row![names, statuses, actions].spacing(16));
-
-        let content = center(
-            column![text("Projects").size(50), rows]
-                .spacing(20)
-                .padding(10)
-                .max_width(1200),
+        let rows = scrollable(
+            row![
+                names,
+                horizontal_space(),
+                statuses,
+                horizontal_space(),
+                actions
+            ]
+            .spacing(16),
         );
 
-        let view = container(content)
-            .height(Length::Fill)
-            .width(Length::Fill)
-            .align_x(alignment::Horizontal::Center)
-            .align_y(alignment::Vertical::Center);
+        let content = column![text("Projects").size(35), rows]
+            .spacing(20)
+            .padding(16);
 
-        view.into()
+        let view = container(content).height(Length::Fill).width(Length::Fill);
+
+        Section::new().render(view)
     }
 }
 
