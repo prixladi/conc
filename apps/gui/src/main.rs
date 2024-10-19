@@ -2,16 +2,19 @@ use std::time::Duration;
 
 use chrono::{DateTime, Local};
 use components::{Menu, StatusErrorBar, StatusInfoBar};
-use daemon_client::{ProjectInfo, Requester, ServiceStatus, SocketClient};
-use iced::widget::{button, center, column, container, row, scrollable, text, Column};
-use iced::{alignment, Element, Length, Padding, Task, Theme};
+use daemon_client::{Requester, SocketClient};
+use iced::widget::{column, row};
+use iced::{Element, Task, Theme};
 use message::Message;
+use pages::{get_page, Page, PageView};
+use tokio::time::sleep;
 
 mod components;
 mod message;
+mod pages;
 
 pub fn main() -> iced::Result {
-    iced::application("ConcG | Projects", App::update, App::view)
+    iced::application(App::title, App::update, App::view)
         .theme(|_| App::theme())
         .run_with(App::new)
 }
@@ -20,7 +23,8 @@ struct App {
     requester: Requester,
     last_refresh_at: DateTime<Local>,
     error: Option<String>,
-    projects: Vec<ProjectInfo>,
+    project_names: Vec<String>,
+    page_view: Box<dyn PageView>,
 }
 
 impl App {
@@ -29,9 +33,10 @@ impl App {
         let requester = Requester::new(socket_client);
 
         let app = Self {
+            page_view: get_page(requester.clone(), Page::Projects),
             requester,
             last_refresh_at: Local::now(),
-            projects: vec![],
+            project_names: vec![],
             error: None,
         };
 
@@ -44,111 +49,56 @@ impl App {
         Theme::Ferra
     }
 
+    fn title(&self) -> String {
+        format!("ConcG | {}", self.page_view.title())
+    }
+
     fn update(&mut self, message: Message) -> Task<Message> {
         let refresh = match &message {
-            Message::RefreshLoop | Message::Refresh => true,
+            Message::RefreshLoop => true,
             Message::StartProject { name } => {
                 self.requester.start_project(name).unwrap();
+                true
+            }
+            Message::RestartProject { name } => {
+                self.requester.restart_project(name).unwrap();
                 true
             }
             Message::StopProject { name } => {
                 self.requester.stop_project(name).unwrap();
                 true
             }
+            Message::GotoPage { page } => {
+                self.page_view = get_page(self.requester.clone(), page.clone());
+                true
+            }
         };
 
         if refresh {
-            match self.requester.get_projects_info() {
+            match self.requester.get_project_names() {
                 Ok(info) => {
-                    self.projects = info.values;
+                    self.project_names = info.values;
                     self.error = None;
                 }
                 Err(err) => self.error = Some(err.to_string()),
             }
-            self.last_refresh_at = Local::now()
+            if let Err(err) = self.page_view.refresh() {
+                self.error = Some(err);
+            }
+
+            self.last_refresh_at = Local::now();
         };
 
         if let Message::RefreshLoop = message {
-            return Task::perform(tokio::time::sleep(Duration::from_secs(1)), |_| {
-                Message::RefreshLoop
-            });
+            return Task::perform(sleep(Duration::from_secs(1)), |_| Message::RefreshLoop);
         };
         Task::none()
     }
 
-    fn cell(content: Column<'_, Message>) -> Column<'_, Message> {
-        column![container(content)
-            .height(Length::Fill)
-            .align_y(alignment::Vertical::Bottom),]
-        .height(30)
-    }
-
     fn view(&self) -> Element<Message> {
-        let mut names = column!().spacing(10);
-        let mut statuses = column!().spacing(10);
-        let mut start_buttons = column!().spacing(10);
-        let mut stop_buttons = column!().spacing(10);
+        let view = self.page_view.view();
 
-        for project in &self.projects {
-            let services_count = project.services.len();
-            let running_services_count = project
-                .services
-                .iter()
-                .filter(|service| service.status == ServiceStatus::RUNNING)
-                .count();
-
-            let name = Self::cell(column![text(&project.name).size(25)]);
-            let status = Self::cell(column![text(format!(
-                "{}/{} services running",
-                running_services_count, services_count
-            ))
-            .size(20)]);
-
-            let mut start_button = button("Start")
-                .style(button::success)
-                .padding(Padding::default().top(7).bottom(2).left(4).right(4));
-            if services_count > running_services_count {
-                start_button = start_button.on_press(Message::StartProject {
-                    name: project.name.clone(),
-                })
-            }
-
-            let mut stop_button = button("Stop")
-                .style(button::danger)
-                .padding(Padding::default().top(7).bottom(2).left(4).right(4));
-            if running_services_count > 0 {
-                stop_button = stop_button.on_press(Message::StopProject {
-                    name: project.name.clone(),
-                })
-            }
-
-            names = names.push(name);
-            statuses = statuses.push(status);
-            start_buttons = start_buttons.push(Self::cell(column![start_button]));
-            stop_buttons = stop_buttons.push(Self::cell(column![stop_button]));
-        }
-
-        let rows = scrollable(row![names, statuses, start_buttons, stop_buttons].spacing(10));
-
-        let content = center(
-            column![text("Projects").size(50), rows]
-                .spacing(20)
-                .padding(20)
-                .max_width(600),
-        );
-
-        let view = container(content)
-            .height(Length::Fill)
-            .width(Length::Fill)
-            .align_x(alignment::Horizontal::Center)
-            .align_y(alignment::Vertical::Center);
-
-        let menu = Menu::new(
-            self.projects
-                .iter()
-                .map(|project| (project.name.clone(), false))
-                .collect(),
-        );
+        let menu = Menu::new(self.project_names.clone(), self.page_view.page());
         let body = row![menu.render(), view];
 
         let info_bar = StatusInfoBar::new(
