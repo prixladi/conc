@@ -86,6 +86,7 @@ fn container_style(theme: &Theme) -> container::Style {
 
 fn menu_button_style(theme: &Theme, status: Status) -> button::Style {
     let palette = theme.extended_palette();
+    let bg_color = palette.primary.weak.color.scale_alpha(0.05);
 
     let base = button::Style {
         background: Some(Background::Color(Color::TRANSPARENT)),
@@ -97,8 +98,7 @@ fn menu_button_style(theme: &Theme, status: Status) -> button::Style {
     match status {
         Status::Active => base,
         Status::Hovered | Status::Pressed => button::Style {
-            background: Some(Background::Color(palette.primary.strong.color)),
-            text_color: palette.background.strong.text,
+            background: Some(Background::Color(bg_color)),
             ..base
         },
         Status::Disabled => base,
@@ -107,10 +107,11 @@ fn menu_button_style(theme: &Theme, status: Status) -> button::Style {
 
 fn menu_button_active_style(theme: &Theme, _: Status) -> button::Style {
     let palette = theme.extended_palette();
+    let bg_color = palette.primary.weak.color.scale_alpha(0.05);
 
     button::Style {
-        background: Some(Background::Color(palette.primary.strong.color)),
-        text_color: palette.background.strong.text,
+        background: Some(Background::Color(bg_color)),
+        text_color: palette.background.base.text,
         border: Border::default().rounded(10),
         shadow: Shadow::default(),
     }

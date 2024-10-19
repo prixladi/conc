@@ -227,7 +227,7 @@ impl TryFrom<Vec<String>> for NoContentResponse {
 }
 impl Response for NoContentResponse {}
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum ServiceStatus {
     IDLE,
     RUNNING,
