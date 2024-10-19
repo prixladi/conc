@@ -24,10 +24,12 @@ pub fn main() -> iced::Result {
 
 struct App {
     requester: Requester,
-    last_refresh_at: DateTime<Local>,
-    error: Option<String>,
     project_names: Vec<String>,
     page_view: Box<dyn PageView>,
+
+    last_action_at: DateTime<Local>,
+    last_action_result: Result<String, String>,
+    refresh_loop_error: Option<String>,
 }
 
 impl App {
@@ -38,9 +40,10 @@ impl App {
         let app = Self {
             page_view: get_page(requester.clone(), Page::Projects),
             requester,
-            last_refresh_at: Local::now(),
+            last_action_at: Local::now(),
             project_names: vec![],
-            error: None,
+            last_action_result: Ok(String::from("Started")),
+            refresh_loop_error: None,
         };
 
         (app, Task::done(Message::RefreshLoop))
@@ -53,48 +56,57 @@ impl App {
     }
 
     fn title(&self) -> String {
-        format!("ConcG | {}", self.page_view.title())
+        format!("Conc | {}", self.page_view.title())
     }
 
     fn update(&mut self, message: Message) -> Task<Message> {
-        let refresh = match &message {
-            Message::RefreshLoop => true,
-            Message::StartProject { name } => {
-                self.requester.start_project(name).unwrap();
-                true
-            }
-            Message::RestartProject { name } => {
-                self.requester.restart_project(name).unwrap();
-                true
-            }
-            Message::StopProject { name } => {
-                self.requester.stop_project(name).unwrap();
-                true
-            }
+        let res: Result<(String, bool), String> = match &message {
+            Message::RefreshLoop => Ok((String::new(), true)),
+            Message::StartProject { name } => self
+                .requester
+                .start_project(name)
+                .map(|_| (format!("Started project {}", name), true))
+                .map_err(|err| err.to_string()),
+            Message::RestartProject { name } => self
+                .requester
+                .restart_project(name)
+                .map(|_| (format!("Restarted project {}", name), true))
+                .map_err(|err| err.to_string()),
+            Message::StopProject { name } => self
+                .requester
+                .stop_project(name)
+                .map(|_| (format!("Stopped project {}", name), true))
+                .map_err(|err| err.to_string()),
             Message::GotoPage { page } => {
                 self.page_view = get_page(self.requester.clone(), page.clone());
-                true
+                Ok((format!("Navigated to the page '{}'", page), true))
             }
         };
 
-        if refresh {
+        if let Ok((_, true)) = res {
             match self.requester.get_project_names() {
                 Ok(info) => {
                     self.project_names = info.values;
-                    self.error = None;
+                    self.refresh_loop_error = None;
                 }
-                Err(err) => self.error = Some(err.to_string()),
+                Err(err) => {
+                    self.refresh_loop_error = Some(err.to_string());
+                    self.last_action_at = Local::now();
+                }
             }
             if let Err(err) = self.page_view.refresh() {
-                self.error = Some(err);
+                self.refresh_loop_error = Some(err);
+                self.last_action_at = Local::now();
             }
-
-            self.last_refresh_at = Local::now();
         };
 
         if let Message::RefreshLoop = message {
             return Task::perform(sleep(Duration::from_secs(1)), |_| Message::RefreshLoop);
         };
+
+        self.last_action_result = res.map(|(status, _)| status);
+        self.last_action_at = Local::now();
+
         Task::none()
     }
 
@@ -104,12 +116,15 @@ impl App {
         let menu = Menu::new(self.project_names.clone(), self.page_view.page());
         let body = row![menu.render(), view];
 
-        let info_bar = StatusInfoBar::new(
-            self.last_refresh_at,
-            self.requester.client().socket_path.clone(),
-        );
-        let error_bar = StatusErrorBar::new(self.error.clone());
+        let info_bar = StatusInfoBar::new(self.requester.client().socket_path.clone());
+        let status: Result<String, String> = if let Some(err) = &self.refresh_loop_error {
+            Err(err.clone())
+        } else {
+            self.last_action_result.clone()
+        };
 
-        column![error_bar.render(), body, info_bar.render(),].into()
+        let error_bar = StatusErrorBar::new(self.last_action_at, status);
+
+        column![error_bar.render(), body, info_bar.render()].into()
     }
 }

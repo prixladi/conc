@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use daemon_client::Requester;
 use iced::Element;
 use project_page::ProjectPage;
@@ -12,6 +14,15 @@ mod projects_page;
 pub enum Page {
     Projects,
     Project(String),
+}
+
+impl Display for Page {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Page::Projects => f.write_str("Projects"),
+            Page::Project(project) => f.write_str(&format!("Project - {}", project)),
+        }
+    }
 }
 
 pub trait PageView {
