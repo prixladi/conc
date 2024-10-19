@@ -4,7 +4,7 @@ Conc is a simple process manager.
 
 ## Architecture
 
-The core of the application (daemon) is written in C, and supporting tools (CLI, GUI, TUI) are written in Rust.
+The core of the application (daemon) is written in C, and supporting tools (CLI, GUI) are written in Rust.
 
 ### Languages
 
@@ -18,9 +18,9 @@ The core of the application (daemon) is written in C, and supporting tools (CLI,
     ├── apps
     │   ├── daemon              # Systemd daemon handling the core of the process management
     │   ├── cli                 # Command line interface communication with the daemon
-    │   ├── gui                 # Graphical interface communicating with daemon (Planned)
-    │   └── tui                 # Terminal interface communicating with daemon (Planned)
+    │   └── gui                 # Graphical interface communicating with daemon
     ├── crates
+    │   ├── app-config          # Shared Rust library for app config manipulation
     │   ├── daemon-client       # Shared Rust library that provides a thin layer for communication with the daemon
     │   └── project-settings    # Shared Rust library for searching and parsing project settings
     └── Cargo.toml
