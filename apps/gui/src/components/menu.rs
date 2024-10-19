@@ -3,23 +3,43 @@ use iced::{
     Background, Border, Color, Element, Length, Padding, Shadow, Theme,
 };
 
-use crate::message::Message;
+use crate::{message::Message, pages::Page};
 
 pub struct Menu {
-    projects: Vec<(String, bool)>,
+    projects: Vec<String>,
+    current_page: Page,
 }
 
 impl<'a> Menu {
-    pub fn new(projects: Vec<(String, bool)>) -> Self {
-        Self { projects }
+    pub fn new(projects: Vec<String>, current_page: Page) -> Self {
+        Self {
+            projects,
+            current_page,
+        }
     }
 
     pub fn render(self) -> Element<'a, Message> {
-        let mut panel = column![].spacing(2);
-        panel = panel.push(self.button(String::from("Projects"), 18, true, Message::Refresh));
+        let mut panel = column![].spacing(8);
+        panel = panel.push(self.button(
+            String::from("Projects"),
+            18,
+            Page::Projects == self.current_page,
+            Message::GotoPage {
+                page: Page::Projects,
+            },
+        ));
 
-        for (project, active) in self.projects.iter() {
-            panel = panel.push(self.button(format!("#{}", project), 16, *active, Message::Refresh));
+        for project in self.projects.iter() {
+            let is_active = self.current_page == Page::Project(project.clone());
+
+            panel = panel.push(self.button(
+                format!("#{}", project),
+                16,
+                is_active,
+                Message::GotoPage {
+                    page: Page::Project(project.clone()),
+                },
+            ));
         }
 
         scrollable(

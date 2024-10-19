@@ -19,6 +19,7 @@ use crate::{
 
 type Res<T> = Result<T, ErrorResponse>;
 
+#[derive(Clone)]
 pub struct Requester {
     socket_client: SocketClient,
 }
