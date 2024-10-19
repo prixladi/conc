@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     convert::TryFrom,
     path::Path,
 };
@@ -50,10 +50,10 @@ pub enum EnvValue {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ProjectSettings {
     pub name: String,
-    #[serde(default = "String::new", skip_deserializing)]
+    #[serde(default = "String::new")]
     pub cwd: String,
     pub services: Vec<ServiceSettings>,
-    #[serde(default = "HashMap::new")]
+    #[serde(default = "HashMap::new", serialize_with = "ordered_map")]
     pub env: HashMap<String, EnvValue>,
 }
 
@@ -79,7 +79,9 @@ impl ProjectSettings {
     pub fn find_parse_and_populate(pwd: Option<String>) -> Result<Self, ProjectSettingsError> {
         let (cwd, json) = resolve_cwd_and_json(pwd)?;
         let mut settings = try_parse(json.as_str())?;
-        settings.cwd = cwd;
+        if settings.cwd.is_empty() {
+            settings.cwd = cwd;
+        }
         settings.env = populate_env(settings.env);
 
         for service in &mut settings.services {
@@ -163,4 +165,12 @@ fn populate_env(envs: HashMap<String, EnvValue>) -> HashMap<String, EnvValue> {
             (key, EnvValue::Str(val))
         })
         .collect()
+}
+
+fn ordered_map<S: Serializer, K: Ord + Serialize, V: Serialize>(
+    value: &HashMap<K, V>,
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
+    let ordered: BTreeMap<_, _> = value.iter().collect();
+    ordered.serialize(serializer)
 }

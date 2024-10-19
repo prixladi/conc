@@ -13,6 +13,7 @@ use tokio::time::sleep;
 mod components;
 mod message;
 mod pages;
+mod utils;
 
 pub fn main() -> iced::Result {
     let config = CliConfig::new().unwrap();
@@ -62,25 +63,44 @@ impl App {
     fn update(&mut self, message: Message) -> Task<Message> {
         let res: Result<(String, bool), String> = match &message {
             Message::RefreshLoop => Ok((String::new(), true)),
-            Message::StartProject { name } => self
-                .requester
-                .start_project(name)
-                .map(|_| (format!("Started project {}", name), true))
-                .map_err(|err| err.to_string()),
-            Message::RestartProject { name } => self
-                .requester
-                .restart_project(name)
-                .map(|_| (format!("Restarted project {}", name), true))
-                .map_err(|err| err.to_string()),
-            Message::StopProject { name } => self
-                .requester
-                .stop_project(name)
-                .map(|_| (format!("Stopped project {}", name), true))
-                .map_err(|err| err.to_string()),
             Message::GotoPage { page } => {
                 self.page_view = get_page(self.requester.clone(), page.clone());
                 Ok((format!("Navigated to the page '{}'", page), true))
             }
+            Message::StartProject { name } => self
+                .requester
+                .start_project(name)
+                .map(|_| (format!("Started project '{}'", name), true))
+                .map_err(|err| format!("Unable to start project '{}': {}", name, err)),
+            Message::RestartProject { name } => self
+                .requester
+                .restart_project(name)
+                .map(|_| (format!("Restarted project '{}'", name), true))
+                .map_err(|err| format!("Unable to restart project '{}': {}", name, err)),
+            Message::StopProject { name } => self
+                .requester
+                .stop_project(name)
+                .map(|_| (format!("Stopped project '{}'", name), true))
+                .map_err(|err| format!("Unable to stop project '{}': {}", name, err)),
+            Message::StartService { project, name } => self
+                .requester
+                .start_service(project, name)
+                .map(|_| (format!("Started service '{}/{}'", project, name), true))
+                .map_err(|err| format!("Unable to start service '{}/{}': {}", project, name, err)),
+            Message::RestartService { project, name } => self
+                .requester
+                .restart_service(project, name)
+                .map(|_| (format!("Restarted service '{}/{}'", project, name), true))
+                .map_err(|err| {
+                    format!("Unable to restart service '{}/{}': {}", project, name, err)
+                }),
+            Message::StopService { project, name } => self
+                .requester
+                .stop_service(project, name)
+                .map(|_| (format!("Restarted service '{}/{}'", project, name), true))
+                .map_err(|err| {
+                    format!("Unable to restart service '{}/{}': {}", project, name, err)
+                }),
         };
 
         if let Ok((_, true)) = res {

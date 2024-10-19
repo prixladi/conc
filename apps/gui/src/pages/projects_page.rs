@@ -77,12 +77,12 @@ impl PageView for ProjectsPage {
                 horizontal_space(),
                 actions
             ]
-            .spacing(16),
+            .spacing(8),
         );
 
-        let content = column![text("Projects").size(35), rows]
-            .spacing(20)
-            .padding(16);
+        let content = column![text("Projects").size(30), rows]
+            .spacing(12)
+            .padding(8);
 
         let view = container(content).height(Length::Fill).width(Length::Fill);
 

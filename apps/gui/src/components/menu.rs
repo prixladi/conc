@@ -47,7 +47,7 @@ impl<'a> Menu {
         let content = scrollable(
             container(panel)
                 .style(container_style)
-                .padding([16, 8])
+                .padding(8)
                 .width(250),
         );
         Section::new().render(content)
