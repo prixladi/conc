@@ -1,25 +1,19 @@
-use std::fmt::Debug;
 use std::time::Duration;
 
 use chrono::{DateTime, Local};
-use components::{StatusErrorBar, StatusInfoBar};
+use components::{Menu, StatusErrorBar, StatusInfoBar};
 use daemon_client::{ProjectInfo, Requester, ServiceStatus, SocketClient};
 use iced::widget::{button, center, column, container, row, scrollable, text, Column};
 use iced::{alignment, Element, Length, Padding, Task, Theme};
+use message::Message;
 
 mod components;
+mod message;
 
 pub fn main() -> iced::Result {
     iced::application("ConcG | Projects", App::update, App::view)
         .theme(|_| App::theme())
         .run_with(App::new)
-}
-
-#[derive(Debug, Clone)]
-enum Message {
-    StartProject { name: String },
-    StopProject { name: String },
-    RefreshLoop,
 }
 
 struct App {
@@ -52,7 +46,7 @@ impl App {
 
     fn update(&mut self, message: Message) -> Task<Message> {
         let refresh = match &message {
-            Message::RefreshLoop => true,
+            Message::RefreshLoop | Message::Refresh => true,
             Message::StartProject { name } => {
                 self.requester.start_project(name).unwrap();
                 true
@@ -149,12 +143,20 @@ impl App {
             .align_x(alignment::Horizontal::Center)
             .align_y(alignment::Vertical::Center);
 
+        let menu = Menu::new(
+            self.projects
+                .iter()
+                .map(|project| (project.name.clone(), false))
+                .collect(),
+        );
+        let body = row![menu.render(), view];
+
         let info_bar = StatusInfoBar::new(
             self.last_refresh_at,
             self.requester.client().socket_path.clone(),
         );
         let error_bar = StatusErrorBar::new(self.error.clone());
 
-        column![error_bar.render(), view, info_bar.render(),].into()
+        column![error_bar.render(), body, info_bar.render(),].into()
     }
 }
