@@ -22,7 +22,7 @@ impl<'a> Menu {
 
     pub fn render(self) -> Element<'a, Message> {
         let mut panel = column![].spacing(8);
-        panel = panel.push(self.button(
+        panel = panel.push(menu_button(
             String::from("Projects"),
             18,
             Page::Projects == self.current_page,
@@ -34,7 +34,7 @@ impl<'a> Menu {
         for project in self.projects.iter() {
             let is_active = self.current_page == Page::Project(project.clone());
 
-            panel = panel.push(self.button(
+            panel = panel.push(menu_button(
                 format!("#{}", project),
                 16,
                 is_active,
@@ -52,24 +52,23 @@ impl<'a> Menu {
         );
         Section::new().render(content)
     }
+}
 
-    fn button(
-        &self,
-        title: String,
-        txt_size: i32,
-        active: bool,
-        message: Message,
-    ) -> Button<'a, Message> {
-        let txt = text(title).size(txt_size as f32).center();
-        let butt = button(txt)
-            .width(Length::Fill)
-            .padding(Padding::default().top(8).bottom(4).left(8).right(8))
-            .on_press(message);
+fn menu_button<'a>(
+    title: String,
+    txt_size: i32,
+    active: bool,
+    message: Message,
+) -> Button<'a, Message> {
+    let txt = text(title).size(txt_size as f32).center();
+    let butt = button(txt)
+        .width(Length::Fill)
+        .padding(Padding::default().top(8).bottom(4).left(8).right(8))
+        .on_press(message);
 
-        match active {
-            true => butt.style(menu_button_active_style),
-            false => butt.style(menu_button_style),
-        }
+    match active {
+        true => butt.style(menu_button_active_style),
+        false => butt.style(menu_button_style),
     }
 }
 

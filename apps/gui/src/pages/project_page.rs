@@ -59,22 +59,25 @@ impl PageView for ProjectPage {
         let mut names = vec![];
         let mut statuses = vec![];
         let mut actions = vec![];
+
+        let mut view = column![];
+
         if let Some(project) = &self.project {
             for service in project.services.iter() {
                 names.push(service.name.clone());
                 statuses.push(service_status_stringify(&service.status));
                 actions.push(ServiceActions::new(&project.name, service).render());
             }
-        }
 
-        let table = InfoTable::new(self.title(), names, statuses, actions);
-
-        let project_view = container(table.render())
+            let table = InfoTable::new(self.title(), names, statuses, actions);
+            let project_view = container(table.render(|_| Message::GotoPage {
+                page: Page::Project(project.name.clone()),
+            }))
             .height(Length::Fill)
             .width(Length::Fill);
-        let project_section = Section::new().render(project_view);
-
-        let mut view = column![project_section];
+        
+            view = view.push(Section::new().render(project_view));
+        }
 
         if let Some(settings) = &self.project_settings {
             let pretty_settings = prettify_json::<ProjectSettings>(settings).unwrap_or_default();

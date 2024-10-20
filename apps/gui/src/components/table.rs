@@ -1,7 +1,7 @@
 use iced::{
     alignment,
-    widget::{column, container, horizontal_space, row, scrollable, text},
-    Element, Padding,
+    widget::{button, button::Status, column, container, horizontal_space, row, scrollable, text},
+    Background, Border, Color, Element, Padding, Shadow, Theme,
 };
 
 use crate::message::Message;
@@ -28,7 +28,7 @@ impl<'a> InfoTable<'a> {
         }
     }
 
-    pub fn render(self) -> Element<'a, Message> {
+    pub fn render(self, name_to_message: impl Fn(&str) -> Message) -> Element<'a, Message> {
         let mut names = column!["NAME"].spacing(10);
         let mut statuses = column!["STATUS"].spacing(10);
         let mut actions = column!["ACTIONS"]
@@ -36,7 +36,7 @@ impl<'a> InfoTable<'a> {
             .padding(Padding::default().right(15));
 
         for name in self.names {
-            names = names.push(cell(text(name).size(18)));
+            names = names.push(name_button(name, &name_to_message));
         }
         for status in self.statuses {
             statuses = statuses.push(cell(text(status).size(18)));
@@ -63,9 +63,41 @@ impl<'a> InfoTable<'a> {
     }
 }
 
+fn name_button<'a>(name: String, name_to_message: impl Fn(&str) -> Message) -> Element<'a, Message> {
+    let message = name_to_message(&name);
+    let txt = cell(text(name).size(18));
+    button(txt)
+        .style(name_button_style)
+        .padding(Padding::default().top(6).bottom(4).left(8).right(8))
+        .height(30)
+        .on_press(message)
+        .into()
+}
+
 fn cell<'a>(content: impl Into<Element<'a, Message>>) -> Element<'a, Message> {
     container(content)
         .align_y(alignment::Vertical::Bottom)
         .height(30)
         .into()
+}
+
+fn name_button_style(theme: &Theme, status: Status) -> button::Style {
+    let palette = theme.extended_palette();
+    let bg_color = palette.primary.weak.color.scale_alpha(0.05);
+
+    let base = button::Style {
+        background: Some(Background::Color(Color::TRANSPARENT)),
+        text_color: palette.background.base.text,
+        border: Border::default().rounded(10),
+        shadow: Shadow::default(),
+    };
+
+    match status {
+        Status::Active => base,
+        Status::Hovered | Status::Pressed => button::Style {
+            background: Some(Background::Color(bg_color)),
+            ..base
+        },
+        Status::Disabled => base,
+    }
 }

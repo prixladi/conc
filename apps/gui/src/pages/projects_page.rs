@@ -62,9 +62,11 @@ impl PageView for ProjectsPage {
 
         let table = InfoTable::new(self.title(), names, statuses, actions);
 
-        let view = container(table.render())
-            .height(Length::Fill)
-            .width(Length::Fill);
+        let view = container(table.render(|project| Message::GotoPage {
+            page: Page::Project(project.to_string()),
+        }))
+        .height(Length::Fill)
+        .width(Length::Fill);
 
         Section::new().render(view)
     }
