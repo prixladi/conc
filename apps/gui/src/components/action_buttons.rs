@@ -1,8 +1,9 @@
 use daemon_client::{ProjectInfo, ServiceInfo, ServiceStatus};
 use iced::{
-    widget::{button, row},
-    Element, Padding,
+    widget::{button, button::Status, row, text},
+    Background, Border, Color, Element, Shadow, Theme,
 };
+use iced_fonts::{bootstrap::icon_to_string, Bootstrap, BOOTSTRAP_FONT};
 
 use crate::message::Message;
 
@@ -20,37 +21,34 @@ impl<'a> ServiceActions<'a> {
     }
 
     pub fn render(self) -> Element<'a, Message> {
-        let restart_button = button("Restart")
-            .style(button::primary)
-            .padding(Padding::default().top(7).bottom(2).left(4).right(4))
-            .on_press(Message::RestartService {
-                project: self.project_name.to_string(),
-                name: self.service.name.clone(),
-            });
-
-        let mut start_button = button("Start")
-            .style(button::success)
-            .padding(Padding::default().top(7).bottom(2).left(4).right(4));
+        let mut start_message = None;
         if self.service.status != ServiceStatus::RUNNING {
-            start_button = start_button.on_press(Message::StartService {
+            start_message = Some(Message::StartService {
                 project: self.project_name.to_string(),
                 name: self.service.name.clone(),
             });
         };
 
-        let mut stop_button = button("Stop")
-            .style(button::danger)
-            .padding(Padding::default().top(7).bottom(2).left(4).right(4));
+        let mut stop_message = None;
         if self.service.status == ServiceStatus::RUNNING {
-            stop_button = stop_button.on_press(Message::StopService {
+            stop_message = Some(Message::StopService {
                 project: self.project_name.to_string(),
                 name: self.service.name.clone(),
             });
         };
 
-        row![start_button, stop_button, restart_button]
-            .spacing(10)
-            .into()
+        let restart_message = Some(Message::RestartService {
+            project: self.project_name.to_string(),
+            name: self.service.name.clone(),
+        });
+
+        row![
+            start_action_button(start_message),
+            stop_action_button(stop_message),
+            restart_action_button(restart_message),
+        ]
+        .spacing(10)
+        .into()
     }
 }
 
@@ -65,39 +63,121 @@ impl<'a> ProjectActions<'a> {
 
     pub fn render(self) -> Element<'a, Message> {
         let services_count = self.project.services.len();
-        let running_services_count = self.project
+        let running_services_count = self
+            .project
             .services
             .iter()
             .filter(|service| service.status == ServiceStatus::RUNNING)
             .count();
 
-        let restart_button = button("Restart")
-            .style(button::primary)
-            .padding(Padding::default().top(7).bottom(2).left(4).right(4))
-            .on_press(Message::RestartProject {
-                name: self.project.name.clone(),
-            });
-
-        let mut start_button = button("Start")
-            .style(button::success)
-            .padding(Padding::default().top(7).bottom(2).left(4).right(4));
+        let mut start_message = None;
         if services_count > running_services_count {
-            start_button = start_button.on_press(Message::StartProject {
+            start_message = Some(Message::StartProject {
                 name: self.project.name.clone(),
             });
         };
 
-        let mut stop_button = button("Stop")
-            .style(button::danger)
-            .padding(Padding::default().top(7).bottom(2).left(4).right(4));
+        let mut stop_message = None;
         if running_services_count > 0 {
-            stop_button = stop_button.on_press(Message::StopProject {
+            stop_message = Some(Message::StopProject {
                 name: self.project.name.clone(),
             });
-        };
+        }
 
-        row![start_button, stop_button, restart_button]
-            .spacing(10)
-            .into()
+        let restart_message = Some(Message::RestartProject {
+            name: self.project.name.clone(),
+        });
+
+        row![
+            start_action_button(start_message),
+            stop_action_button(stop_message),
+            restart_action_button(restart_message),
+        ]
+        .spacing(10)
+        .into()
+    }
+}
+
+fn start_action_button<'a>(message: Option<Message>) -> Element<'a, Message> {
+    action_button(message, Bootstrap::PlayFill, start_action_button_style)
+}
+
+fn stop_action_button<'a>(message: Option<Message>) -> Element<'a, Message> {
+    action_button(message, Bootstrap::StopFill, stop_action_button_style)
+}
+
+fn restart_action_button<'a>(message: Option<Message>) -> Element<'a, Message> {
+    action_button(
+        message,
+        Bootstrap::ArrowClockwise,
+        restart_action_button_style,
+    )
+}
+
+fn action_button<'a>(
+    message: Option<Message>,
+    icon: Bootstrap,
+    style: impl Fn(&Theme, Status) -> button::Style + 'a,
+) -> Element<'a, Message> {
+    let mut action = button(text(icon_to_string(icon)).size(25).font(BOOTSTRAP_FONT))
+        .style(style)
+        .padding(0);
+
+    if let Some(message) = message {
+        action = action.on_press(message);
+    };
+
+    action.into()
+}
+
+fn start_action_button_style(theme: &Theme, status: Status) -> button::Style {
+    let palette = theme.extended_palette();
+    action_button_style(
+        status,
+        palette.success.weak.color,
+        palette.success.strong.color,
+    )
+}
+
+fn stop_action_button_style(theme: &Theme, status: Status) -> button::Style {
+    let palette = theme.extended_palette();
+    action_button_style(
+        status,
+        palette.danger.base.color,
+        palette.danger.strong.color,
+    )
+}
+
+fn restart_action_button_style(theme: &Theme, status: Status) -> button::Style {
+    let palette = theme.extended_palette();
+    action_button_style(
+        status,
+        palette.background.base.text,
+        palette.background.weak.text,
+    )
+}
+
+fn action_button_style(
+    status: Status,
+    text_color: Color,
+    active_text_color: Color,
+) -> button::Style {
+    let base = button::Style {
+        background: Some(Background::Color(Color::TRANSPARENT)),
+        text_color,
+        border: Border::default(),
+        shadow: Shadow::default(),
+    };
+
+    match status {
+        Status::Active => base,
+        Status::Hovered | Status::Pressed => button::Style {
+            text_color: active_text_color,
+            ..base
+        },
+        Status::Disabled => button::Style {
+            text_color: text_color.scale_alpha(0.2),
+            ..base
+        },
     }
 }

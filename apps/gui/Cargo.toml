@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 iced = { version = "0.13.1", features = ["tokio", "debug", "advanced"] }
+iced_fonts = { version = "0.1.1", features = ["bootstrap"] }
 tokio = { version = "1.40.0", features = ["tracing", "time"] }
 chrono = "0.4.38"
 tracing-subscriber = "0.3.18"

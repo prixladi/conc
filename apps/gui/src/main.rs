@@ -19,6 +19,7 @@ pub fn main() -> iced::Result {
     let config = CliConfig::new().unwrap();
 
     iced::application(App::title, App::update, App::view)
+        .font(iced_fonts::BOOTSTRAP_FONT_BYTES)
         .theme(|_| App::theme())
         .run_with(|| App::new(config))
 }

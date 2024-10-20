@@ -1,7 +1,7 @@
 use iced::{
     alignment,
     widget::{column, container, horizontal_space, row, scrollable, text},
-    Element,
+    Element, Padding,
 };
 
 use crate::message::Message;
@@ -31,7 +31,9 @@ impl<'a> InfoTable<'a> {
     pub fn render(self) -> Element<'a, Message> {
         let mut names = column!["NAME"].spacing(10);
         let mut statuses = column!["STATUS"].spacing(10);
-        let mut actions = column!["ACTIONS"].spacing(10);
+        let mut actions = column!["ACTIONS"]
+            .spacing(10)
+            .padding(Padding::default().right(15));
 
         for name in self.names {
             names = names.push(cell(text(name).size(18)));
