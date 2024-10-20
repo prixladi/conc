@@ -32,7 +32,12 @@ impl<'a> Menu {
         ));
 
         for project in self.projects.iter() {
-            let is_active = self.current_page == Page::Project(project.clone());
+            let is_active = match &self.current_page {
+                Page::Project(project_name) | Page::Service(project_name, _) => {
+                    project_name == project
+                }
+                _ => false,
+            };
 
             panel = panel.push(menu_button(
                 format!("#{}", project),
@@ -47,7 +52,6 @@ impl<'a> Menu {
         let content = scrollable(
             container(panel)
                 .style(container_style)
-                .padding(8)
                 .width(250),
         );
         Section::new().render(content)

@@ -3,7 +3,7 @@ use iced::widget::{column, container, scrollable, text};
 use iced::{Element, Length};
 use project_settings::ProjectSettings;
 
-use crate::components::{InfoTable, Section, ServiceActions};
+use crate::components::{InfoTable, PageTitle, ProjectActions, Section, ServiceActions};
 use crate::message::Message;
 use crate::utils::{prettify_json, service_status_stringify};
 
@@ -69,21 +69,26 @@ impl PageView for ProjectPage {
                 actions.push(ServiceActions::new(&project.name, service).render());
             }
 
-            let table = InfoTable::new(self.title(), names, statuses, actions);
-            let project_view = container(table.render(|_| Message::GotoPage {
-                page: Page::Project(project.name.clone()),
-            }))
+            let action_buttons = ProjectActions::new(project).render();
+
+            let tile = PageTitle::new(self.title()).render(Some(action_buttons));
+            let table = InfoTable::new(names, statuses, actions);
+            let project_view = container(table.render(
+                |service| Message::GotoPage {
+                    page: Page::Service(project.name.clone(), service.to_string()),
+                },
+                tile,
+            ))
             .height(Length::Fill)
             .width(Length::Fill);
-        
+
             view = view.push(Section::new().render(project_view));
         }
 
         if let Some(settings) = &self.project_settings {
             let pretty_settings = prettify_json::<ProjectSettings>(settings).unwrap_or_default();
             let json_view = scrollable(text(pretty_settings).width(Length::Fill));
-            let settings_view = container(json_view).padding(8);
-            let settings_section = Section::new().render(settings_view);
+            let settings_section = Section::new().render(json_view);
             view = view.push(settings_section);
         }
 

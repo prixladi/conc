@@ -4,16 +4,19 @@ use daemon_client::Requester;
 use iced::Element;
 use project_page::ProjectPage;
 use projects_page::ProjectsPage;
+use service_page::ServicePage;
 
 use crate::message::Message;
 
 mod project_page;
 mod projects_page;
+mod service_page;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Page {
     Projects,
     Project(String),
+    Service(String, String),
 }
 
 impl Display for Page {
@@ -21,6 +24,9 @@ impl Display for Page {
         match self {
             Page::Projects => f.write_str("Projects"),
             Page::Project(project) => f.write_str(&format!("Project - {}", project)),
+            Page::Service(project, service) => {
+                f.write_str(&format!("Service - {}/{}", project, service))
+            }
         }
     }
 }
@@ -35,6 +41,7 @@ pub trait PageView {
 pub fn get_page(requester: Requester, page_transition: Page) -> Box<dyn PageView> {
     match page_transition {
         Page::Projects => Box::new(ProjectsPage::new(requester)),
-        Page::Project(project_name) => Box::new(ProjectPage::new(requester, project_name)),
+        Page::Project(project) => Box::new(ProjectPage::new(requester, project)),
+        Page::Service(project, service) => Box::new(ServicePage::new(requester, project, service)),
     }
 }

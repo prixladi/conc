@@ -12,7 +12,7 @@ impl<'a> Section {
     pub fn render(self, content: impl Into<Element<'a, Message>>) -> Element<'a, Message> {
         container(
             container(content)
-                .padding(8)
+                .padding(16)
                 .style(outer_container_style)
                 .height(Length::Fill),
         )

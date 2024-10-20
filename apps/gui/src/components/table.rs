@@ -7,7 +7,6 @@ use iced::{
 use crate::message::Message;
 
 pub struct InfoTable<'a> {
-    title: String,
     names: Vec<String>,
     statuses: Vec<String>,
     actions: Vec<Element<'a, Message>>,
@@ -15,23 +14,25 @@ pub struct InfoTable<'a> {
 
 impl<'a> InfoTable<'a> {
     pub fn new(
-        title: String,
         names: Vec<String>,
         statuses: Vec<String>,
         actions: Vec<Element<'a, Message>>,
     ) -> Self {
         Self {
-            title,
             names,
             statuses,
             actions,
         }
     }
 
-    pub fn render(self, name_to_message: impl Fn(&str) -> Message) -> Element<'a, Message> {
-        let mut names = column!["NAME"].spacing(10);
-        let mut statuses = column!["STATUS"].spacing(10);
-        let mut actions = column!["ACTIONS"]
+    pub fn render(
+        self,
+        name_to_message: impl Fn(&str) -> Message,
+        title: Element<'a, Message>,
+    ) -> Element<'a, Message> {
+        let mut names = column![column_tile("NAME")].spacing(10);
+        let mut statuses = column![column_tile("STATUS")].spacing(10);
+        let mut actions = column![column_tile("ACTIONS")]
             .spacing(10)
             .padding(Padding::default().right(15));
 
@@ -56,14 +57,18 @@ impl<'a> InfoTable<'a> {
             .spacing(8),
         );
 
-        column![text(self.title).size(30), rows]
-            .spacing(12)
-            .padding(8)
-            .into()
+        column![title, rows].spacing(12).padding(8).into()
     }
 }
 
-fn name_button<'a>(name: String, name_to_message: impl Fn(&str) -> Message) -> Element<'a, Message> {
+fn column_tile(text: &str) -> Element<Message> {
+    container(text).padding(Padding::default().left(8)).into()
+}
+
+fn name_button<'a>(
+    name: String,
+    name_to_message: impl Fn(&str) -> Message,
+) -> Element<'a, Message> {
     let message = name_to_message(&name);
     let txt = cell(text(name).size(18));
     button(txt)
