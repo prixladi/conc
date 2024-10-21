@@ -1,4 +1,4 @@
-use app_config::CliConfig;
+use app_config::AppConfig;
 use clap::{Parser, Subcommand};
 use daemon_client::{Requester, SocketClient};
 use output::Output;
@@ -94,7 +94,7 @@ fn main() {
 }
 
 fn run() -> Output {
-    let config = match CliConfig::new() {
+    let config = match AppConfig::new() {
         Ok(config) => config,
         Err(err) => return err.into(),
     };

@@ -51,7 +51,7 @@ impl<'a> Menu {
             "Settings",
             Bootstrap::Gear,
             false,
-            Message::GotoPage(Page::Projects),
+            Message::GotoPage(Page::Settings),
         );
 
         let github_button = menu_button_with_icon(

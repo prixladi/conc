@@ -5,7 +5,7 @@ use iced::{Element, Length};
 use crate::components::{InfoTable, PageTitle, ProjectActions, Section};
 use crate::message::Message;
 
-use super::{Page, PageView};
+use super::{Page, PageData, PageView};
 
 pub struct ProjectsPage {
     requester: Requester,
@@ -13,10 +13,10 @@ pub struct ProjectsPage {
 }
 
 impl ProjectsPage {
-    pub fn new(requester: Requester) -> Self {
+    pub fn new(data: PageData) -> Self {
         Self {
             projects: vec![],
-            requester,
+            requester: data.requester,
         }
     }
 }
@@ -26,11 +26,7 @@ impl PageView for ProjectsPage {
         Page::Projects
     }
 
-    fn title(&self) -> String {
-        String::from("Projects")
-    }
-
-    fn refresh(&mut self) -> Result<(), String> {
+    fn refresh(&mut self, _: PageData) -> Result<(), String> {
         match self.requester.get_projects_info() {
             Ok(info) => {
                 self.projects = info.values;

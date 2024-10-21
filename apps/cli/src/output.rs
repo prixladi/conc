@@ -1,4 +1,4 @@
-use app_config::CliConfigError;
+use app_config::AppConfigError;
 use daemon_client::{
     ErrorResponse, NameListResponse, NoContentResponse, ProjectInfo, ProjectInfoResponse,
     ProjectSettingsResponse, ProjectsInfoResponse, ServiceInfo, ServiceInfoResponse, ServiceStatus,
@@ -95,8 +95,8 @@ impl From<ProjectSettingsError> for Output {
     }
 }
 
-impl From<CliConfigError> for Output {
-    fn from(value: CliConfigError) -> Self {
+impl From<AppConfigError> for Output {
+    fn from(value: AppConfigError) -> Self {
         Self::Stderr(value.to_string())
     }
 }

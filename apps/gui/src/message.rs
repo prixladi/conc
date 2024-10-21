@@ -1,6 +1,8 @@
+use iced::Theme;
+
 use crate::pages::Page;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Message {
     StartProject {
         project_name: String,
@@ -25,5 +27,6 @@ pub enum Message {
     },
     GotoPage(Page),
     OpenUrl(String),
+    ThemeChanged(Theme),
     RefreshLoop,
 }

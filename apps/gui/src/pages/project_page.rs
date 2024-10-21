@@ -7,7 +7,7 @@ use crate::components::{InfoTable, PageTitle, ProjectActions, Section, ServiceAc
 use crate::message::Message;
 use crate::utils::{prettify_json, service_status_stringify};
 
-use super::{Page, PageView};
+use super::{Page, PageData, PageView};
 
 pub struct ProjectPage {
     requester: Requester,
@@ -17,9 +17,9 @@ pub struct ProjectPage {
 }
 
 impl ProjectPage {
-    pub fn new(requester: Requester, project_name: String) -> Self {
+    pub fn new(data: PageData, project_name: String) -> Self {
         Self {
-            requester,
+            requester: data.requester,
             project_name,
             project: None,
             project_settings: None,
@@ -32,11 +32,7 @@ impl PageView for ProjectPage {
         Page::Project(self.project_name.clone())
     }
 
-    fn title(&self) -> String {
-        format!("Project - {}", self.project_name)
-    }
-
-    fn refresh(&mut self) -> Result<(), String> {
+    fn refresh(&mut self,  _: PageData) -> Result<(), String> {
         let result = self
             .requester
             .get_project_info(&self.project_name)
@@ -70,7 +66,6 @@ impl PageView for ProjectPage {
             }
 
             let action_buttons = ProjectActions::new(project).render();
-
             let tile = PageTitle::new(self.title()).render(Some(action_buttons));
             let table = InfoTable::new(names, statuses, actions);
             let name_to_message = |service: &str| {

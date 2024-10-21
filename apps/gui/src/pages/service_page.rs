@@ -7,7 +7,7 @@ use iced::{Element, Length};
 use crate::components::Section;
 use crate::message::Message;
 
-use super::{Page, PageView};
+use super::{Page, PageData, PageView};
 
 pub struct ServicePage {
     requester: Requester,
@@ -17,9 +17,9 @@ pub struct ServicePage {
 }
 
 impl ServicePage {
-    pub fn new(requester: Requester, project_name: String, service_name: String) -> Self {
+    pub fn new(data: PageData, project_name: String, service_name: String) -> Self {
         Self {
-            requester,
+            requester: data.requester,
             project_name,
             service_name,
             service: None,
@@ -32,11 +32,7 @@ impl PageView for ServicePage {
         Page::Service(self.project_name.clone(), self.project_name.clone())
     }
 
-    fn title(&self) -> String {
-        format!("Service - {}/{}", self.project_name, self.service_name)
-    }
-
-    fn refresh(&mut self) -> Result<(), String> {
+    fn refresh(&mut self,  _: PageData) -> Result<(), String> {
         let result = self
             .requester
             .get_services_info(&self.project_name, &self.service_name);
@@ -54,7 +50,8 @@ impl PageView for ServicePage {
         let mut view = column![];
 
         if let Some(service) = &self.service {
-            view = view.push(Section::new().render(text(self.title()).size(30)));
+            let title = Section::new().render(text(self.title()).size(30));
+            view = view.push(title);
 
             // TODO: Use some more efficient way to read just last n lines
             let log_data = std::fs::read_to_string(Path::new(&service.logfile_path))

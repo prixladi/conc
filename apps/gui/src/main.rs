@@ -1,13 +1,13 @@
 use std::time::Duration;
 
-use app_config::CliConfig;
+use app_config::AppConfig;
 use chrono::{DateTime, Local};
 use components::{Menu, StatusErrorBar, StatusInfoBar};
 use daemon_client::{Requester, SocketClient};
 use iced::widget::{column, row};
 use iced::{Element, Task, Theme};
 use message::Message;
-use pages::{get_page, Page, PageView};
+use pages::{get_page, Page, PageData, PageView};
 use tokio::time::sleep;
 
 mod components;
@@ -16,15 +16,18 @@ mod pages;
 mod utils;
 
 pub fn main() -> iced::Result {
-    let config = CliConfig::new().unwrap();
+    let config = AppConfig::new().unwrap();
 
     iced::application(App::title, App::update, App::view)
         .font(iced_fonts::BOOTSTRAP_FONT_BYTES)
-        .theme(|_| App::theme())
+        .theme(App::theme)
         .run_with(|| App::new(config))
 }
 
 struct App {
+    theme: Theme,
+    config: AppConfig,
+
     requester: Requester,
     project_names: Vec<String>,
     page_view: Box<dyn PageView>,
@@ -35,15 +38,29 @@ struct App {
 }
 
 impl App {
-    fn new(config: CliConfig) -> (Self, Task<Message>) {
+    fn new(config: AppConfig) -> (Self, Task<Message>) {
         let socket_client = SocketClient::new(&config.daemon_socket_path);
         let requester = Requester::new(socket_client);
+        let theme = Theme::Ferra;
+
+        let page_view = get_page(
+            Page::Projects,
+            PageData {
+                requester: requester.clone(),
+                theme: theme.clone(),
+                config: config.clone(),
+            },
+        );
 
         let app = Self {
-            page_view: get_page(requester.clone(), Page::Projects),
+            theme,
+            config,
+
             requester,
-            last_action_at: Local::now(),
             project_names: vec![],
+            page_view,
+
+            last_action_at: Local::now(),
             last_action_result: Ok(String::from("Started")),
             refresh_loop_error: None,
         };
@@ -53,8 +70,8 @@ impl App {
 }
 
 impl App {
-    fn theme() -> Theme {
-        Theme::Ferra
+    fn theme(&self) -> Theme {
+        self.theme.clone()
     }
 
     fn title(&self) -> String {
@@ -62,33 +79,58 @@ impl App {
     }
 
     fn update(&mut self, message: Message) -> Task<Message> {
-        let res: Result<(String, bool), String> = match &message {
+        let is_loop = message == Message::RefreshLoop;
+
+        let res: Result<(String, bool), String> = match message {
             Message::RefreshLoop => Ok((String::new(), true)),
+
             Message::GotoPage(page) => {
-                self.page_view = get_page(self.requester.clone(), page.clone());
+                self.page_view = get_page(
+                    page.clone(),
+                    PageData {
+                        requester: self.requester.clone(),
+                        theme: self.theme.clone(),
+                        config: self.config.clone(),
+                    },
+                );
                 Ok((format!("Navigated to the page '{}'", page), true))
             }
+
+            Message::OpenUrl(url) => open::that(&url)
+                .map(|_| (format!("Opened the external url '{}'", url), true))
+                .map_err(|err| format!("Unable to open the external url '{}': {}", url, err)),
+
+            Message::ThemeChanged(theme) => {
+                self.theme = theme;
+                Ok((format!("Changed theme to '{}'", self.theme), true))
+            }
+
             Message::StartProject { project_name } => self
                 .requester
-                .start_project(project_name)
+                .start_project(&project_name)
                 .map(|_| (format!("Started the project '{}'", project_name), true))
                 .map_err(|err| format!("Unable to start the project '{}': {}", project_name, err)),
+
             Message::RestartProject { project_name } => self
                 .requester
-                .restart_project(project_name)
+                .restart_project(&project_name)
                 .map(|_| (format!("Restarted the project '{}'", project_name), true))
-                .map_err(|err| format!("Unable to restart the project '{}': {}", project_name, err)),
+                .map_err(|err| {
+                    format!("Unable to restart the project '{}': {}", project_name, err)
+                }),
+
             Message::StopProject { project_name } => self
                 .requester
-                .stop_project(project_name)
+                .stop_project(&project_name)
                 .map(|_| (format!("Stopped the project '{}'", project_name), true))
                 .map_err(|err| format!("Unable to stop the project '{}': {}", project_name, err)),
+
             Message::StartService {
                 project_name,
                 service_name,
             } => self
                 .requester
-                .start_service(project_name, service_name)
+                .start_service(&project_name, &service_name)
                 .map(|_| {
                     (
                         format!("Started the service '{}/{}'", project_name, service_name),
@@ -101,12 +143,13 @@ impl App {
                         project_name, service_name, err
                     )
                 }),
+
             Message::RestartService {
                 project_name,
                 service_name,
             } => self
                 .requester
-                .restart_service(project_name, service_name)
+                .restart_service(&project_name, &service_name)
                 .map(|_| {
                     (
                         format!("Restarted the service '{}/{}'", project_name, service_name),
@@ -119,12 +162,13 @@ impl App {
                         project_name, service_name, err
                     )
                 }),
+
             Message::StopService {
                 project_name,
                 service_name,
             } => self
                 .requester
-                .stop_service(project_name, service_name)
+                .stop_service(&project_name, &service_name)
                 .map(|_| {
                     (
                         format!("Restarted the service '{}/{}'", project_name, service_name),
@@ -137,9 +181,6 @@ impl App {
                         project_name, service_name, err
                     )
                 }),
-            Message::OpenUrl(url) => open::that(url)
-                .map(|_| (format!("Opened the external url '{}'", url), true))
-                .map_err(|err| format!("Unable to open the external url '{}': {}", url, err)),
         };
 
         if let Ok((_, true)) = res {
@@ -153,14 +194,20 @@ impl App {
                     self.last_action_at = Local::now();
                 }
             }
-            if let Err(err) = self.page_view.refresh() {
+
+            let page_data = PageData {
+                requester: self.requester.clone(),
+                theme: self.theme.clone(),
+                config: self.config.clone(),
+            };
+            if let Err(err) = self.page_view.refresh(page_data) {
                 self.refresh_loop_error = Some(err);
                 self.last_action_at = Local::now();
             }
         };
 
-        if let Message::RefreshLoop = message {
-            return Task::perform(sleep(Duration::from_secs(1)), |_| Message::RefreshLoop);
+        if is_loop {
+            return Task::perform(sleep(Duration::from_secs(10)), |_| Message::RefreshLoop);
         };
 
         self.last_action_result = res.map(|(status, _)| status);
