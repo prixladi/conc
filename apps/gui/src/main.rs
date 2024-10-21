@@ -137,6 +137,9 @@ impl App {
                         project_name, service_name, err
                     )
                 }),
+            Message::OpenUrl(url) => open::that(url)
+                .map(|_| (format!("Opened external url '{}'", url), true))
+                .map_err(|err| format!("Opened external url '{}': {}", url, err)),
         };
 
         if let Ok((_, true)) = res {

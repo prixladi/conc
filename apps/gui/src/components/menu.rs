@@ -1,7 +1,5 @@
 use iced::{
-    widget::{
-        button, button::Status, column, container, row, scrollable, text, Button,
-    },
+    widget::{button, button::Status, column, container, row, scrollable, text, Button},
     Alignment, Background, Border, Color, Element, Length, Padding, Shadow, Theme,
 };
 use iced_fonts::{bootstrap::icon_to_string, Bootstrap, BOOTSTRAP_FONT};
@@ -60,7 +58,7 @@ impl<'a> Menu {
             "Github",
             Bootstrap::Github,
             false,
-            Message::GotoPage(Page::Projects),
+            Message::OpenUrl(String::from("https://github.com/prixladi/conc")),
         );
 
         let panel = column![

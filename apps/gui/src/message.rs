@@ -24,5 +24,6 @@ pub enum Message {
         service_name: String,
     },
     GotoPage(Page),
+    OpenUrl(String),
     RefreshLoop,
 }
