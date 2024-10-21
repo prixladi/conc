@@ -57,7 +57,7 @@ impl<'a> InfoTable<'a> {
             .spacing(8),
         );
 
-        column![title, rows].spacing(12).padding(8).into()
+        column![title, rows].spacing(12).into()
     }
 }
 

@@ -71,18 +71,18 @@ impl App {
             Message::StartProject { project_name } => self
                 .requester
                 .start_project(project_name)
-                .map(|_| (format!("Started project '{}'", project_name), true))
-                .map_err(|err| format!("Unable to start project '{}': {}", project_name, err)),
+                .map(|_| (format!("Started the project '{}'", project_name), true))
+                .map_err(|err| format!("Unable to start the project '{}': {}", project_name, err)),
             Message::RestartProject { project_name } => self
                 .requester
                 .restart_project(project_name)
-                .map(|_| (format!("Restarted project '{}'", project_name), true))
-                .map_err(|err| format!("Unable to restart project '{}': {}", project_name, err)),
+                .map(|_| (format!("Restarted the project '{}'", project_name), true))
+                .map_err(|err| format!("Unable to restart the project '{}': {}", project_name, err)),
             Message::StopProject { project_name } => self
                 .requester
                 .stop_project(project_name)
-                .map(|_| (format!("Stopped project '{}'", project_name), true))
-                .map_err(|err| format!("Unable to stop project '{}': {}", project_name, err)),
+                .map(|_| (format!("Stopped the project '{}'", project_name), true))
+                .map_err(|err| format!("Unable to stop the project '{}': {}", project_name, err)),
             Message::StartService {
                 project_name,
                 service_name,
@@ -91,13 +91,13 @@ impl App {
                 .start_service(project_name, service_name)
                 .map(|_| {
                     (
-                        format!("Started service '{}/{}'", project_name, service_name),
+                        format!("Started the service '{}/{}'", project_name, service_name),
                         true,
                     )
                 })
                 .map_err(|err| {
                     format!(
-                        "Unable to start service '{}/{}': {}",
+                        "Unable to start the service '{}/{}': {}",
                         project_name, service_name, err
                     )
                 }),
@@ -109,13 +109,13 @@ impl App {
                 .restart_service(project_name, service_name)
                 .map(|_| {
                     (
-                        format!("Restarted service '{}/{}'", project_name, service_name),
+                        format!("Restarted the service '{}/{}'", project_name, service_name),
                         true,
                     )
                 })
                 .map_err(|err| {
                     format!(
-                        "Unable to restart service '{}/{}': {}",
+                        "Unable to restart the service '{}/{}': {}",
                         project_name, service_name, err
                     )
                 }),
@@ -127,19 +127,19 @@ impl App {
                 .stop_service(project_name, service_name)
                 .map(|_| {
                     (
-                        format!("Restarted service '{}/{}'", project_name, service_name),
+                        format!("Restarted the service '{}/{}'", project_name, service_name),
                         true,
                     )
                 })
                 .map_err(|err| {
                     format!(
-                        "Unable to restart service '{}/{}': {}",
+                        "Unable to restart the service '{}/{}': {}",
                         project_name, service_name, err
                     )
                 }),
             Message::OpenUrl(url) => open::that(url)
-                .map(|_| (format!("Opened external url '{}'", url), true))
-                .map_err(|err| format!("Opened external url '{}': {}", url, err)),
+                .map(|_| (format!("Opened the external url '{}'", url), true))
+                .map_err(|err| format!("Unable to open the external url '{}': {}", url, err)),
         };
 
         if let Ok((_, true)) = res {
