@@ -6,30 +6,32 @@ use iced::{
 
 use crate::message::Message;
 
-pub struct InfoTable<'a> {
+pub struct InfoTable<'a, F: Fn(&str) -> Message> {
+    title: Element<'a, Message>,
     names: Vec<String>,
     statuses: Vec<String>,
     actions: Vec<Element<'a, Message>>,
+    name_to_message: F,
 }
 
-impl<'a> InfoTable<'a> {
+impl<'a, F: Fn(&str) -> Message> InfoTable<'a, F> {
     pub fn new(
+        title: Element<'a, Message>,
         names: Vec<String>,
         statuses: Vec<String>,
         actions: Vec<Element<'a, Message>>,
+        name_to_message: F,
     ) -> Self {
         Self {
+            title,
             names,
             statuses,
             actions,
+            name_to_message,
         }
     }
 
-    pub fn render(
-        self,
-        name_to_message: impl Fn(&str) -> Message,
-        title: Element<'a, Message>,
-    ) -> Element<'a, Message> {
+    pub fn render(self) -> Element<'a, Message> {
         let mut names = column![column_tile("NAME", 8)].spacing(10);
         let mut statuses = column![column_tile("STATUS", 0)].spacing(10);
         let mut actions = column![column_tile("ACTIONS", 0)]
@@ -37,10 +39,10 @@ impl<'a> InfoTable<'a> {
             .padding(Padding::default().right(15));
 
         for name in self.names {
-            names = names.push(name_button(name, &name_to_message));
+            names = names.push(name_button(name, &self.name_to_message));
         }
         for status in self.statuses {
-            statuses = statuses.push(cell(text(status).size(18)));
+            statuses = statuses.push(cell(text(status).size(18).into()));
         }
         for action in self.actions {
             actions = actions.push(action);
@@ -57,7 +59,7 @@ impl<'a> InfoTable<'a> {
             .spacing(8),
         );
 
-        column![title, rows].spacing(12).into()
+        column![self.title, rows].spacing(12).into()
     }
 }
 
@@ -72,7 +74,7 @@ fn name_button<'a>(
     name_to_message: impl Fn(&str) -> Message,
 ) -> Element<'a, Message> {
     let message = name_to_message(&name);
-    let txt = cell(text(name).size(18));
+    let txt = cell(text(name).size(18).into());
     button(txt)
         .style(name_button_style)
         .padding(Padding::default().top(6).bottom(4).left(8).right(8))
@@ -81,7 +83,7 @@ fn name_button<'a>(
         .into()
 }
 
-fn cell<'a>(content: impl Into<Element<'a, Message>>) -> Element<'a, Message> {
+fn cell(content: Element<'_, Message>) -> Element<'_, Message> {
     container(content)
         .align_y(alignment::Vertical::Bottom)
         .height(30)

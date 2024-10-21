@@ -2,16 +2,18 @@ use iced::{widget::container, Background, Border, Color, Element, Length, Shadow
 
 use crate::message::Message;
 
-pub struct Section;
+pub struct Section<'a> {
+    content: Element<'a, Message>,
+}
 
-impl<'a> Section {
-    pub fn new() -> Self {
-        Self
+impl<'a> Section<'a> {
+    pub fn new(content: Element<'a, Message>) -> Self {
+        Self { content }
     }
 
-    pub fn render(self, content: impl Into<Element<'a, Message>>) -> Element<'a, Message> {
+    pub fn render(self) -> Element<'a, Message> {
         container(
-            container(content)
+            container(self.content)
                 .padding(16)
                 .style(outer_container_style)
                 .height(Length::Fill),

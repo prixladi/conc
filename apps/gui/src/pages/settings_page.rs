@@ -42,11 +42,11 @@ impl PageView for SettingsPage {
         ]
         .spacing(10);
 
-        view = view.push(Section::new().render(theme_picker));
+        view = view.push(Section::new(theme_picker.into()).render());
 
         let pretty_config = prettify_serializable(&self.config).unwrap_or_default();
         let json_view = scrollable(text(pretty_config).width(Length::Fill));
-        let config_section = Section::new().render(json_view);
+        let config_section = Section::new(json_view.into()).render();
         view = view.push(config_section);
 
         view.into()

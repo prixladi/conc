@@ -56,14 +56,14 @@ impl PageView for ProjectsPage {
             actions.push(ProjectActions::new(project).render());
         }
 
-        let tile = PageTitle::new(self.title()).render(None);
-        let table = InfoTable::new(names, statuses, actions);
+        let title = PageTitle::new(self.title(), None).render();
         let name_to_message = |project: &str| Message::GotoPage(Page::Project(project.to_string()));
+        let table = InfoTable::new(title, names, statuses, actions, name_to_message);
 
-        let view = container(table.render(name_to_message, tile))
+        let view = container(table.render())
             .height(Length::Fill)
             .width(Length::Fill);
 
-        Section::new().render(view)
+        Section::new(view.into()).render()
     }
 }

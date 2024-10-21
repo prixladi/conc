@@ -32,7 +32,7 @@ impl PageView for ProjectPage {
         Page::Project(self.project_name.clone())
     }
 
-    fn refresh(&mut self,  _: PageData) -> Result<(), String> {
+    fn refresh(&mut self, _: PageData) -> Result<(), String> {
         let result = self
             .requester
             .get_project_info(&self.project_name)
@@ -66,22 +66,23 @@ impl PageView for ProjectPage {
             }
 
             let action_buttons = ProjectActions::new(project).render();
-            let tile = PageTitle::new(self.title()).render(Some(action_buttons));
-            let table = InfoTable::new(names, statuses, actions);
+            let tile = PageTitle::new(self.title(), Some(action_buttons)).render();
             let name_to_message = |service: &str| {
                 Message::GotoPage(Page::Service(project.name.clone(), service.to_string()))
             };
-            let project_view = container(table.render(name_to_message, tile))
+            let table = InfoTable::new(tile, names, statuses, actions, name_to_message);
+
+            let project_view = container(table.render())
                 .height(Length::Fill)
                 .width(Length::Fill);
 
-            view = view.push(Section::new().render(project_view));
+            view = view.push(Section::new(project_view.into()).render());
         }
 
         if let Some(settings) = &self.project_settings {
             let pretty_settings = prettify_json::<ProjectSettings>(settings).unwrap_or_default();
             let json_view = scrollable(text(pretty_settings).width(Length::Fill));
-            let settings_section = Section::new().render(json_view);
+            let settings_section = Section::new(json_view.into()).render();
             view = view.push(settings_section);
         }
 

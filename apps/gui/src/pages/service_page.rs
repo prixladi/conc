@@ -32,7 +32,7 @@ impl PageView for ServicePage {
         Page::Service(self.project_name.clone(), self.project_name.clone())
     }
 
-    fn refresh(&mut self,  _: PageData) -> Result<(), String> {
+    fn refresh(&mut self, _: PageData) -> Result<(), String> {
         let result = self
             .requester
             .get_services_info(&self.project_name, &self.service_name);
@@ -50,7 +50,7 @@ impl PageView for ServicePage {
         let mut view = column![];
 
         if let Some(service) = &self.service {
-            let title = Section::new().render(text(self.title()).size(30));
+            let title = Section::new(text(self.title()).size(30).into()).render();
             view = view.push(title);
 
             // TODO: Use some more efficient way to read just last n lines
@@ -65,7 +65,7 @@ impl PageView for ServicePage {
                 .unwrap_or_default();
 
             let log_data_view = scrollable(text(log_data).width(Length::Fill));
-            let log_section = Section::new().render(log_data_view);
+            let log_section = Section::new(log_data_view.into()).render();
             view = view.push(log_section);
         }
 

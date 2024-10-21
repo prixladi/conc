@@ -4,6 +4,8 @@ use iced::{
     Background, Border, Element, Length, Shadow, Theme,
 };
 
+use crate::message::Message;
+
 pub struct StatusErrorBar {
     last_action_at: DateTime<Local>,
     status: Result<String, String>,
@@ -17,7 +19,7 @@ impl StatusErrorBar {
         }
     }
 
-    pub fn render<'a, Message: 'a>(self) -> Element<'a, Message> {
+    pub fn render<'a>(self) -> Element<'a, Message> {
         let is_error = self.status.is_err();
         let formatted_date =
             text(self.last_action_at.format("%d/%m/%Y %H:%M:%S").to_string()).size(16);

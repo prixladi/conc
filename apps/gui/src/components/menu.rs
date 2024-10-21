@@ -69,7 +69,7 @@ impl<'a> Menu {
         ]
         .spacing(12);
         let content = container(panel).style(container_style).width(250);
-        Section::new().render(content)
+        Section::new(content.into()).render()
     }
 }
 
