@@ -1,6 +1,7 @@
 use iced::{
     alignment,
-    widget::{container, row, text}, Element, Padding,
+    widget::{container, row, text},
+    Element, Padding,
 };
 
 use crate::message::Message;

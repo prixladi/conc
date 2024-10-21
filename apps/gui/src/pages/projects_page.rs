@@ -62,15 +62,11 @@ impl PageView for ProjectsPage {
 
         let tile = PageTitle::new(self.title()).render(None);
         let table = InfoTable::new(names, statuses, actions);
+        let name_to_message = |project: &str| Message::GotoPage(Page::Project(project.to_string()));
 
-        let view = container(table.render(
-            |project| Message::GotoPage {
-                page: Page::Project(project.to_string()),
-            },
-            tile,
-        ))
-        .height(Length::Fill)
-        .width(Length::Fill);
+        let view = container(table.render(name_to_message, tile))
+            .height(Length::Fill)
+            .width(Length::Fill);
 
         Section::new().render(view)
     }

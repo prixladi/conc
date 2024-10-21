@@ -73,14 +73,12 @@ impl PageView for ProjectPage {
 
             let tile = PageTitle::new(self.title()).render(Some(action_buttons));
             let table = InfoTable::new(names, statuses, actions);
-            let project_view = container(table.render(
-                |service| Message::GotoPage {
-                    page: Page::Service(project.name.clone(), service.to_string()),
-                },
-                tile,
-            ))
-            .height(Length::Fill)
-            .width(Length::Fill);
+            let name_to_message = |service: &str| {
+                Message::GotoPage(Page::Service(project.name.clone(), service.to_string()))
+            };
+            let project_view = container(table.render(name_to_message, tile))
+                .height(Length::Fill)
+                .width(Length::Fill);
 
             view = view.push(Section::new().render(project_view));
         }

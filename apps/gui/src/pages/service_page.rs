@@ -1,15 +1,11 @@
-use std::fs::File;
-use std::io::Read;
 use std::path::Path;
 
-use daemon_client::{ProjectInfo, Requester, ServiceInfo};
-use iced::widget::{column, container, scrollable, text};
+use daemon_client::{Requester, ServiceInfo};
+use iced::widget::{column, scrollable, text};
 use iced::{Element, Length};
-use project_settings::ProjectSettings;
 
-use crate::components::{InfoTable, Section, ServiceActions};
+use crate::components::Section;
 use crate::message::Message;
-use crate::utils::service_status_stringify;
 
 use super::{Page, PageView};
 

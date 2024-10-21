@@ -2,12 +2,27 @@ use crate::pages::Page;
 
 #[derive(Debug, Clone)]
 pub enum Message {
-    StartProject { name: String },
-    RestartProject { name: String },
-    StopProject { name: String },
-    StartService { project: String, name: String },
-    RestartService { project: String, name: String },
-    StopService { project: String, name: String },
-    GotoPage { page: Page },
+    StartProject {
+        project_name: String,
+    },
+    RestartProject {
+        project_name: String,
+    },
+    StopProject {
+        project_name: String,
+    },
+    StartService {
+        project_name: String,
+        service_name: String,
+    },
+    RestartService {
+        project_name: String,
+        service_name: String,
+    },
+    StopService {
+        project_name: String,
+        service_name: String,
+    },
+    GotoPage(Page),
     RefreshLoop,
 }

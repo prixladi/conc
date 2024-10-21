@@ -24,22 +24,22 @@ impl<'a> ServiceActions<'a> {
         let mut start_message = None;
         if self.service.status != ServiceStatus::RUNNING {
             start_message = Some(Message::StartService {
-                project: self.project_name.to_string(),
-                name: self.service.name.clone(),
+                project_name: self.project_name.to_string(),
+                service_name: self.service.name.clone(),
             });
         };
 
         let mut stop_message = None;
         if self.service.status == ServiceStatus::RUNNING {
             stop_message = Some(Message::StopService {
-                project: self.project_name.to_string(),
-                name: self.service.name.clone(),
+                project_name: self.project_name.to_string(),
+                service_name: self.service.name.clone(),
             });
         };
 
         let restart_message = Some(Message::RestartService {
-            project: self.project_name.to_string(),
-            name: self.service.name.clone(),
+            project_name: self.project_name.to_string(),
+            service_name: self.service.name.clone(),
         });
 
         row![
@@ -73,19 +73,19 @@ impl<'a> ProjectActions<'a> {
         let mut start_message = None;
         if services_count > running_services_count {
             start_message = Some(Message::StartProject {
-                name: self.project.name.clone(),
+                project_name: self.project.name.clone(),
             });
         };
 
         let mut stop_message = None;
         if running_services_count > 0 {
             stop_message = Some(Message::StopProject {
-                name: self.project.name.clone(),
+                project_name: self.project.name.clone(),
             });
         }
 
         let restart_message = Some(Message::RestartProject {
-            name: self.project.name.clone(),
+            project_name: self.project.name.clone(),
         });
 
         row![

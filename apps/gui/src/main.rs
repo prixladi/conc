@@ -64,43 +64,78 @@ impl App {
     fn update(&mut self, message: Message) -> Task<Message> {
         let res: Result<(String, bool), String> = match &message {
             Message::RefreshLoop => Ok((String::new(), true)),
-            Message::GotoPage { page } => {
+            Message::GotoPage(page) => {
                 self.page_view = get_page(self.requester.clone(), page.clone());
                 Ok((format!("Navigated to the page '{}'", page), true))
             }
-            Message::StartProject { name } => self
+            Message::StartProject { project_name } => self
                 .requester
-                .start_project(name)
-                .map(|_| (format!("Started project '{}'", name), true))
-                .map_err(|err| format!("Unable to start project '{}': {}", name, err)),
-            Message::RestartProject { name } => self
+                .start_project(project_name)
+                .map(|_| (format!("Started project '{}'", project_name), true))
+                .map_err(|err| format!("Unable to start project '{}': {}", project_name, err)),
+            Message::RestartProject { project_name } => self
                 .requester
-                .restart_project(name)
-                .map(|_| (format!("Restarted project '{}'", name), true))
-                .map_err(|err| format!("Unable to restart project '{}': {}", name, err)),
-            Message::StopProject { name } => self
+                .restart_project(project_name)
+                .map(|_| (format!("Restarted project '{}'", project_name), true))
+                .map_err(|err| format!("Unable to restart project '{}': {}", project_name, err)),
+            Message::StopProject { project_name } => self
                 .requester
-                .stop_project(name)
-                .map(|_| (format!("Stopped project '{}'", name), true))
-                .map_err(|err| format!("Unable to stop project '{}': {}", name, err)),
-            Message::StartService { project, name } => self
+                .stop_project(project_name)
+                .map(|_| (format!("Stopped project '{}'", project_name), true))
+                .map_err(|err| format!("Unable to stop project '{}': {}", project_name, err)),
+            Message::StartService {
+                project_name,
+                service_name,
+            } => self
                 .requester
-                .start_service(project, name)
-                .map(|_| (format!("Started service '{}/{}'", project, name), true))
-                .map_err(|err| format!("Unable to start service '{}/{}': {}", project, name, err)),
-            Message::RestartService { project, name } => self
-                .requester
-                .restart_service(project, name)
-                .map(|_| (format!("Restarted service '{}/{}'", project, name), true))
+                .start_service(project_name, service_name)
+                .map(|_| {
+                    (
+                        format!("Started service '{}/{}'", project_name, service_name),
+                        true,
+                    )
+                })
                 .map_err(|err| {
-                    format!("Unable to restart service '{}/{}': {}", project, name, err)
+                    format!(
+                        "Unable to start service '{}/{}': {}",
+                        project_name, service_name, err
+                    )
                 }),
-            Message::StopService { project, name } => self
+            Message::RestartService {
+                project_name,
+                service_name,
+            } => self
                 .requester
-                .stop_service(project, name)
-                .map(|_| (format!("Restarted service '{}/{}'", project, name), true))
+                .restart_service(project_name, service_name)
+                .map(|_| {
+                    (
+                        format!("Restarted service '{}/{}'", project_name, service_name),
+                        true,
+                    )
+                })
                 .map_err(|err| {
-                    format!("Unable to restart service '{}/{}': {}", project, name, err)
+                    format!(
+                        "Unable to restart service '{}/{}': {}",
+                        project_name, service_name, err
+                    )
+                }),
+            Message::StopService {
+                project_name,
+                service_name,
+            } => self
+                .requester
+                .stop_service(project_name, service_name)
+                .map(|_| {
+                    (
+                        format!("Restarted service '{}/{}'", project_name, service_name),
+                        true,
+                    )
+                })
+                .map_err(|err| {
+                    format!(
+                        "Unable to restart service '{}/{}': {}",
+                        project_name, service_name, err
+                    )
                 }),
         };
 

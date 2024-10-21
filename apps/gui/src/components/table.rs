@@ -30,9 +30,9 @@ impl<'a> InfoTable<'a> {
         name_to_message: impl Fn(&str) -> Message,
         title: Element<'a, Message>,
     ) -> Element<'a, Message> {
-        let mut names = column![column_tile("NAME")].spacing(10);
-        let mut statuses = column![column_tile("STATUS")].spacing(10);
-        let mut actions = column![column_tile("ACTIONS")]
+        let mut names = column![column_tile("NAME", 8)].spacing(10);
+        let mut statuses = column![column_tile("STATUS", 0)].spacing(10);
+        let mut actions = column![column_tile("ACTIONS", 0)]
             .spacing(10)
             .padding(Padding::default().right(15));
 
@@ -61,8 +61,10 @@ impl<'a> InfoTable<'a> {
     }
 }
 
-fn column_tile(text: &str) -> Element<Message> {
-    container(text).padding(Padding::default().left(8)).into()
+fn column_tile(text: &str, padding_left: i32) -> Element<Message> {
+    container(text)
+        .padding(Padding::default().left(padding_left as f32))
+        .into()
 }
 
 fn name_button<'a>(
