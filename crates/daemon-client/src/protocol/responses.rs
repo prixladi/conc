@@ -273,10 +273,9 @@ impl TryFrom<&str> for ServiceInfo {
         let status = ServiceStatus::try_from(parts[1])?;
         let pid = parts[2].parse::<i32>().map_err(|_| ())?;
 
-        let logfile_path = if parts[3] == "-" {
-            "/dev/null"
-        } else {
-            parts[3]
+        let logfile_path = match parts[3] {
+            "-" => "/dev/null",
+            _ => parts[3],
         };
 
         Ok(Self {

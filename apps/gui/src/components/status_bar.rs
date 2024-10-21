@@ -30,10 +30,9 @@ impl StatusErrorBar {
 
         status_bar = status_bar.push(text(self.status.unwrap_or_else(|e| e)).size(16));
 
-        let status_bar_container = if is_error {
-            container(status_bar).style(error_container_style)
-        } else {
-            container(status_bar).style(info_container_style)
+        let status_bar_container = match is_error {
+            true => container(status_bar).style(error_container_style),
+            false => container(status_bar).style(info_container_style),
         };
 
         status_bar_container.into()

@@ -223,12 +223,11 @@ impl App {
         let body = row![menu.render(), view];
 
         let info_bar = StatusInfoBar::new(self.requester.client().socket_path.clone());
-        let status: Result<String, String> = if let Some(err) = &self.refresh_loop_error {
-            Err(err.clone())
-        } else {
-            self.last_action_result.clone()
-        };
-
+        let status: Result<String, String> = match &self.refresh_loop_error {
+            Some(err) => Err(err.clone()),
+            None => self.last_action_result.clone(),
+        }; 
+    
         let error_bar = StatusErrorBar::new(self.last_action_at, status);
 
         column![error_bar.render(), body, info_bar.render()].into()
