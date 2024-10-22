@@ -107,7 +107,7 @@ server_run(void *data)
             unsigned int clen = sizeof(client_addr);
 
             int client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &clen);
-            log_debug("Accepted socket connection '%d'\n", client_socket);
+            log_trace(TRACE_NAME, "Accepted socket connection '%d'\n", client_socket);
 
             struct handler_options *handler_opts = malloc(sizeof(struct handler_options));
             handler_opts->dispatch = server->opts.dispatch;
@@ -150,7 +150,7 @@ client_socket_handle(void *data)
 
     write(opts->client_socket, response, strlen(response) + 1); // we also want to send '\0' as a end of message indicator
 
-    log_debug("Closing socket connection '%d'\n", opts->client_socket);
+    log_trace(TRACE_NAME, "Closing socket connection '%d'\n", opts->client_socket);
     if (close(opts->client_socket) > 0)
         log_error("Unable to close client socket '%d'\n", opts->client_socket);
 

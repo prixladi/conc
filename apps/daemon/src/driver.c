@@ -233,7 +233,7 @@ get_service_pid(const char *proj_name, const char *serv_name)
         return -1;
 
     struct stat sts;
-    if (try_get_pid_info(info.pid, &sts) == false)
+    if (try_get_pid_info(info.pid, &sts) == false || info.c_time != sts.st_ctime)
         return 0;
 
     return info.pid;
@@ -277,7 +277,7 @@ write_service_meta_file(const char *proj_name, const char *serv_name, struct ser
     return 0;
 }
 
-#define MAX_META_LINE_LEN 1024 // This should be sufficient but probably should handle cases when it is not
+#define MAX_META_LINE_LEN 1024 // TODO: this should be sufficient but probably should handle cases when it is not
 static bool
 try_parse_service_meta_file(const char *proj_name, const char *serv_name, struct service_process_info *info)
 {
