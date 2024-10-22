@@ -53,16 +53,25 @@ pub struct ProjectSettings {
     #[serde(default = "String::new")]
     pub cwd: String,
     pub services: Vec<ServiceSettings>,
-    #[serde(default = "HashMap::new", serialize_with = "ordered_map")]
+    #[serde(
+        default = "HashMap::new",
+        serialize_with = "ordered_map",
+        skip_serializing_if = "HashMap::is_empty"
+    )]
     pub env: HashMap<String, EnvValue>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ServiceSettings {
     pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub pwd: Option<String>,
     pub command: Vec<String>,
-    #[serde(default = "HashMap::new")]
+    #[serde(
+        default = "HashMap::new",
+        serialize_with = "ordered_map",
+        skip_serializing_if = "HashMap::is_empty"
+    )]
     pub env: HashMap<String, EnvValue>,
 }
 
@@ -77,11 +86,10 @@ impl TryFrom<&ProjectSettings> for String {
 
 impl ProjectSettings {
     pub fn find_parse_and_populate(pwd: Option<String>) -> Result<Self, ProjectSettingsError> {
-        let (cwd, json) = resolve_cwd_and_json(pwd)?;
+        let (path, json) = resolve_settings_path_and_json(pwd)?;
         let mut settings = try_parse(json.as_str())?;
-        if settings.cwd.is_empty() {
-            settings.cwd = cwd;
-        }
+
+        settings.cwd = resolve_cwd(path, settings.cwd);
         settings.env = populate_env(settings.env);
 
         for service in &mut settings.services {
@@ -90,6 +98,19 @@ impl ProjectSettings {
 
         Ok(settings)
     }
+}
+
+fn resolve_cwd(settings_path: String, provided_cwd: String) -> String {
+    if provided_cwd.is_empty() {
+        return settings_path;
+    }
+
+    let cwd_path = Path::new(&provided_cwd);
+    if cwd_path.is_absolute() {
+        return provided_cwd;
+    };
+
+    String::from(Path::new(&settings_path).join(cwd_path).to_str().unwrap())
 }
 
 fn try_parse(value: &str) -> Result<ProjectSettings, ProjectSettingsError> {
@@ -123,14 +144,15 @@ fn try_parse(value: &str) -> Result<ProjectSettings, ProjectSettingsError> {
     Ok(settings)
 }
 
-fn resolve_cwd_and_json(pwd: Option<String>) -> Result<(String, String), ProjectSettingsError> {
+fn resolve_settings_path_and_json(
+    pwd: Option<String>,
+) -> Result<(String, String), ProjectSettingsError> {
     let mut path = match pwd {
         Some(pwd) => {
             let path = Path::new(&pwd);
-            if path.is_absolute() {
-                Ok(path.to_path_buf())
-            } else {
-                std::env::current_dir().map(|cd| cd.join(path))
+            match path.is_absolute() {
+                true => Ok(path.to_path_buf()),
+                false => std::env::current_dir().map(|cd| cd.join(path))
             }
         }
         None => std::env::current_dir(),

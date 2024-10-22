@@ -121,9 +121,13 @@ fn action_button<'a>(
     icon_size: i32,
     style: impl Fn(&Theme, Status) -> button::Style + 'a,
 ) -> Element<'a, Message> {
-    let mut action = button(text(icon_to_string(icon)).size(icon_size as f32).font(BOOTSTRAP_FONT))
-        .style(style)
-        .padding(0);
+    let mut action = button(
+        text(icon_to_string(icon))
+            .size(icon_size as f32)
+            .font(BOOTSTRAP_FONT),
+    )
+    .style(style)
+    .padding(0);
 
     if let Some(message) = message {
         action = action.on_press(message);

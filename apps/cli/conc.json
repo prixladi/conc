@@ -1,0 +1,10 @@
+{
+    "name": "testik",
+    "services": [
+      {
+        "name": "gui",
+        "command": ["ls"]
+      }
+    ]
+  }
+  

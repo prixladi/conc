@@ -41,7 +41,7 @@ impl App {
     fn new(config: AppConfig) -> (Self, Task<Message>) {
         let socket_client = SocketClient::new(&config.daemon_socket_path);
         let requester = Requester::new(socket_client);
-        let theme = Theme::Ferra;
+        let theme = Theme::Dark;
 
         let page_view = get_page(
             Page::Projects,
