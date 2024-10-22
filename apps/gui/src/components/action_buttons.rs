@@ -99,17 +99,18 @@ impl<'a> ProjectActions<'a> {
 }
 
 fn start_action_button<'a>(message: Option<Message>) -> Element<'a, Message> {
-    action_button(message, Bootstrap::PlayFill, start_action_button_style)
+    action_button(message, Bootstrap::PlayFill, 25, start_action_button_style)
 }
 
 fn stop_action_button<'a>(message: Option<Message>) -> Element<'a, Message> {
-    action_button(message, Bootstrap::StopFill, stop_action_button_style)
+    action_button(message, Bootstrap::StopFill, 25, stop_action_button_style)
 }
 
 fn restart_action_button<'a>(message: Option<Message>) -> Element<'a, Message> {
     action_button(
         message,
         Bootstrap::ArrowClockwise,
+        25,
         restart_action_button_style,
     )
 }
@@ -117,9 +118,10 @@ fn restart_action_button<'a>(message: Option<Message>) -> Element<'a, Message> {
 fn action_button<'a>(
     message: Option<Message>,
     icon: Bootstrap,
+    icon_size: i32,
     style: impl Fn(&Theme, Status) -> button::Style + 'a,
 ) -> Element<'a, Message> {
-    let mut action = button(text(icon_to_string(icon)).size(25).font(BOOTSTRAP_FONT))
+    let mut action = button(text(icon_to_string(icon)).size(icon_size as f32).font(BOOTSTRAP_FONT))
         .style(style)
         .padding(0);
 

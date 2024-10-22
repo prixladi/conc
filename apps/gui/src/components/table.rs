@@ -45,7 +45,7 @@ impl<'a, F: Fn(&str) -> Message> InfoTable<'a, F> {
             statuses = statuses.push(cell(text(status).size(18).into()));
         }
         for action in self.actions {
-            actions = actions.push(action);
+            actions = actions.push(cell(action));
         }
 
         let rows = scrollable(
