@@ -152,7 +152,7 @@ fn resolve_settings_path_and_json(
             let path = Path::new(&pwd);
             match path.is_absolute() {
                 true => Ok(path.to_path_buf()),
-                false => std::env::current_dir().map(|cd| cd.join(path))
+                false => std::env::current_dir().map(|cd| cd.join(path)),
             }
         }
         None => std::env::current_dir(),

@@ -4,6 +4,16 @@ use crate::pages::Page;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Message {
+    GotoPage(Page),
+    OpenUrl(String),
+    ThemeChanged(Theme),
+    CopyToClipboard {
+        name: String,
+        data: String,
+    },
+    Refresh {
+        repeated: bool,
+    },
     StartProject {
         project_name: String,
     },
@@ -25,8 +35,83 @@ pub enum Message {
         project_name: String,
         service_name: String,
     },
-    GotoPage(Page),
-    OpenUrl(String),
-    ThemeChanged(Theme),
-    RefreshLoop,
+}
+
+impl Message {
+    pub fn to_success_message(&self) -> String {
+        match self {
+            Message::GotoPage(page) => format!("Navigated to the page '{}'", page),
+            Message::OpenUrl(url) => format!("Opened the external url '{}'", url),
+            Message::ThemeChanged(theme) => format!("Changed theme to '{}'", theme),
+            Message::Refresh { repeated: _ } => String::new(),
+            Message::StartProject { project_name } => {
+                format!("Started the project '{}'", project_name)
+            }
+            Message::RestartProject { project_name } => {
+                format!("Restarted the project '{}'", project_name)
+            }
+            Message::StopProject { project_name } => {
+                format!("Stopped the project '{}'", project_name)
+            }
+            Message::StartService {
+                project_name,
+                service_name,
+            } => format!("Started the service '{}/{}'", project_name, service_name),
+            Message::RestartService {
+                project_name,
+                service_name,
+            } => format!("Restarted the service '{}/{}'", project_name, service_name),
+            Message::StopService {
+                project_name,
+                service_name,
+            } => format!("Restarted the service '{}/{}'", project_name, service_name),
+            Message::CopyToClipboard { name, data: _ } => {
+                format!("Copied '{}' to the clipboard.", name)
+            }
+        }
+    }
+
+    pub fn to_error_message(&self, error: &str) -> String {
+        let message = match self {
+            Message::GotoPage(page) => format!("Unable to navigate to the page '{}'", page),
+            Message::OpenUrl(url) => format!("Opened the external url '{}'", url),
+            Message::ThemeChanged(theme) => format!("Changed theme to '{}'", theme),
+            Message::Refresh { repeated: _ } => String::new(),
+            Message::StartProject { project_name } => {
+                format!("Unable to start the project '{}'", project_name)
+            }
+            Message::RestartProject { project_name } => {
+                format!("Unable to restart the project '{}'", project_name)
+            }
+            Message::StopProject { project_name } => {
+                format!("Unable to stop the project '{}'", project_name)
+            }
+            Message::StartService {
+                project_name,
+                service_name,
+            } => format!(
+                "Unable to start the service '{}/{}'",
+                project_name, service_name
+            ),
+            Message::RestartService {
+                project_name,
+                service_name,
+            } => format!(
+                "Unable to restart the service '{}/{}'",
+                project_name, service_name
+            ),
+            Message::StopService {
+                project_name,
+                service_name,
+            } => format!(
+                "Unable to stop the service '{}/{}'",
+                project_name, service_name
+            ),
+            Message::CopyToClipboard { name, data: _ } => {
+                format!("Unable to copy '{}' to the clipboard.", name)
+            }
+        };
+
+        format!("{}, {}", message, error)
+    }
 }

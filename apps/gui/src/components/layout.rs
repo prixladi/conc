@@ -26,7 +26,11 @@ impl<'a> Section<'a> {
 fn outer_container_style(theme: &Theme) -> container::Style {
     let palette = theme.extended_palette();
 
-    let border_color = palette.background.strong.color.scale_alpha(0.1);
+    let scale = match palette.is_dark {
+        true => 0.1,
+        false => 0.5,
+    };
+    let border_color = palette.background.strong.color.scale_alpha(scale);
 
     container::Style {
         text_color: None,

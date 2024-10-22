@@ -7,12 +7,12 @@ use iced_fonts::{bootstrap::icon_to_string, Bootstrap, BOOTSTRAP_FONT};
 
 use crate::message::Message;
 
-pub struct ServiceActions<'a> {
+pub struct ServiceActionButtons<'a> {
     project_name: &'a str,
     service: &'a ServiceInfo,
 }
 
-impl<'a> ServiceActions<'a> {
+impl<'a> ServiceActionButtons<'a> {
     pub fn new(project_name: &'a str, service: &'a ServiceInfo) -> Self {
         Self {
             project_name,
@@ -52,11 +52,11 @@ impl<'a> ServiceActions<'a> {
     }
 }
 
-pub struct ProjectActions<'a> {
+pub struct ProjectActionButtons<'a> {
     project: &'a ProjectInfo,
 }
 
-impl<'a> ProjectActions<'a> {
+impl<'a> ProjectActionButtons<'a> {
     pub fn new(project: &'a ProjectInfo) -> Self {
         Self { project }
     }
@@ -98,12 +98,47 @@ impl<'a> ProjectActions<'a> {
     }
 }
 
+pub struct CopyToClipboardButton {
+    name: String,
+    data: String,
+}
+
+impl<'a> CopyToClipboardButton {
+    pub fn new(name: String, data: String) -> Self {
+        Self { name, data }
+    }
+
+    pub fn render(self) -> Element<'a, Message> {
+        action_button(
+            Some(Message::CopyToClipboard {
+                name: self.name,
+                data: self.data,
+            }),
+            Bootstrap::ClipboardCheck,
+            25,
+            |theme, status| {
+                let palette = theme.extended_palette();
+                action_button_style(
+                    status,
+                    palette.secondary.base.text.scale_alpha(0.9),
+                    palette.secondary.base.text,
+                )
+            },
+        )
+    }
+}
+
 fn start_action_button<'a>(message: Option<Message>) -> Element<'a, Message> {
-    action_button(message, Bootstrap::PlayFill, 25, start_action_button_style)
+    action_button(
+        message,
+        Bootstrap::PlayCircle,
+        25,
+        start_action_button_style,
+    )
 }
 
 fn stop_action_button<'a>(message: Option<Message>) -> Element<'a, Message> {
-    action_button(message, Bootstrap::StopFill, 25, stop_action_button_style)
+    action_button(message, Bootstrap::StopCircle, 25, stop_action_button_style)
 }
 
 fn restart_action_button<'a>(message: Option<Message>) -> Element<'a, Message> {
@@ -140,7 +175,7 @@ fn start_action_button_style(theme: &Theme, status: Status) -> button::Style {
     let palette = theme.extended_palette();
     action_button_style(
         status,
-        palette.success.weak.color,
+        palette.success.strong.color.scale_alpha(0.85),
         palette.success.strong.color,
     )
 }

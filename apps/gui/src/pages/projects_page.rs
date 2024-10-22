@@ -2,7 +2,7 @@ use daemon_client::{ProjectInfo, Requester, ServiceStatus};
 use iced::widget::container;
 use iced::{Element, Length};
 
-use crate::components::{InfoTable, PageTitle, ProjectActions, Section};
+use crate::components::{InfoTable, PageTitle, ProjectActionButtons, Section};
 use crate::message::Message;
 
 use super::{Page, PageData, PageView};
@@ -53,7 +53,7 @@ impl PageView for ProjectsPage {
                 "{}/{} services running",
                 running_services_count, services_count
             ));
-            actions.push(ProjectActions::new(project).render());
+            actions.push(ProjectActionButtons::new(project).render());
         }
 
         let title = PageTitle::new(self.title(), None).render();

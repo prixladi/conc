@@ -16,8 +16,8 @@ mod pages;
 mod utils;
 
 pub fn main() -> iced::Result {
+    tracing_subscriber::fmt::init();
     let config = AppConfig::new().unwrap();
-
     iced::application(App::title, App::update, App::view)
         .font(iced_fonts::BOOTSTRAP_FONT_BYTES)
         .theme(App::theme)
@@ -65,7 +65,7 @@ impl App {
             refresh_loop_error: None,
         };
 
-        (app, Task::done(Message::RefreshLoop))
+        (app, Task::done(Message::Refresh { repeated: true }))
     }
 }
 
@@ -79,10 +79,55 @@ impl App {
     }
 
     fn update(&mut self, message: Message) -> Task<Message> {
-        let is_loop = message == Message::RefreshLoop;
+        match self.handle_message(&message) {
+            Ok(task) => {
+                let last_action_result = message.to_success_message();
+                if !last_action_result.is_empty() {
+                    self.last_action_result = Ok(last_action_result);
+                    self.last_action_at = Local::now()
+                }
 
-        let res: Result<(String, bool), String> = match message {
-            Message::RefreshLoop => Ok((String::new(), true)),
+                task
+            }
+            Err(err) => {
+                self.last_action_result = Err(message.to_error_message(&err));
+                self.last_action_at = Local::now();
+                Task::none()
+            }
+        }
+    }
+
+    fn handle_message(&mut self, message: &Message) -> Result<Task<Message>, String> {
+        match message {
+            Message::Refresh { repeated } => {
+                match self.requester.get_project_names() {
+                    Ok(info) => {
+                        self.project_names = info.values;
+                        self.refresh_loop_error = None;
+                    }
+                    Err(err) => {
+                        self.refresh_loop_error = Some(err.to_string());
+                        self.last_action_at = Local::now();
+                    }
+                }
+
+                let page_data = PageData {
+                    requester: self.requester.clone(),
+                    theme: self.theme.clone(),
+                    config: self.config.clone(),
+                };
+                if let Err(err) = self.page_view.refresh(page_data) {
+                    self.refresh_loop_error = Some(err);
+                    self.last_action_at = Local::now();
+                }
+
+                match repeated {
+                    true => Ok(Task::perform(sleep(Duration::from_secs(1)), |_| {
+                        Message::Refresh { repeated: true }
+                    })),
+                    false => Ok(Task::none()),
+                }
+            }
 
             Message::GotoPage(page) => {
                 self.page_view = get_page(
@@ -93,127 +138,71 @@ impl App {
                         config: self.config.clone(),
                     },
                 );
-                Ok((format!("Navigated to the page '{}'", page), true))
+
+                Ok(Task::done(Message::Refresh { repeated: false }))
             }
 
-            Message::OpenUrl(url) => open::that(&url)
-                .map(|_| (format!("Opened the external url '{}'", url), true))
-                .map_err(|err| format!("Unable to open the external url '{}': {}", url, err)),
+            Message::OpenUrl(url) => open::that(url)
+                .map(|_| Task::none())
+                .map_err(|err| err.to_string()),
 
             Message::ThemeChanged(theme) => {
-                self.theme = theme;
-                Ok((format!("Changed theme to '{}'", self.theme), true))
+                self.theme = theme.clone();
+                Ok(Task::none())
             }
+
+            Message::CopyToClipboard { name: _, data } => Ok(iced::clipboard::write(data.clone())),
 
             Message::StartProject { project_name } => self
                 .requester
-                .start_project(&project_name)
-                .map(|_| (format!("Started the project '{}'", project_name), true))
-                .map_err(|err| format!("Unable to start the project '{}': {}", project_name, err)),
+                .start_project(project_name)
+                .map(|_| Task::done(Message::Refresh { repeated: false }))
+                .map_err(|err| err.to_string()),
 
             Message::RestartProject { project_name } => self
                 .requester
-                .restart_project(&project_name)
-                .map(|_| (format!("Restarted the project '{}'", project_name), true))
-                .map_err(|err| {
-                    format!("Unable to restart the project '{}': {}", project_name, err)
-                }),
+                .restart_project(project_name)
+                .map(|_| Task::done(Message::Refresh { repeated: false }))
+                .map_err(|err| err.to_string()),
 
             Message::StopProject { project_name } => self
                 .requester
-                .stop_project(&project_name)
-                .map(|_| (format!("Stopped the project '{}'", project_name), true))
-                .map_err(|err| format!("Unable to stop the project '{}': {}", project_name, err)),
+                .stop_project(project_name)
+                .map(|_| Task::done(Message::Refresh { repeated: false }))
+                .map_err(|err| err.to_string()),
 
             Message::StartService {
                 project_name,
                 service_name,
             } => self
                 .requester
-                .start_service(&project_name, &service_name)
-                .map(|_| {
-                    (
-                        format!("Started the service '{}/{}'", project_name, service_name),
-                        true,
-                    )
-                })
-                .map_err(|err| {
-                    format!(
-                        "Unable to start the service '{}/{}': {}",
-                        project_name, service_name, err
-                    )
-                }),
+                .start_service(project_name, service_name)
+                .map(|_| Task::done(Message::Refresh { repeated: false }))
+                .map_err(|err| err.to_string()),
 
             Message::RestartService {
                 project_name,
                 service_name,
             } => self
                 .requester
-                .restart_service(&project_name, &service_name)
-                .map(|_| {
-                    (
-                        format!("Restarted the service '{}/{}'", project_name, service_name),
-                        true,
-                    )
-                })
-                .map_err(|err| {
-                    format!(
-                        "Unable to restart the service '{}/{}': {}",
-                        project_name, service_name, err
-                    )
-                }),
+                .restart_service(project_name, service_name)
+                .map(|_| Task::done(Message::Refresh { repeated: false }))
+                .map_err(|err| err.to_string()),
 
             Message::StopService {
                 project_name,
                 service_name,
             } => self
                 .requester
-                .stop_service(&project_name, &service_name)
-                .map(|_| {
-                    (
-                        format!("Restarted the service '{}/{}'", project_name, service_name),
-                        true,
-                    )
-                })
+                .stop_service(project_name, service_name)
+                .map(|_| Task::done(Message::Refresh { repeated: false }))
                 .map_err(|err| {
                     format!(
                         "Unable to restart the service '{}/{}': {}",
                         project_name, service_name, err
                     )
                 }),
-        };
-
-        if let Ok((_, true)) = res {
-            match self.requester.get_project_names() {
-                Ok(info) => {
-                    self.project_names = info.values;
-                    self.refresh_loop_error = None;
-                }
-                Err(err) => {
-                    self.refresh_loop_error = Some(err.to_string());
-                    self.last_action_at = Local::now();
-                }
-            }
-
-            let page_data = PageData {
-                requester: self.requester.clone(),
-                theme: self.theme.clone(),
-                config: self.config.clone(),
-            };
-            if let Err(err) = self.page_view.refresh(page_data) {
-                self.refresh_loop_error = Some(err);
-                self.last_action_at = Local::now();
-            }
-        };
-
-        if is_loop {
-            return Task::perform(sleep(Duration::from_secs(10)), |_| Message::RefreshLoop);
-        };
-
-        self.last_action_result = res.map(|(status, _)| status);
-        self.last_action_at = Local::now();
-
-        Task::none()
+        }
     }
 
     fn view(&self) -> Element<Message> {
