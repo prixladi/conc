@@ -3,6 +3,7 @@
     "chrono",
     "concc",
     "concd",
+    "concg",
     "journalctl",
     "libc",
     "logfile",
