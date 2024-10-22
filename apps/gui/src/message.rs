@@ -11,9 +11,7 @@ pub enum Message {
         name: String,
         data: String,
     },
-    Refresh {
-        repeated: bool,
-    },
+    RefreshLoop,
     StartProject {
         project_name: String,
     },
@@ -43,7 +41,7 @@ impl Message {
             Message::GotoPage(page) => format!("Navigated to the page '{}'", page),
             Message::OpenUrl(url) => format!("Opened the external url '{}'", url),
             Message::ThemeChanged(theme) => format!("Changed theme to '{}'", theme),
-            Message::Refresh { repeated: _ } => String::new(),
+            Message::RefreshLoop => String::from("Performed the refresh loop"),
             Message::StartProject { project_name } => {
                 format!("Started the project '{}'", project_name)
             }
@@ -76,7 +74,7 @@ impl Message {
             Message::GotoPage(page) => format!("Unable to navigate to the page '{}'", page),
             Message::OpenUrl(url) => format!("Opened the external url '{}'", url),
             Message::ThemeChanged(theme) => format!("Changed theme to '{}'", theme),
-            Message::Refresh { repeated: _ } => String::new(),
+            Message::RefreshLoop => String::from("Unable to perform the refresh loop"),
             Message::StartProject { project_name } => {
                 format!("Unable to start the project '{}'", project_name)
             }
@@ -112,6 +110,6 @@ impl Message {
             }
         };
 
-        format!("{}, {}", message, error)
+        format!("{}, error: {}", message, error)
     }
 }
