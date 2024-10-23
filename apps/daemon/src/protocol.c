@@ -10,8 +10,11 @@
 #include "settings.h"
 #include "manager.h"
 
-#define resp_error(msg) str_concat("ERROR\n", msg)
-#define resp_ok(msg) str_concat("OK\n", msg)
+const char arg_separator = (char)17;
+const char arg_separator_str[2] = { arg_separator, '\0' };
+
+#define resp_error(msg) str_concat("ERROR", arg_separator_str, msg)
+#define resp_ok(msg) str_concat("OK", arg_separator_str, msg)
 #define resp_ok_no_content() str_dup("OK")
 
 static char **tokenize(const char *input);
@@ -93,12 +96,12 @@ tokenize(const char *input)
     size_t last_pos = 0;
     for (size_t i = 0; i < len; i++)
     {
-        bool is_newline = input[i] == '\n';
+        bool is_separator = input[i] == arg_separator;
         bool is_last = i + 1 == len;
-        if (!is_newline && !is_last)
+        if (!is_separator && !is_last)
             continue;
 
-        int ind = is_newline ? 0 : 1;
+        int ind = is_separator ? 0 : 1;
 
         size_t part_len = i - last_pos + ind;
         char *part = malloc(sizeof(char) * (part_len + 1));
@@ -418,7 +421,7 @@ format_list(char **lines)
     if (item_count == 0)
         return str_dup("");
 
-    size_t response_length = item_count; // newline after each line and the '\0' at the end
+    size_t response_length = item_count; // separator after each line and the '\0' at the end
     for (size_t i = 0; i < item_count; i++)
         response_length += strlen(lines[i]);
 
@@ -426,8 +429,8 @@ format_list(char **lines)
     for (size_t i = 0; i < item_count; i++)
     {
         strcat(response, lines[i]);
-        if (i + 1 < item_count) // last line should not be suffixed with the '\n'
-            strcat(response, "\n");
+        if (i + 1 < item_count) // last arg should not be suffixed with the separator
+            strcat(response, arg_separator_str);
     }
 
     return response;

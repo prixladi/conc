@@ -12,6 +12,7 @@ use crate::{
             ProjectSettingsResponse, ProjectsInfoResponse, ProjectsSettingsResponse,
             ServiceInfoResponse,
         },
+        ARG_SEPARATOR_STR,
     },
     socket_client::SocketClient,
     Response,
@@ -120,7 +121,7 @@ impl Requester {
     fn send_request<R: Response>(&self, req: impl Request<R>) -> Res<R> {
         let req_string = req.serialize();
         let resp = self.socket_client.send(req_string.as_bytes())?;
-        let parts: Vec<String> = resp.split("\n").map(String::from).collect();
+        let parts: Vec<String> = resp.split(ARG_SEPARATOR_STR).map(String::from).collect();
         R::try_from(parts.clone()).map_err(|_| ErrorResponse::from(parts))
     }
 }

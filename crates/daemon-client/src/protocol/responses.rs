@@ -24,7 +24,7 @@ impl From<std::io::Error> for ErrorResponse {
 
 impl From<Vec<String>> for ErrorResponse {
     fn from(data: Vec<String>) -> Self {
-        let raw = data.join("\n");
+        let raw = data.join(" ");
 
         if data.is_empty() || data[0] != "ERROR" {
             return Self::Malformed(raw);
