@@ -15,13 +15,15 @@ impl<'a> PageTitle<'a> {
     pub fn new(title: String, content: Option<Element<'a, Message>>) -> Self {
         Self { title, content }
     }
+}
 
-    pub fn render(self) -> Element<'a, Message> {
-        let mut row = row![text(self.title).size(30)]
+impl<'a> From<PageTitle<'a>> for Element<'a, Message> {
+    fn from(value: PageTitle<'a>) -> Self {
+        let mut row = row![text(value.title).size(30)]
             .align_y(alignment::Vertical::Center)
             .spacing(12)
             .height(30);
-        if let Some(content) = self.content {
+        if let Some(content) = value.content {
             row = row.push(content);
         }
 

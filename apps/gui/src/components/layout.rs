@@ -10,10 +10,12 @@ impl<'a> Section<'a> {
     pub fn new(content: Element<'a, Message>) -> Self {
         Self { content }
     }
+}
 
-    pub fn render(self) -> Element<'a, Message> {
+impl<'a> From<Section<'a>> for Element<'a, Message> {
+    fn from(value: Section<'a>) -> Self {
         container(
-            container(self.content)
+            container(value.content)
                 .padding(16)
                 .style(outer_container_style)
                 .height(Length::Fill),

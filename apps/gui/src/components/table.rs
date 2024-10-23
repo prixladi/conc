@@ -30,21 +30,23 @@ impl<'a, F: Fn(&str) -> Message> InfoTable<'a, F> {
             name_to_message,
         }
     }
+}
 
-    pub fn render(self) -> Element<'a, Message> {
+impl<'a, F: Fn(&str) -> Message> From<InfoTable<'a, F>> for Element<'a, Message> {
+    fn from(value: InfoTable<'a, F>) -> Self {
         let mut names = column![column_tile("NAME", 8)].spacing(10);
         let mut statuses = column![column_tile("STATUS", 0)].spacing(10);
         let mut actions = column![column_tile("ACTIONS", 0)]
             .spacing(10)
             .padding(Padding::default().right(15));
 
-        for name in self.names {
-            names = names.push(name_button(name, &self.name_to_message));
+        for name in value.names {
+            names = names.push(name_button(name, &value.name_to_message));
         }
-        for status in self.statuses {
+        for status in value.statuses {
             statuses = statuses.push(cell(text(status).size(18).into()));
         }
-        for action in self.actions {
+        for action in value.actions {
             actions = actions.push(cell(action));
         }
 
@@ -59,7 +61,7 @@ impl<'a, F: Fn(&str) -> Message> InfoTable<'a, F> {
             .spacing(8),
         );
 
-        column![self.title, rows].spacing(12).into()
+        column![value.title, rows].spacing(12).into()
     }
 }
 

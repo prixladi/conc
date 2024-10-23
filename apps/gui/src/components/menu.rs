@@ -13,18 +13,20 @@ pub struct Menu {
     current_page: Page,
 }
 
-impl<'a> Menu {
+impl Menu {
     pub fn new(projects: Vec<String>, current_page: Page) -> Self {
         Self {
             projects,
             current_page,
         }
     }
+}
 
-    pub fn render(self) -> Element<'a, Message> {
+impl<'a> From<Menu> for Element<'a, Message> {
+    fn from(value: Menu) -> Self {
         let mut project_panel = column![].spacing(8);
-        for project in self.projects.iter() {
-            let is_active = match &self.current_page {
+        for project in value.projects.iter() {
+            let is_active = match &value.current_page {
                 Page::Project(project_name) | Page::Service(project_name, _) => {
                     project_name == project
                 }
@@ -43,7 +45,7 @@ impl<'a> Menu {
         let project_button = menu_button_with_icon(
             "Projects",
             Bootstrap::HousesFill,
-            Page::Projects == self.current_page,
+            Page::Projects == value.current_page,
             Message::GotoPage(Page::Projects),
         );
 
@@ -69,7 +71,7 @@ impl<'a> Menu {
         ]
         .spacing(12);
         let content = container(panel).style(container_style).width(250);
-        Section::new(content.into()).render()
+        Section::new(content.into()).into()
     }
 }
 

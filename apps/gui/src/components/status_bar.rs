@@ -18,11 +18,13 @@ impl StatusErrorBar {
             status,
         }
     }
+}
 
-    pub fn render<'a>(self) -> Element<'a, Message> {
-        let is_error = self.status.is_err();
+impl<'a> From<StatusErrorBar> for Element<'a, Message> {
+    fn from(value: StatusErrorBar) -> Self {
+        let is_error = value.status.is_err();
         let formatted_date =
-            text(self.last_action_at.format("%d/%m/%Y %H:%M:%S").to_string()).size(16);
+            text(value.last_action_at.format("%d/%m/%Y %H:%M:%S").to_string()).size(16);
 
         let mut status_bar = row![formatted_date, "-"]
             .height(32)
@@ -30,7 +32,7 @@ impl StatusErrorBar {
             .spacing(10)
             .padding(8);
 
-        status_bar = status_bar.push(text(self.status.unwrap_or_else(|e| e)).size(16));
+        status_bar = status_bar.push(text(value.status.unwrap_or_else(|e| e)).size(16));
 
         let status_bar_container = match is_error {
             true => container(status_bar).style(error_container_style),
@@ -49,10 +51,12 @@ impl StatusInfoBar {
     pub fn new(socket_path: String) -> Self {
         Self { socket_path }
     }
+}
 
-    pub fn render<'a, Message: 'a>(self) -> Element<'a, Message> {
+impl<'a> From<StatusInfoBar> for Element<'a, Message> {
+    fn from(value: StatusInfoBar) -> Self {
         let formatted_version = text(format!("v{}", env!("CARGO_PKG_VERSION")));
-        let socket = format!("Using the daemon socket at unix://{}", self.socket_path);
+        let socket = format!("Using the daemon socket at unix://{}", value.socket_path);
         let status_bar = row![formatted_version, text("|").size(16), text(socket).size(16)]
             .height(32)
             .width(Length::Fill)

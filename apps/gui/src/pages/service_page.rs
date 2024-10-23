@@ -50,7 +50,7 @@ impl PageView for ServicePage {
         let mut view = column![];
 
         if let Some(service) = &self.service {
-            let title = Section::new(text(self.title()).size(30).into()).render();
+            let title = Section::new(text(self.title()).size(30).into());
             view = view.push(title);
 
             // TODO: Use some more efficient way to read just last n lines
@@ -65,7 +65,7 @@ impl PageView for ServicePage {
                 .unwrap_or_default();
 
             let log_data_view = scrollable(text(log_data).width(Length::Fill));
-            let log_section = Section::new(log_data_view.into()).render();
+            let log_section = Section::new(log_data_view.into());
             view = view.push(log_section);
         }
 

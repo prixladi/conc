@@ -19,27 +19,29 @@ impl<'a> ServiceActionButtons<'a> {
             service,
         }
     }
+}
 
-    pub fn render(self) -> Element<'a, Message> {
+impl<'a> From<ServiceActionButtons<'a>> for Element<'a, Message> {
+    fn from(value: ServiceActionButtons<'a>) -> Self {
         let mut start_message = None;
-        if self.service.status != ServiceStatus::RUNNING {
+        if value.service.status != ServiceStatus::RUNNING {
             start_message = Some(Message::StartService {
-                project_name: self.project_name.to_string(),
-                service_name: self.service.name.clone(),
+                project_name: value.project_name.to_string(),
+                service_name: value.service.name.clone(),
             });
         };
 
         let mut stop_message = None;
-        if self.service.status == ServiceStatus::RUNNING {
+        if value.service.status == ServiceStatus::RUNNING {
             stop_message = Some(Message::StopService {
-                project_name: self.project_name.to_string(),
-                service_name: self.service.name.clone(),
+                project_name: value.project_name.to_string(),
+                service_name: value.service.name.clone(),
             });
         };
 
         let restart_message = Some(Message::RestartService {
-            project_name: self.project_name.to_string(),
-            service_name: self.service.name.clone(),
+            project_name: value.project_name.to_string(),
+            service_name: value.service.name.clone(),
         });
 
         row![
@@ -60,10 +62,12 @@ impl<'a> ProjectActionButtons<'a> {
     pub fn new(project: &'a ProjectInfo) -> Self {
         Self { project }
     }
+}
 
-    pub fn render(self) -> Element<'a, Message> {
-        let services_count = self.project.services.len();
-        let running_services_count = self
+impl<'a> From<ProjectActionButtons<'a>> for Element<'a, Message> {
+    fn from(value: ProjectActionButtons<'a>) -> Self {
+        let services_count = value.project.services.len();
+        let running_services_count = value
             .project
             .services
             .iter()
@@ -73,19 +77,19 @@ impl<'a> ProjectActionButtons<'a> {
         let mut start_message = None;
         if services_count > running_services_count {
             start_message = Some(Message::StartProject {
-                project_name: self.project.name.clone(),
+                project_name: value.project.name.clone(),
             });
         };
 
         let mut stop_message = None;
         if running_services_count > 0 {
             stop_message = Some(Message::StopProject {
-                project_name: self.project.name.clone(),
+                project_name: value.project.name.clone(),
             });
         }
 
         let restart_message = Some(Message::RestartProject {
-            project_name: self.project.name.clone(),
+            project_name: value.project.name.clone(),
         });
 
         row![
@@ -103,16 +107,18 @@ pub struct CopyToClipboardButton {
     data: String,
 }
 
-impl<'a> CopyToClipboardButton {
+impl CopyToClipboardButton {
     pub fn new(name: String, data: String) -> Self {
         Self { name, data }
     }
+}
 
-    pub fn render(self) -> Element<'a, Message> {
+impl<'a> From<CopyToClipboardButton> for Element<'a, Message> {
+    fn from(value: CopyToClipboardButton) -> Self {
         action_button(
             Some(Message::CopyToClipboard {
-                name: self.name,
-                data: self.data,
+                name: value.name,
+                data: value.data,
             }),
             Bootstrap::ClipboardCheck,
             25,

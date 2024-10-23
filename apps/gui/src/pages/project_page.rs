@@ -65,29 +65,27 @@ impl PageView for ProjectPage {
         for service in project.services.iter() {
             names.push(service.name.clone());
             statuses.push(service_status_stringify(&service.status));
-            actions.push(ServiceActionButtons::new(&project.name, service).render());
+            actions.push(ServiceActionButtons::new(&project.name, service).into());
         }
 
         let pretty_settings = prettify_json::<ProjectSettings>(settings).unwrap_or_default();
         let json_view = scrollable(text(pretty_settings.clone()).width(Length::Fill));
-        let settings_section = Section::new(json_view.into()).render();
+        let settings_section = Section::new(json_view.into());
 
         let copy_button =
-            CopyToClipboardButton::new(String::from("project settings"), pretty_settings).render();
-        let action_buttons = ProjectActionButtons::new(project).render();
+            CopyToClipboardButton::new(String::from("project settings"), pretty_settings);
+        let action_buttons = ProjectActionButtons::new(project);
         let button_line = row![action_buttons, copy_button].spacing(10).into();
 
-        let tile = PageTitle::new(self.title(), Some(button_line)).render();
+        let title = PageTitle::new(self.title(), Some(button_line)).into();
         let name_to_message = |service: &str| {
             Message::GotoPage(Page::Service(project.name.clone(), service.to_string()))
         };
-        let table = InfoTable::new(tile, names, statuses, actions, name_to_message);
+        let table = InfoTable::new(title, names, statuses, actions, name_to_message);
 
-        let project_view = container(table.render())
-            .height(Length::Fill)
-            .width(Length::Fill);
+        let project_view = container(table).height(Length::Fill).width(Length::Fill);
 
-        view = view.push(Section::new(project_view.into()).render());
+        view = view.push(Section::new(project_view.into()));
         view = view.push(settings_section);
 
         view.into()

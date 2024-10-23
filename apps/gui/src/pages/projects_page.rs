@@ -53,17 +53,15 @@ impl PageView for ProjectsPage {
                 "{}/{} services running",
                 running_services_count, services_count
             ));
-            actions.push(ProjectActionButtons::new(project).render());
+            actions.push(ProjectActionButtons::new(project).into());
         }
 
-        let title = PageTitle::new(self.title(), None).render();
+        let title = PageTitle::new(self.title(), None).into();
         let name_to_message = |project: &str| Message::GotoPage(Page::Project(project.to_string()));
         let table = InfoTable::new(title, names, statuses, actions, name_to_message);
 
-        let view = container(table.render())
-            .height(Length::Fill)
-            .width(Length::Fill);
+        let view = container(table).height(Length::Fill).width(Length::Fill);
 
-        Section::new(view.into()).render()
+        Section::new(view.into()).into()
     }
 }

@@ -133,7 +133,7 @@ impl App {
         let view = self.page_view.view();
 
         let menu = Menu::new(self.project_names.clone(), self.page_view.page());
-        let body = row![menu.render(), view];
+        let body = row![menu, view];
 
         let info_bar = StatusInfoBar::new(self.requester.client().socket_path.clone());
         let status: Result<String, String> = match &self.refresh_loop_error {
@@ -143,7 +143,7 @@ impl App {
 
         let error_bar = StatusErrorBar::new(self.last_action_at, status);
 
-        column![error_bar.render(), body, info_bar.render()].into()
+        column![error_bar, body, info_bar].into()
     }
 }
 
