@@ -94,7 +94,7 @@ fn cell(content: Element<'_, Message>) -> Element<'_, Message> {
 
 fn name_button_style(theme: &Theme, status: Status) -> button::Style {
     let palette = theme.extended_palette();
-    let bg_color = palette.primary.weak.color.scale_alpha(0.05);
+    let bg_color = palette.primary.weak.color.scale_alpha(0.25);
 
     let base = button::Style {
         background: Some(Background::Color(Color::TRANSPARENT)),

@@ -45,14 +45,14 @@ impl<'a> From<Menu> for Element<'a, Message> {
         let project_button = menu_button_with_icon(
             "Projects",
             Bootstrap::HousesFill,
-            Page::Projects == value.current_page,
+            value.current_page == Page::Projects,
             Message::GotoPage(Page::Projects),
         );
 
         let settings_button = menu_button_with_icon(
             "Settings",
             Bootstrap::Gear,
-            false,
+            value.current_page == Page::Settings,
             Message::GotoPage(Page::Settings),
         );
 
@@ -116,7 +116,7 @@ fn container_style(theme: &Theme) -> container::Style {
 
 fn menu_button_style(theme: &Theme, status: Status) -> button::Style {
     let palette = theme.extended_palette();
-    let bg_color = palette.primary.weak.color.scale_alpha(0.05);
+    let bg_color = palette.primary.weak.color.scale_alpha(0.25);
 
     let base = button::Style {
         background: Some(Background::Color(Color::TRANSPARENT)),
@@ -137,7 +137,7 @@ fn menu_button_style(theme: &Theme, status: Status) -> button::Style {
 
 fn menu_button_active_style(theme: &Theme, _: Status) -> button::Style {
     let palette = theme.extended_palette();
-    let bg_color = palette.primary.weak.color.scale_alpha(0.05);
+    let bg_color = palette.primary.weak.color.scale_alpha(0.25);
 
     button::Style {
         background: Some(Background::Color(bg_color)),
