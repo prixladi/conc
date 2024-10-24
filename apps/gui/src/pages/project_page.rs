@@ -1,4 +1,4 @@
-use daemon_client::{ProjectInfo, Requester};
+use daemon_client::ProjectInfo;
 use iced::widget::{column, container, row, scrollable, text};
 use iced::{Element, Length};
 use project_settings::ProjectSettings;
@@ -13,15 +13,13 @@ use crate::utils::{prettify_json, service_status_stringify};
 use super::{Page, PageData, PageView};
 
 pub struct ProjectPage {
-    requester: Requester,
     project_name: String,
     project: Option<(ProjectInfo, String)>,
 }
 
 impl ProjectPage {
-    pub fn new(data: PageData, project_name: String) -> Self {
+    pub fn new(project_name: String) -> Self {
         Self {
-            requester: data.requester,
             project_name,
             project: None,
         }
@@ -33,12 +31,12 @@ impl PageView for ProjectPage {
         Page::Project(self.project_name.clone())
     }
 
-    fn refresh(&mut self, _: PageData) -> Result<(), String> {
-        let result = self
+    fn refresh(&mut self, data: PageData) -> Result<(), String> {
+        let result = data
             .requester
             .get_project_info(&self.project_name)
             .and_then(|project| {
-                let settings = self.requester.get_project_settings(&self.project_name)?;
+                let settings = data.requester.get_project_settings(&self.project_name)?;
                 Ok((project.value, settings.value))
             });
 
@@ -56,7 +54,6 @@ impl PageView for ProjectPage {
         if self.project.is_none() {
             return view.into();
         };
-
         let (project, settings) = self.project.as_ref().unwrap();
 
         let mut names = vec![];
@@ -77,7 +74,9 @@ impl PageView for ProjectPage {
         let action_buttons = ProjectActionButtons::new(project);
         let button_line = row![action_buttons, copy_button].spacing(10).into();
 
-        let title = PageTitle::new(self.title(), Some(button_line)).into();
+        let title = PageTitle::new(self.title())
+            .additional_content(button_line)
+            .into();
         let name_to_message = |service: &str| {
             Message::GotoPage(Page::Service(project.name.clone(), service.to_string()))
         };

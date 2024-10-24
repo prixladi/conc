@@ -4,11 +4,20 @@ use crate::message::Message;
 
 pub struct Section<'a> {
     content: Element<'a, Message>,
+    height: Length,
 }
 
 impl<'a> Section<'a> {
     pub fn new(content: Element<'a, Message>) -> Self {
-        Self { content }
+        Self {
+            content,
+            height: Length::Fill,
+        }
+    }
+
+    pub fn height(mut self, height: Length) -> Self {
+        self.height = height;
+        self
     }
 }
 
@@ -17,15 +26,15 @@ impl<'a> From<Section<'a>> for Element<'a, Message> {
         container(
             container(value.content)
                 .padding(16)
-                .style(outer_container_style)
-                .height(Length::Fill),
+                .style(inner_container_style)
+                .height(value.height),
         )
         .padding([8, 8])
         .into()
     }
 }
 
-fn outer_container_style(theme: &Theme) -> container::Style {
+fn inner_container_style(theme: &Theme) -> container::Style {
     let palette = theme.extended_palette();
 
     let scale = match palette.is_dark {

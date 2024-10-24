@@ -1,4 +1,4 @@
-use daemon_client::{ProjectInfo, Requester, ServiceStatus};
+use daemon_client::{ProjectInfo, ServiceStatus};
 use iced::widget::container;
 use iced::{Element, Length};
 
@@ -8,16 +8,12 @@ use crate::message::Message;
 use super::{Page, PageData, PageView};
 
 pub struct ProjectsPage {
-    requester: Requester,
     projects: Vec<ProjectInfo>,
 }
 
 impl ProjectsPage {
-    pub fn new(data: PageData) -> Self {
-        Self {
-            projects: vec![],
-            requester: data.requester,
-        }
+    pub fn new() -> Self {
+        Self { projects: vec![] }
     }
 }
 
@@ -26,8 +22,8 @@ impl PageView for ProjectsPage {
         Page::Projects
     }
 
-    fn refresh(&mut self, _: PageData) -> Result<(), String> {
-        match self.requester.get_projects_info() {
+    fn refresh(&mut self, data: PageData) -> Result<(), String> {
+        match data.requester.get_projects_info() {
             Ok(info) => {
                 self.projects = info.values;
                 Ok(())
@@ -56,7 +52,7 @@ impl PageView for ProjectsPage {
             actions.push(ProjectActionButtons::new(project).into());
         }
 
-        let title = PageTitle::new(self.title(), None).into();
+        let title = PageTitle::new(self.title()).into();
         let name_to_message = |project: &str| Message::GotoPage(Page::Project(project.to_string()));
         let table = InfoTable::new(title, names, statuses, actions, name_to_message);
 

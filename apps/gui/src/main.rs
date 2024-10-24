@@ -43,14 +43,7 @@ impl App {
         let requester = Requester::new(socket_client);
         let theme = Theme::Dark;
 
-        let page_view = get_page(
-            Page::Projects,
-            PageData {
-                requester: requester.clone(),
-                theme: theme.clone(),
-                config: config.clone(),
-            },
-        );
+        let page_view = get_page(Page::Projects);
 
         let app = Self {
             theme,
@@ -164,7 +157,7 @@ fn handle_message(app: &mut App, message: &Message) -> Result<UpdateAction, Stri
         Message::RefreshLoop => Ok(UpdateAction::Refresh),
 
         Message::GotoPage(page) => {
-            app.page_view = get_page(page.clone(), app.create_page_data());
+            app.page_view = get_page(page.clone());
             Ok(UpdateAction::Refresh)
         }
 

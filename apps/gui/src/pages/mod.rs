@@ -52,11 +52,11 @@ pub struct PageData {
     pub config: AppConfig,
 }
 
-pub fn get_page(page_transition: Page, data: PageData) -> Box<dyn PageView> {
+pub fn get_page(page_transition: Page) -> Box<dyn PageView> {
     match page_transition {
-        Page::Projects => Box::new(ProjectsPage::new(data)),
-        Page::Project(project) => Box::new(ProjectPage::new(data, project)),
-        Page::Service(project, service) => Box::new(ServicePage::new(data, project, service)),
-        Page::Settings => Box::new(SettingsPage::new(data)),
+        Page::Projects => Box::new(ProjectsPage::new()),
+        Page::Project(project) => Box::new(ProjectPage::new(project)),
+        Page::Service(project, service) => Box::new(ServicePage::new(project, service)),
+        Page::Settings => Box::new(SettingsPage::new()),
     }
 }

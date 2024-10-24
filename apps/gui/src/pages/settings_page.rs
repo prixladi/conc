@@ -9,15 +9,15 @@ use crate::utils::prettify_serializable;
 use super::{Page, PageData, PageView};
 
 pub struct SettingsPage {
-    theme: Theme,
-    config: AppConfig,
+    theme: Option<Theme>,
+    config: Option<AppConfig>,
 }
 
 impl SettingsPage {
-    pub fn new(data: PageData) -> Self {
+    pub fn new() -> Self {
         Self {
-            theme: data.theme,
-            config: data.config,
+            theme: None,
+            config: None,
         }
     }
 }
@@ -28,8 +28,8 @@ impl PageView for SettingsPage {
     }
 
     fn refresh(&mut self, data: PageData) -> Result<(), String> {
-        self.theme = data.theme;
-        self.config = data.config;
+        self.theme = Some(data.theme);
+        self.config = Some(data.config);
         Ok(())
     }
 
@@ -38,7 +38,7 @@ impl PageView for SettingsPage {
 
         let theme_picker = column![
             text("Theme"),
-            pick_list(Theme::ALL, Some(&self.theme), Message::ThemeChanged).width(Length::Fill),
+            pick_list(Theme::ALL, self.theme.clone(), Message::ThemeChanged).width(Length::Fill),
         ]
         .spacing(10);
 

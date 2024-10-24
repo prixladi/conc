@@ -23,26 +23,29 @@ impl<'a> ServiceActionButtons<'a> {
 
 impl<'a> From<ServiceActionButtons<'a>> for Element<'a, Message> {
     fn from(value: ServiceActionButtons<'a>) -> Self {
-        let mut start_message = None;
-        if value.service.status != ServiceStatus::RUNNING {
-            start_message = Some(Message::StartService {
+        let start_message = match value.service.status {
+            ServiceStatus::RUNNING => None,
+            _ => Some(Message::StartService {
                 project_name: value.project_name.to_string(),
                 service_name: value.service.name.clone(),
-            });
+            }),
         };
 
-        let mut stop_message = None;
-        if value.service.status == ServiceStatus::RUNNING {
-            stop_message = Some(Message::StopService {
+        let stop_message = match value.service.status {
+            ServiceStatus::RUNNING => Some(Message::StopService {
                 project_name: value.project_name.to_string(),
                 service_name: value.service.name.clone(),
-            });
+            }),
+            _ => None,
         };
 
-        let restart_message = Some(Message::RestartService {
-            project_name: value.project_name.to_string(),
-            service_name: value.service.name.clone(),
-        });
+        let restart_message = match value.service.status {
+            ServiceStatus::RUNNING => Some(Message::RestartService {
+                project_name: value.project_name.to_string(),
+                service_name: value.service.name.clone(),
+            }),
+            _ => None,
+        };
 
         row![
             start_action_button(start_message),
@@ -74,23 +77,26 @@ impl<'a> From<ProjectActionButtons<'a>> for Element<'a, Message> {
             .filter(|service| service.status == ServiceStatus::RUNNING)
             .count();
 
-        let mut start_message = None;
-        if services_count > running_services_count {
-            start_message = Some(Message::StartProject {
+        let start_message = match services_count > running_services_count {
+            true => Some(Message::StartProject {
                 project_name: value.project.name.clone(),
-            });
+            }),
+            false => None,
         };
 
-        let mut stop_message = None;
-        if running_services_count > 0 {
-            stop_message = Some(Message::StopProject {
+        let stop_message = match running_services_count > 0 {
+            true => Some(Message::StopProject {
                 project_name: value.project.name.clone(),
-            });
-        }
+            }),
+            false => None,
+        };
 
-        let restart_message = Some(Message::RestartProject {
-            project_name: value.project.name.clone(),
-        });
+        let restart_message = match running_services_count > 0 {
+            true => Some(Message::RestartProject {
+                project_name: value.project.name.clone(),
+            }),
+            false => None,
+        };
 
         row![
             start_action_button(start_message),
