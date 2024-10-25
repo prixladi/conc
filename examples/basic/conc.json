@@ -1,0 +1,17 @@
+{
+  "name": "basic-example",
+  "services": [
+    {
+      "name": "sleeper",
+      "command": ["sleep", "100000000"]
+    },
+    {
+      "name": "dir",
+      "command": ["bash", "-c", "while [ 1 ]; do ls; sleep 2; done"]
+    },
+    {
+      "name": "script",
+      "command": ["./script.sh", "Hello World."]
+    }
+  ]
+}
