@@ -38,10 +38,7 @@ pub(crate) struct ProjectSettingsRequest<'a> {
 
 impl<'a> Request<ProjectSettingsResponse> for ProjectSettingsRequest<'a> {
     fn serialize(&self) -> String {
-        format!(
-            "{}{}{}",
-            "PROJECT-SETTINGS", ARG_SEPARATOR_STR, self.project_name
-        )
+        serialize_parts(vec!["PROJECT-SETTINGS", self.project_name])
     }
 }
 
@@ -51,10 +48,7 @@ pub(crate) struct ProjectInfoRequest<'a> {
 
 impl<'a> Request<ProjectInfoResponse> for ProjectInfoRequest<'a> {
     fn serialize(&self) -> String {
-        format!(
-            "{}{}{}",
-            "PROJECT-INFO", ARG_SEPARATOR_STR, self.project_name
-        )
+        serialize_parts(vec!["PROJECT-INFO", self.project_name])
     }
 }
 
@@ -64,10 +58,7 @@ pub(crate) struct ProjectUpsertRequest<'a> {
 
 impl<'a> Request<ProjectInfoResponse> for ProjectUpsertRequest<'a> {
     fn serialize(&self) -> String {
-        format!(
-            "{}{}{}",
-            "PROJECT-UPSERT", ARG_SEPARATOR_STR, self.settings_json
-        )
+        serialize_parts(vec!["PROJECT-UPSERT", self.settings_json])
     }
 }
 
@@ -77,10 +68,7 @@ pub(crate) struct ProjectStartRequest<'a> {
 
 impl<'a> Request<ProjectInfoResponse> for ProjectStartRequest<'a> {
     fn serialize(&self) -> String {
-        format!(
-            "{}{}{}",
-            "PROJECT-START", ARG_SEPARATOR_STR, self.project_name
-        )
+        serialize_parts(vec!["PROJECT-START", self.project_name])
     }
 }
 
@@ -90,10 +78,7 @@ pub(crate) struct ProjectRestartRequest<'a> {
 
 impl<'a> Request<ProjectInfoResponse> for ProjectRestartRequest<'a> {
     fn serialize(&self) -> String {
-        format!(
-            "{}{}{}",
-            "PROJECT-RESTART", ARG_SEPARATOR_STR, self.project_name
-        )
+        serialize_parts(vec!["PROJECT-RESTART", self.project_name])
     }
 }
 
@@ -103,10 +88,7 @@ pub(crate) struct ProjectStopRequest<'a> {
 
 impl<'a> Request<ProjectInfoResponse> for ProjectStopRequest<'a> {
     fn serialize(&self) -> String {
-        format!(
-            "{}{}{}",
-            "PROJECT-STOP", ARG_SEPARATOR_STR, self.project_name
-        )
+        serialize_parts(vec!["PROJECT-STOP", self.project_name])
     }
 }
 
@@ -116,10 +98,7 @@ pub(crate) struct ProjectRemoveRequest<'a> {
 
 impl<'a> Request<NoContentResponse> for ProjectRemoveRequest<'a> {
     fn serialize(&self) -> String {
-        format!(
-            "{}{}{}",
-            "PROJECT-REMOVE", ARG_SEPARATOR_STR, self.project_name
-        )
+        serialize_parts(vec!["PROJECT-REMOVE", self.project_name])
     }
 }
 
@@ -129,10 +108,7 @@ pub(crate) struct ServicesNamesRequest<'a> {
 
 impl<'a> Request<NameListResponse> for ServicesNamesRequest<'a> {
     fn serialize(&self) -> String {
-        format!(
-            "{}{}{}",
-            "SERVICES-NAMES", ARG_SEPARATOR_STR, self.project_name
-        )
+        serialize_parts(vec!["SERVICES-NAMES", self.project_name])
     }
 }
 
@@ -143,14 +119,7 @@ pub(crate) struct ServiceInfoRequest<'a> {
 
 impl<'a> Request<ServiceInfoResponse> for ServiceInfoRequest<'a> {
     fn serialize(&self) -> String {
-        format!(
-            "{}{}{}{}{}",
-            "SERVICE-INFO",
-            ARG_SEPARATOR_STR,
-            self.project_name,
-            ARG_SEPARATOR_STR,
-            self.service_name
-        )
+        serialize_parts(vec!["SERVICE-INFO", self.project_name, self.service_name])
     }
 }
 
@@ -161,14 +130,7 @@ pub(crate) struct ServiceStartRequest<'a> {
 
 impl<'a> Request<ServiceInfoResponse> for ServiceStartRequest<'a> {
     fn serialize(&self) -> String {
-        format!(
-            "{}{}{}{}{}",
-            "SERVICE-START",
-            ARG_SEPARATOR_STR,
-            self.project_name,
-            ARG_SEPARATOR_STR,
-            self.service_name
-        )
+        serialize_parts(vec!["SERVICE-START", self.project_name, self.service_name])
     }
 }
 
@@ -179,14 +141,11 @@ pub(crate) struct ServiceRestartRequest<'a> {
 
 impl<'a> Request<ServiceInfoResponse> for ServiceRestartRequest<'a> {
     fn serialize(&self) -> String {
-        format!(
-            "{}{}{}{}{}",
+        serialize_parts(vec![
             "SERVICE-RESTART",
-            ARG_SEPARATOR_STR,
             self.project_name,
-            ARG_SEPARATOR_STR,
-            self.service_name
-        )
+            self.service_name,
+        ])
     }
 }
 
@@ -197,13 +156,11 @@ pub(crate) struct ServiceStopRequest<'a> {
 
 impl<'a> Request<ServiceInfoResponse> for ServiceStopRequest<'a> {
     fn serialize(&self) -> String {
-        format!(
-            "{}{}{}{}{}",
-            "SERVICE-STOP",
-            ARG_SEPARATOR_STR,
-            self.project_name,
-            ARG_SEPARATOR_STR,
-            self.service_name
-        )
+        serialize_parts(vec!["SERVICE-STOP", self.project_name, self.service_name])
     }
+}
+
+#[inline]
+fn serialize_parts(parts: Vec<&str>) -> String {
+    parts.join(ARG_SEPARATOR_STR)
 }

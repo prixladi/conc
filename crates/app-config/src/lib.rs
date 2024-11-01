@@ -23,6 +23,12 @@ pub enum AppConfigError {
     },
 }
 
+impl From<std::env::VarError> for AppConfigError {
+    fn from(value: std::env::VarError) -> Self {
+        AppConfigError::HomeNotFound { inner: value }
+    }
+}
+
 impl AppConfig {
     pub fn new() -> Result<Self, AppConfigError> {
         if cfg!(debug_assertions) {
@@ -31,8 +37,7 @@ impl AppConfig {
             });
         }
 
-        let home_dir =
-            std::env::var(HOME_ENV_VAR).map_err(|e| AppConfigError::HomeNotFound { inner: e })?;
+        let home_dir = std::env::var(HOME_ENV_VAR)?;
         let conc_config = Path::new(&home_dir)
             .join(CONF_RELATIVE_LOCATION)
             .to_str()
