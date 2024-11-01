@@ -69,29 +69,21 @@ impl<'a> ProjectActionButtons<'a> {
 
 impl<'a> From<ProjectActionButtons<'a>> for Element<'a, Message> {
     fn from(value: ProjectActionButtons<'a>) -> Self {
-        let services_count = value.project.services.len();
-        let running_services_count = value
-            .project
-            .services
-            .iter()
-            .filter(|service| service.status == ServiceStatus::RUNNING)
-            .count();
-
-        let start_message = match services_count > running_services_count {
-            true => Some(Message::StartProject {
+        let start_message = match value.project.all_services_running() {
+            false => Some(Message::StartProject {
                 project_name: value.project.name.clone(),
             }),
-            false => None,
+            true => None,
         };
 
-        let stop_message = match running_services_count > 0 {
+        let stop_message = match value.project.any_service_running() {
             true => Some(Message::StopProject {
                 project_name: value.project.name.clone(),
             }),
             false => None,
         };
 
-        let restart_message = match running_services_count > 0 {
+        let restart_message = match value.project.any_service_running() {
             true => Some(Message::RestartProject {
                 project_name: value.project.name.clone(),
             }),

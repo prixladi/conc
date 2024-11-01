@@ -1,4 +1,4 @@
-use daemon_client::{ProjectInfo, ServiceStatus};
+use daemon_client::ProjectInfo;
 use iced::widget::container;
 use iced::{Element, Length};
 
@@ -37,17 +37,11 @@ impl PageView for ProjectsPage {
         let mut statuses = vec![];
         let mut actions = vec![];
         for project in &self.projects {
-            let services_count = project.services.len();
-            let running_services_count = project
-                .services
-                .iter()
-                .filter(|service| service.status == ServiceStatus::RUNNING)
-                .count();
-
             names.push(project.name.clone());
             statuses.push(format!(
                 "{}/{} services running",
-                running_services_count, services_count
+                project.running_service_count(),
+                project.service_count()
             ));
             actions.push(ProjectActionButtons::new(project).into());
         }

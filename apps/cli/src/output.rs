@@ -116,16 +116,11 @@ fn format_projects_info(projects: Vec<ProjectInfo>) -> String {
 }
 
 fn format_project_info(project: ProjectInfo) -> String {
-    let services_count = project.services.len();
-    let running_services_count = project
-        .services
-        .iter()
-        .filter(|service| service.status == ServiceStatus::RUNNING)
-        .count();
-
     let mut output = format!(
         "Project: {}, {}/{} Running\n",
-        project.name, running_services_count, services_count
+        project.name,
+        project.running_service_count(),
+        project.service_count()
     );
     let service_table = format_services_info(project.services);
     output.push_str(&service_table);
