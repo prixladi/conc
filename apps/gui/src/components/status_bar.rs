@@ -1,7 +1,6 @@
 use chrono::{DateTime, Local};
 use iced::{
-    widget::{container, row, text},
-    Background, Border, Element, Length, Shadow, Theme,
+    widget::{container, row, text}, Alignment, Background, Border, Element, Length, Shadow, Theme
 };
 
 use crate::message::Message;
@@ -28,9 +27,10 @@ impl<'a> From<StatusErrorBar> for Element<'a, Message> {
 
         let mut status_bar = row![formatted_date, "-"]
             .height(32)
+            .align_y(Alignment::Center)
             .width(Length::Fill)
             .spacing(10)
-            .padding(8);
+            .padding([0, 8]);
 
         status_bar = status_bar.push(text(value.status.unwrap_or_else(|e| e)).size(16));
 
@@ -59,9 +59,10 @@ impl<'a> From<StatusInfoBar> for Element<'a, Message> {
         let socket = format!("Using the daemon socket at unix://{}", value.socket_path);
         let status_bar = row![formatted_version, text("|").size(16), text(socket).size(16)]
             .height(32)
+            .align_y(Alignment::Center)
             .width(Length::Fill)
             .spacing(10)
-            .padding(8);
+            .padding([0, 8]);
 
         container(status_bar).style(info_container_style).into()
     }

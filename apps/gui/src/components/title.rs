@@ -1,7 +1,6 @@
 use iced::{
-    alignment,
     widget::{container, row, text},
-    Element, Padding,
+    Alignment, Element,
 };
 
 use crate::message::Message;
@@ -28,17 +27,13 @@ impl<'a> PageTitle<'a> {
 impl<'a> From<PageTitle<'a>> for Element<'a, Message> {
     fn from(value: PageTitle<'a>) -> Self {
         let mut row = row![text(value.title).size(30)]
-            .align_y(alignment::Vertical::Center)
+            .align_y(Alignment::Center)
             .spacing(12)
-            .height(30);
+            .height(38);
         if let Some(content) = value.additional_content {
             row = row.push(content);
         }
 
-        container(row)
-            .align_y(alignment::Vertical::Center)
-            .height(42)
-            .padding(Padding::default().bottom(12))
-            .into()
+        container(row).align_y(Alignment::Center).height(42).into()
     }
 }
