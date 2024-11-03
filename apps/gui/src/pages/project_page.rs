@@ -37,7 +37,7 @@ impl PageView for ProjectPage {
             .get_project_info(&self.project_name)
             .and_then(|project| {
                 let settings = data.requester.get_project_settings(&self.project_name)?;
-                Ok((project.value, settings.value))
+                Ok((project, settings))
             });
 
         match result {
@@ -67,7 +67,6 @@ impl PageView for ProjectPage {
 
         let pretty_settings = prettify_json::<ProjectSettings>(settings).unwrap_or_default();
         let json_view = scrollable(text(pretty_settings.clone()).width(Length::Fill));
-        let settings_section = Section::new(json_view.into());
 
         let copy_button =
             CopyToClipboardButton::new(String::from("project settings"), pretty_settings);
@@ -85,7 +84,7 @@ impl PageView for ProjectPage {
         let project_view = container(table).height(Length::Fill).width(Length::Fill);
 
         view = view.push(Section::new(project_view.into()));
-        view = view.push(settings_section);
+        view = view.push(Section::new(json_view.into()));
 
         view.into()
     }

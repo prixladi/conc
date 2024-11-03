@@ -179,9 +179,9 @@ fn run() -> Output {
             let res = match service {
                 Some(service) => requester
                     .get_services_info(&project, &service)
-                    .map(|res| vec![res.value.logfile_path]),
-                None => requester.get_project_info(&project).map(|res| {
-                    res.value
+                    .map(|service| vec![service.logfile_path]),
+                None => requester.get_project_info(&project).map(|project| {
+                    project
                         .services
                         .into_iter()
                         .map(|val| val.logfile_path)

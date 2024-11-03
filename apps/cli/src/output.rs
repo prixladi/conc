@@ -1,8 +1,5 @@
 use app_config::AppConfigError;
-use daemon_client::{
-    ErrorResponse, NameListResponse, NoContentResponse, ProjectInfo, ProjectInfoResponse,
-    ProjectSettingsResponse, ProjectsInfoResponse, ServiceInfo, ServiceInfoResponse, ServiceStatus,
-};
+use daemon_client::{ErrorResponse, ProjectInfo, ServiceInfo, ServiceStatus};
 use project_settings::ProjectSettingsError;
 use std::vec;
 
@@ -29,14 +26,14 @@ impl From<ErrorResponse> for Output {
 impl From<Result<String, ErrorResponse>> for Output {
     fn from(value: Result<String, ErrorResponse>) -> Self {
         match value {
-            Ok(value) => Self::Stdout(value),
+            Ok(val) => Self::Stdout(val),
             Err(err) => err.into(),
         }
     }
 }
 
-impl From<Result<NoContentResponse, ErrorResponse>> for Output {
-    fn from(value: Result<NoContentResponse, ErrorResponse>) -> Self {
+impl From<Result<(), ErrorResponse>> for Output {
+    fn from(value: Result<(), ErrorResponse>) -> Self {
         match value {
             Ok(_) => Self::Stdout(String::from("success")),
             Err(err) => err.into(),
@@ -44,46 +41,37 @@ impl From<Result<NoContentResponse, ErrorResponse>> for Output {
     }
 }
 
-impl From<Result<ProjectSettingsResponse, ErrorResponse>> for Output {
-    fn from(value: Result<ProjectSettingsResponse, ErrorResponse>) -> Self {
+impl From<Result<Vec<String>, ErrorResponse>> for Output {
+    fn from(value: Result<Vec<String>, ErrorResponse>) -> Self {
         match value {
-            Ok(res) => Self::Stdout(res.value),
+            Ok(val) => Self::Stdout(val.join(" ")),
             Err(err) => err.into(),
         }
     }
 }
 
-impl From<Result<NameListResponse, ErrorResponse>> for Output {
-    fn from(value: Result<NameListResponse, ErrorResponse>) -> Self {
+impl From<Result<ServiceInfo, ErrorResponse>> for Output {
+    fn from(value: Result<ServiceInfo, ErrorResponse>) -> Self {
         match value {
-            Ok(res) => Self::Stdout(res.values.join(" ")),
+            Ok(val) => Self::Stdout(format_services_info(vec![val])),
             Err(err) => err.into(),
         }
     }
 }
 
-impl From<Result<ServiceInfoResponse, ErrorResponse>> for Output {
-    fn from(value: Result<ServiceInfoResponse, ErrorResponse>) -> Self {
+impl From<Result<ProjectInfo, ErrorResponse>> for Output {
+    fn from(value: Result<ProjectInfo, ErrorResponse>) -> Self {
         match value {
-            Ok(res) => Self::Stdout(format_services_info(vec![res.value])),
+            Ok(val) => Self::Stdout(format_project_info(val)),
             Err(err) => err.into(),
         }
     }
 }
 
-impl From<Result<ProjectInfoResponse, ErrorResponse>> for Output {
-    fn from(value: Result<ProjectInfoResponse, ErrorResponse>) -> Self {
+impl From<Result<Vec<ProjectInfo>, ErrorResponse>> for Output {
+    fn from(value: Result<Vec<ProjectInfo>, ErrorResponse>) -> Self {
         match value {
-            Ok(res) => Self::Stdout(format_project_info(res.value)),
-            Err(err) => err.into(),
-        }
-    }
-}
-
-impl From<Result<ProjectsInfoResponse, ErrorResponse>> for Output {
-    fn from(value: Result<ProjectsInfoResponse, ErrorResponse>) -> Self {
-        match value {
-            Ok(res) => Self::Stdout(format_projects_info(res.values)),
+            Ok(val) => Self::Stdout(format_projects_info(val)),
             Err(err) => err.into(),
         }
     }

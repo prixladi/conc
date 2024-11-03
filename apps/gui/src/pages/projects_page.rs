@@ -24,8 +24,8 @@ impl PageView for ProjectsPage {
 
     fn refresh(&mut self, data: PageData) -> Result<(), String> {
         match data.requester.get_projects_info() {
-            Ok(info) => {
-                self.projects = info.values;
+            Ok(projects) => {
+                self.projects = projects;
                 Ok(())
             }
             Err(err) => Err(err.to_string()),

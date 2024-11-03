@@ -99,8 +99,8 @@ impl App {
             UpdateAction::Task(task) => task,
             UpdateAction::Refresh => {
                 match self.requester.get_project_names() {
-                    Ok(info) => {
-                        self.project_names = info.values;
+                    Ok(names) => {
+                        self.project_names = names;
                         self.refresh_loop_error = None;
                     }
                     Err(err) => {

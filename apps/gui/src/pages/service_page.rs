@@ -37,7 +37,7 @@ impl PageView for ServicePage {
             .get_services_info(&self.project_name, &self.service_name)
             .map(|service| {
                 // TODO: Use some more efficient way to read just last n lines
-                let log_data = std::fs::read_to_string(Path::new(&service.value.logfile_path))
+                let log_data = std::fs::read_to_string(Path::new(&service.logfile_path))
                     .map(|text| {
                         text.lines()
                             .rev()
@@ -47,7 +47,7 @@ impl PageView for ServicePage {
                     })
                     .unwrap_or_default();
 
-                (service.value, log_data)
+                (service, log_data)
             });
 
         match result {

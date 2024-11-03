@@ -49,11 +49,11 @@ impl From<Vec<String>> for ErrorResponse {
 }
 
 #[derive(Debug)]
-pub struct NameListResponse {
+pub(crate) struct NameListResponse {
     pub values: Vec<String>,
 }
 
-pub trait Response: TryFrom<Vec<String>> {}
+pub(crate) trait Response: TryFrom<Vec<String>> {}
 
 impl TryFrom<Vec<String>> for NameListResponse {
     type Error = ();
@@ -72,7 +72,7 @@ impl TryFrom<Vec<String>> for NameListResponse {
 impl Response for NameListResponse {}
 
 #[derive(Debug)]
-pub struct ProjectSettingsResponse {
+pub(crate) struct ProjectSettingsResponse {
     pub value: String,
 }
 
@@ -92,7 +92,7 @@ impl TryFrom<Vec<String>> for ProjectSettingsResponse {
 impl Response for ProjectSettingsResponse {}
 
 #[derive(Debug)]
-pub struct ProjectsSettingsResponse {
+pub(crate) struct ProjectsSettingsResponse {
     pub values: Vec<(String, String)>,
 }
 
@@ -121,7 +121,7 @@ impl TryFrom<Vec<String>> for ProjectsSettingsResponse {
 impl Response for ProjectsSettingsResponse {}
 
 #[derive(Debug)]
-pub struct ServiceInfoResponse {
+pub(crate) struct ServiceInfoResponse {
     pub value: ServiceInfo,
 }
 
@@ -141,7 +141,7 @@ impl TryFrom<Vec<String>> for ServiceInfoResponse {
 impl Response for ServiceInfoResponse {}
 
 #[derive(Debug)]
-pub struct ProjectInfoResponse {
+pub(crate) struct ProjectInfoResponse {
     pub value: ProjectInfo,
 }
 
@@ -173,7 +173,7 @@ impl TryFrom<Vec<String>> for ProjectInfoResponse {
 impl Response for ProjectInfoResponse {}
 
 #[derive(Debug)]
-pub struct ProjectsInfoResponse {
+pub(crate) struct ProjectsInfoResponse {
     pub values: Vec<ProjectInfo>,
 }
 
@@ -212,7 +212,7 @@ impl TryFrom<Vec<String>> for ProjectsInfoResponse {
 impl Response for ProjectsInfoResponse {}
 
 #[derive(Debug)]
-pub struct NoContentResponse;
+pub(crate) struct NoContentResponse;
 
 impl TryFrom<Vec<String>> for NoContentResponse {
     type Error = ();
