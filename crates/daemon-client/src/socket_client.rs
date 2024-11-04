@@ -5,7 +5,7 @@ use std::os::unix::net::UnixStream;
 use std::str;
 use std::{fs, vec};
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct SocketClient {
     pub socket_path: String,
 }

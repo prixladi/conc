@@ -1,10 +1,12 @@
 use app_config::AppConfig;
 use clap::{Parser, Subcommand};
 use daemon_client::{Requester, SocketClient};
+use interactive::interact;
 use output::Output;
 use process::execute_tail;
 use project_settings::ProjectSettings;
 
+mod interactive;
 mod output;
 mod process;
 
@@ -18,6 +20,8 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
+    /// Opens a interactive mode
+    Interactive,
     /// Create new project or replaces existing
     Upsert {
         /// path to the settings file or directory containing the settings file (conc.json), defaults to current dir
@@ -108,6 +112,8 @@ fn run() -> Output {
 
     let requester = Requester::new(socket_client);
     match cli.command {
+        Command::Interactive => interact(requester).into(),
+
         Command::Projects => requester.get_project_names().into(),
 
         Command::Services { project } => requester.get_service_names(&project).into(),
@@ -175,32 +181,25 @@ fn run() -> Output {
             project,
             service,
             raw,
-        } => {
-            let res = match service {
-                Some(service) => requester
-                    .get_services_info(&project, &service)
-                    .map(|service| vec![service.logfile_path]),
-                None => requester.get_project_info(&project).map(|project| {
-                    project
-                        .services
-                        .into_iter()
-                        .map(|val| val.logfile_path)
-                        .collect()
-                }),
-            };
-
-            match res {
-                Ok(res) => {
-                    if raw {
-                        Output::Stdout(res.join(" "))
-                    } else {
-                        let error = execute_tail(res);
-                        // Should never reach here because execute replaces executable
-                        Output::Stderr(error.to_string())
-                    }
-                }
-                Err(err) => err.into(),
-            }
+        } => match service {
+            Some(service) => requester
+                .get_services_info(&project, &service)
+                .map(|service| vec![service.logfile_path]),
+            None => requester.get_project_info(&project).map(|project| {
+                project
+                    .services
+                    .into_iter()
+                    .map(|val| val.logfile_path)
+                    .collect()
+            }),
         }
+        .map(|res| match raw {
+            true => Output::Stdout(res.join(" ")),
+            false => {
+                let error = execute_tail(res);
+                Output::Stderr(error.to_string())
+            }
+        })
+        .unwrap_or_else(|err| err.into()),
     }
 }

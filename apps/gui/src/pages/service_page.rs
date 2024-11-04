@@ -6,7 +6,6 @@ use iced::{Alignment, Element, Length, Padding};
 
 use crate::components::{CopyToClipboardButton, PageTitle, Section, ServiceActionButtons};
 use crate::message::Message;
-use crate::utils::service_status_stringify;
 
 use super::{Page, PageData, PageView};
 
@@ -64,7 +63,6 @@ impl PageView for ServicePage {
         if self.service.is_none() {
             return view.into();
         };
-
         let (service, log_data) = self.service.as_ref().unwrap();
 
         let mut service_info = column![].width(Length::Fill).spacing(12);
@@ -75,8 +73,7 @@ impl PageView for ServicePage {
         let action_buttons = ServiceActionButtons::new(&self.project_name, service);
         let status_row = row![
             container(text("STATUS:").size(20)).padding(Padding::default().top(4)),
-            container(text(service_status_stringify(&service.status)).size(18))
-                .padding(Padding::default().top(4)),
+            container(text(service.status.to_string()).size(18)).padding(Padding::default().top(4)),
             action_buttons
         ]
         .spacing(12)

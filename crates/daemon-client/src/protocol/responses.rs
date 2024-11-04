@@ -1,4 +1,8 @@
-use std::{convert::From, convert::TryFrom, vec};
+use std::{
+    convert::{From, TryFrom},
+    fmt::Display,
+    vec,
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ErrorResponse {
@@ -232,6 +236,18 @@ pub enum ServiceStatus {
     IDLE,
     RUNNING,
     STOPPED,
+}
+
+impl Display for ServiceStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            ServiceStatus::IDLE => "Idle",
+            ServiceStatus::RUNNING => "Running",
+            ServiceStatus::STOPPED => "Stopped",
+        };
+
+        write!(f, "{}", str)
+    }
 }
 
 impl TryFrom<&str> for ServiceStatus {
