@@ -8,7 +8,6 @@ use crate::components::{
     ServiceActionButtons,
 };
 use crate::message::Message;
-use crate::utils::{prettify_json, service_status_stringify};
 
 use super::{Page, PageData, PageView};
 
@@ -61,11 +60,11 @@ impl PageView for ProjectPage {
         let mut actions = vec![];
         for service in project.services.iter() {
             names.push(service.name.clone());
-            statuses.push(service_status_stringify(&service.status));
+            statuses.push(service.status.to_string());
             actions.push(ServiceActionButtons::new(&project.name, service).into());
         }
 
-        let pretty_settings = prettify_json::<ProjectSettings>(settings).unwrap_or_default();
+        let pretty_settings = ProjectSettings::prettify_json(settings).unwrap_or_default();
         let json_view = scrollable(text(pretty_settings.clone()).width(Length::Fill));
 
         let copy_button =

@@ -1,7 +1,7 @@
 use app_config::AppConfigError;
 use daemon_client::{ErrorResponse, ProjectInfo, ServiceInfo, ServiceStatus};
 use project_settings::ProjectSettingsError;
-use std::vec;
+use std::{error::Error, vec};
 
 pub enum Output {
     Stdout(String),
@@ -14,6 +14,15 @@ impl Output {
             "Cannot connect to the Conc daemon at unix://{}. Daemon is not running or is using different work directory.",
             socket_path
         ))
+    }
+}
+
+impl From<Result<(), Box<dyn Error>>> for Output {
+    fn from(value: Result<(), Box<dyn Error>>) -> Self {
+        match value {
+            Ok(_) => Self::Stdout(String::new()),
+            Err(err) => Self::Stderr(err.to_string()),
+        }
     }
 }
 

@@ -1,6 +1,7 @@
 use chrono::{DateTime, Local};
 use iced::{
-    widget::{container, row, text}, Alignment, Background, Border, Element, Length, Shadow, Theme
+    widget::{container, row, text},
+    Alignment, Background, Border, Element, Length, Shadow, Theme,
 };
 
 use crate::message::Message;

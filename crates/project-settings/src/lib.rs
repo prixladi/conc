@@ -85,6 +85,12 @@ impl TryFrom<&ProjectSettings> for String {
 }
 
 impl ProjectSettings {
+    pub fn prettify_json(data: &str) -> Result<String, serde_json::Error> {
+        serde_json::from_str::<Self>(data).and_then(|d| serde_json::to_string_pretty(&d))
+    }
+}
+
+impl ProjectSettings {
     pub fn find_parse_and_populate(pwd: Option<String>) -> Result<Self, ProjectSettingsError> {
         let (path, json) = resolve_settings_path_and_json(pwd)?;
         let mut settings = try_parse(json.as_str())?;

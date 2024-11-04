@@ -10,3 +10,4 @@ This example requires having the application installed and the **daemon** runnin
 - Run `concc logs basic-example` to `tail` logs of all the services in the basic-example project
 - Run `concc logs basic-example dir -r` to show the raw path to the logfile of dir service that you can open in editor/viewer of your choice.
 - Run `concg` to open the **gui**, it should be relatively intuitive after **cli** introduction.
+- Run `concc interactive` to open the **interactive cli**, it should also be relatively intuitive.

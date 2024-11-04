@@ -12,3 +12,7 @@ thiserror = "1.0.64"
 daemon-client.workspace = true
 project-settings.workspace = true
 app-config.workspace = true
+ratatui = "0.29.0"
+crossterm = "0.28.1"
+color-eyre = "0.6.3"
+strum = "0.26.3"
