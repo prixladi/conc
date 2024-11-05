@@ -37,7 +37,7 @@ There is currently no distribution of binaries so you need to compile the projec
 
 ### Unix like
 
-Run `make install` to install the **daemon**, the **cli**, and the **gui**, and then run `sudo systemctl start concd` to start the **daemon**. This will install `concd` as a system service and `concc` and `concg` as a binary to the `/usr/local/bin` directory, which can be used from the command line `concc -h`, which prints help info of the **cli** or `concg`, which starts the **gui**.
+Run `make install` to install the **daemon**, the **cli**, and the **gui**, and then run `systemctl --user start concd` to start the **daemon**. This will install `concd` as a systemd user service service and `concc` and `concg` as a binary to the `/usr/local/bin` directory, which can be used from the command line `concc -h`, which prints help info of the **cli** or `concg`, which starts the **gui**.
 
 If you want to install just individual parts, you can run `make install_{daemon/cli/gui}`, note that **daemon** and **cli** are required for conc to work properly, **gui** is optional.
 

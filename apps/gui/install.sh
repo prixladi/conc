@@ -1,8 +1,13 @@
 #! /bin/env bash
 
-BIN=/usr/local/bin/concg
+BIN=$PREFIX/concg
 
-echo "[GUI] Installing into ${BIN}..."
+if [[ -z "${PREFIX}" ]]; then
+    echo "PREFIX environment must be set"
+    return 1
+fi
+
+echo "[GUI] Installing into ${BIN} ..."
 
 sudo cp -f ../../target/release/gui "$BIN"
 

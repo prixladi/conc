@@ -1,5 +1,15 @@
 default:
 
+ifndef PREFIX
+PREFIX = /usr/local/bin
+endif
+ifndef SYSTEMD_PREFIX
+SYSTEMD_PREFIX = $(HOME)/.config/systemd/user
+endif
+
+export PREFIX
+export SYSTEMD_PREFIX
+
 install: install_daemon install_cli install_gui
 
 install_daemon: 

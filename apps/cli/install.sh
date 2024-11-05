@@ -1,8 +1,13 @@
 #! /bin/env bash
 
-BIN=/usr/local/bin/concc
+BIN=$PREFIX/concc
 
-echo "[CLI] Installing into ${BIN}..."
+if [[ -z "${PREFIX}" ]]; then
+    echo "PREFIX environment must be set"
+    return 1
+fi
+
+echo "[CLI] Installing into ${BIN} ..."
 
 sudo cp -f ../../target/release/cli "$BIN"
 
