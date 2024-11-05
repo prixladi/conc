@@ -1,6 +1,8 @@
 #ifndef DRIVER__H
 #define DRIVER__H
 
+#include <time.h>
+
 #include "settings.h"
 
 enum d_result
@@ -23,6 +25,7 @@ struct d_service_info
     enum d_service_status status;
     char *logfile_path;
     int pid;
+    time_t start_time;
 };
 
 enum d_result driver_mount(void);

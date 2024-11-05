@@ -30,6 +30,7 @@ struct service_info
     enum service_status status;
     char *logfile_path;
     int pid;
+    time_t start_time;
 };
 
 struct project_info

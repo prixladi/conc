@@ -23,4 +23,12 @@ impl ProjectInfo {
             .iter()
             .all(|service| service.status == ServiceStatus::RUNNING)
     }
+
+    pub fn newest_running_service_started_at(&self) -> Option<u64> {
+        self.services
+            .iter()
+            .filter(|service| service.status == ServiceStatus::RUNNING)
+            .max_by(|s1, s2| s1.start_time.cmp(&s2.start_time))
+            .map(|service| service.start_time)
+    }
 }

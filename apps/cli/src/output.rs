@@ -3,6 +3,8 @@ use daemon_client::{ErrorResponse, ProjectInfo, ServiceInfo, ServiceStatus};
 use project_settings::ProjectSettingsError;
 use std::{error::Error, vec};
 
+use crate::utils::start_time_to_age;
+
 pub enum Output {
     Stdout(String),
     Stderr(String),
@@ -129,17 +131,25 @@ fn format_services_info(services: Vec<ServiceInfo>) -> String {
     let mut service_names_column = vec![String::from("NAME")];
     let mut service_statuses_column = vec![String::from("STATUS")];
     let mut service_pids_column = vec![String::from("PID")];
+    let mut service_ages_column = vec![String::from("AGE")];
 
     for service in services {
         service_names_column.push(service.name);
         service_statuses_column.push(format_service_status(service.status));
         service_pids_column.push(service.pid.to_string());
+
+        let age = match service.status {
+            ServiceStatus::RUNNING => start_time_to_age(service.start_time),
+            _ => String::new(),
+        };
+        service_ages_column.push(age);
     }
 
     format_table(vec![
         service_names_column,
         service_statuses_column,
         service_pids_column,
+        service_ages_column,
     ])
 }
 

@@ -15,7 +15,11 @@ pub(super) fn open_log_file_in_less(
 ) -> std::io::Result<()> {
     stdout().execute(LeaveAlternateScreen)?;
     disable_raw_mode()?;
-    Command::new("less").arg("-R").arg("+GF").arg(path).status()?;
+    Command::new("less")
+        .arg("-R")
+        .arg("+GF")
+        .arg(path)
+        .status()?;
 
     stdout().execute(EnterAlternateScreen)?;
     enable_raw_mode()?;

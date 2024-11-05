@@ -5,9 +5,12 @@ use daemon_client::{ProjectInfo, Requester, ServiceStatus};
 use project_settings::ProjectSettings;
 use ratatui::{buffer::Buffer, layout::Rect, style::Stylize, text::Span, widgets::Row};
 
-use crate::interactive::{
-    components::{ActiveTable, CommonBlock},
-    Action, ActionResult,
+use crate::{
+    interactive::{
+        components::{ActiveTable, CommonBlock},
+        Action, ActionResult,
+    },
+    utils::start_time_to_age,
 };
 
 use super::{Page, PageView};
@@ -22,9 +25,10 @@ pub(super) struct ProjectPage {
 impl ProjectPage {
     pub(super) fn new(project_name: String) -> Self {
         let table = ActiveTable::new()
-            .ad_header(("NAME", 50))
-            .ad_header(("STATUS", 50))
-            .ad_header(("PID", 15));
+            .ad_header(("NAME", 25))
+            .ad_header(("STATUS", 25))
+            .ad_header(("PID", 25))
+            .ad_header(("AGE", 25));
 
         ProjectPage {
             project_name,
@@ -109,8 +113,13 @@ impl PageView for ProjectPage {
                 let status: Span = service.status.to_string().into();
                 let name: Span = service.name.clone().into();
                 let pid: Span = service.pid.to_string().into();
+                let age: Span = match service.status {
+                    ServiceStatus::RUNNING => start_time_to_age(service.start_time),
+                    _ => String::new(),
+                }
+                .into();
 
-                let mut row = Row::new(vec![name, status, pid]);
+                let mut row = Row::new(vec![name, status, pid, age]);
                 if service.status == ServiceStatus::RUNNING {
                     row = row.green();
                 }

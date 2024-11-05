@@ -4,9 +4,12 @@ use crossterm::event::{KeyCode, KeyEvent};
 use daemon_client::{ProjectInfo, Requester};
 use ratatui::{buffer::Buffer, layout::Rect, style::Stylize, text::Span, widgets::Row};
 
-use crate::interactive::{
-    components::{ActiveTable, CommonBlock},
-    Action, ActionResult,
+use crate::{
+    interactive::{
+        components::{ActiveTable, CommonBlock},
+        Action, ActionResult,
+    },
+    utils::start_time_to_age,
 };
 
 use super::{Page, PageView};
@@ -20,8 +23,9 @@ pub(super) struct ProjectsPage {
 impl ProjectsPage {
     pub(super) fn new() -> Self {
         let table = ActiveTable::new()
-            .ad_header(("NAME", 50))
-            .ad_header(("STATUS", 50));
+            .ad_header(("NAME", 33))
+            .ad_header(("STATUS", 33))
+            .ad_header(("AGE", 33));
 
         ProjectsPage {
             projects: vec![],
@@ -78,10 +82,14 @@ impl PageView for ProjectsPage {
                     project.service_count()
                 )
                 .into();
-
                 let name: Span = project.name.clone().into();
+                let age = match project.newest_running_service_started_at() {
+                    Some(start_time) => start_time_to_age(start_time),
+                    None => String::new(),
+                }
+                .into();
 
-                let mut row = Row::new(vec![name, status]);
+                let mut row = Row::new(vec![name, status, age]);
                 if project.all_services_running() && project.service_count() > 0 {
                     row = row.green();
                 } else if project.any_service_running() {

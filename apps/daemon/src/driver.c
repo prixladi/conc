@@ -48,7 +48,7 @@ static char *get_service_logfile_path(const char *proj_name, const char *serv_na
 static int remove_file_f(char *path);
 static int remove_dir_f(char *path);
 
-static int get_service_pid(const char *proj_name, const char *serv_name);
+static struct service_process_info get_service_info(const char *proj_name, const char *serv_name);
 static bool try_get_pid_info(int pid, struct stat *sts);
 static int kill_pid(int pid);
 
@@ -160,12 +160,13 @@ d_project_remove(const struct project_settings settings)
 enum d_result
 d_service_info_get(const char *proj_name, const char *serv_name, struct d_service_info *info)
 {
-    int running_pid = get_service_pid(proj_name, serv_name);
+    struct service_process_info process_info = get_service_info(proj_name, serv_name);
 
-    info->status = running_pid > 0 ? D_RUNNING : running_pid == 0 ? D_STOPPED : D_NONE;
+    info->status = process_info.pid > 0 ? D_RUNNING : process_info.pid == 0 ? D_STOPPED : D_NONE;
+    info->pid = process_info.pid;
+    info->start_time = process_info.c_time;
     scoped char *log_path = get_service_logfile_path(proj_name, serv_name);
     info->logfile_path = realpath(log_path, NULL);
-    info->pid = running_pid;
 
     return D_OK;
 }
@@ -173,8 +174,8 @@ d_service_info_get(const char *proj_name, const char *serv_name, struct d_servic
 enum d_result
 d_service_start(const struct project_settings project, const struct service_settings service_settings)
 {
-    int running_pid = get_service_pid(project.name, service_settings.name);
-    if (running_pid > 0)
+    struct service_process_info process_info = get_service_info(project.name, service_settings.name);
+    if (process_info.pid > 0)
         return D_NO_ACTION;
 
     scoped char *logfile_path = get_service_logfile_path(project.name, service_settings.name);
@@ -202,15 +203,15 @@ d_service_start(const struct project_settings project, const struct service_sett
 enum d_result
 d_service_stop(const char *proj_name, const struct service_settings service_settings)
 {
-    int running_pid = get_service_pid(proj_name, service_settings.name);
-    if (running_pid <= 0)
+    struct service_process_info process_info = get_service_info(proj_name, service_settings.name);
+    if (process_info.pid <= 0)
         return D_NO_ACTION;
 
-    log_debug("Stopping process '%s/%s - %d'\n", proj_name, service_settings.name, running_pid);
+    log_debug("Stopping process '%s/%s - %d'\n", proj_name, service_settings.name, process_info.pid);
 
-    if (kill_pid(running_pid) > 0)
+    if (kill_pid(process_info.pid) > 0)
     {
-        log_error("Unable to kill PID '%d'\n", running_pid);
+        log_error("Unable to kill PID '%d'\n", process_info.pid);
         return D_PROC_ERROR;
     }
 
@@ -225,18 +226,22 @@ d_service_info_free(struct d_service_info info)
     info.logfile_path = NULL;
 }
 
-static int
-get_service_pid(const char *proj_name, const char *serv_name)
+static struct service_process_info
+get_service_info(const char *proj_name, const char *serv_name)
 {
     struct service_process_info info = { 0 };
     if (try_parse_service_meta_file(proj_name, serv_name, &info) == false)
-        return -1;
+    {
+        info.pid = -1;
+        info.c_time = 0;
+        return info;
+    }
 
     struct stat sts;
     if (try_get_pid_info(info.pid, &sts) == false || info.c_time != sts.st_ctime)
-        return 0;
+        info.pid = 0;
 
-    return info.pid;
+    return info;
 }
 
 static int

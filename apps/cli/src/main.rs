@@ -9,6 +9,7 @@ use project_settings::ProjectSettings;
 mod interactive;
 mod output;
 mod process;
+mod utils;
 
 /// Simple process manager
 #[derive(Debug, Parser)]

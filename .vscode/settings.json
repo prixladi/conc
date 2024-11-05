@@ -37,6 +37,7 @@
     "tuple": "c",
     "type_traits": "c",
     "utility": "c",
-    "thread": "c"
+    "thread": "c",
+    "time.h": "c"
   }
 }

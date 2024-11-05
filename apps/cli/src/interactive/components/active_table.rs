@@ -65,7 +65,7 @@ impl ActiveTable {
         let widths = self
             .headers
             .iter()
-            .map(|(_, width)| Constraint::Length(*width));
+            .map(|(_, width)| Constraint::Percentage(*width));
 
         let table = Table::new(rows, widths)
             .header(headers)

@@ -640,12 +640,11 @@ service_info_create(const char *proj_name, const char *serv_name)
         break;
     }
 
-    struct service_info info = {
-        .name = str_dup(serv_name),
-        .status = status,
-        .logfile_path = logfile_path,
-        .pid = d_info.pid,
-    };
+    struct service_info info = { .name = str_dup(serv_name),
+                                 .status = status,
+                                 .logfile_path = logfile_path,
+                                 .pid = d_info.pid,
+                                 .start_time = d_info.start_time };
 
     d_service_info_free(d_info);
 

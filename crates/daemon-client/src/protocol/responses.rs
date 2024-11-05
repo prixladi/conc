@@ -273,8 +273,9 @@ pub struct ProjectInfo {
 pub struct ServiceInfo {
     pub name: String,
     pub status: ServiceStatus,
-    pub logfile_path: String,
     pub pid: i32,
+    pub start_time: u64,
+    pub logfile_path: String,
 }
 
 impl TryFrom<&str> for ServiceInfo {
@@ -282,23 +283,25 @@ impl TryFrom<&str> for ServiceInfo {
 
     fn try_from(data: &str) -> Result<Self, Self::Error> {
         let parts: Vec<&str> = data.split(" ").collect();
-        if parts.len() < 4 {
+        if parts.len() < 5 {
             return Err(());
         }
 
+        let name = String::from(parts[0]);
         let status = ServiceStatus::try_from(parts[1])?;
         let pid = parts[2].parse::<i32>().map_err(|_| ())?;
-
-        let logfile_path = match parts[3] {
+        let start_time = parts[3].parse::<u64>().map_err(|_| ())?;
+        let logfile_path = String::from(match parts[4] {
             "-" => "/dev/null",
-            _ => parts[3],
-        };
+            _ => parts[4],
+        });
 
         Ok(Self {
-            name: String::from(parts[0]),
+            name,
             status,
-            logfile_path: String::from(logfile_path),
             pid,
+            start_time,
+            logfile_path,
         })
     }
 }
