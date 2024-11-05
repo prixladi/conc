@@ -47,6 +47,10 @@ impl PageView for ProjectsPage {
                 selected_project.map(|project| requester.stop_project(&project.name).unwrap());
                 Ok(Action::None)
             }
+            KeyCode::Char('r') => {
+                selected_project.map(|project| requester.restart_project(&project.name).unwrap());
+                Ok(Action::None)
+            }
             KeyCode::Enter | KeyCode::Right => match selected_project {
                 Some(project) => Ok(Action::GotoPage(Page::Project(project.name))),
                 None => Ok(Action::None),
@@ -69,6 +73,7 @@ impl PageView for ProjectsPage {
             .add_instruction(("Open project", "enter"))
             .add_instruction(("Start project", "s"))
             .add_instruction(("Stop project", "d"))
+            .add_instruction(("Restart project", "r"))
             .add_instruction(("Quit", "q"));
 
         let rows = self

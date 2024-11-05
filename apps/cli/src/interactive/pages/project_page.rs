@@ -59,6 +59,12 @@ impl PageView for ProjectPage {
                 }
                 Ok(Action::None)
             }
+            KeyCode::Char('r') => {
+                if let Some(service) = selected_service {
+                    requester.restart_service(&self.project_name, &service.name)?;
+                }
+                Ok(Action::None)
+            }
             KeyCode::Char('o') => {
                 let settings = requester.get_project_settings(&self.project_name)?;
                 Ok(Action::OpenString(ProjectSettings::prettify_json(
@@ -100,6 +106,7 @@ impl PageView for ProjectPage {
         let block = CommonBlock::new(format!("Project: {}", project.name))
             .add_instruction(("Start service", "s"))
             .add_instruction(("Stop service", "d"))
+            .add_instruction(("Restart service", "r"))
             .add_instruction(("Service logs", "l"))
             .add_instruction(("Project settings", "o"))
             .add_instruction(("Back", "b"))
