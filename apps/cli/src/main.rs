@@ -88,7 +88,9 @@ enum Command {
 fn main() {
     match run() {
         Output::Stdout(res) => {
-            println!("{}", res);
+            if !res.is_empty() {
+                println!("{}", res);
+            }
             std::process::exit(0);
         }
         Output::Stderr(res) => {
