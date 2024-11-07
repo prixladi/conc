@@ -4,7 +4,7 @@ BIN=$PREFIX/concc
 
 if [[ -z "${PREFIX}" ]]; then
     echo "PREFIX environment must be set"
-    return 1
+    exit 1
 fi
 
 echo "[CLI] Installing into ${BIN} ..."

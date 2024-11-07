@@ -4,12 +4,12 @@ BIN=$PREFIX/concd
 
 if [[ -z "${PREFIX}" ]]; then
     echo "PREFIX environment must be set"
-    return 1
+    exit 1
 fi
 
 if [[ -z "${SYSTEMD_PREFIX}" ]]; then
     echo "SYSTEMD_PREFIX environment must be set"
-    return 1
+    exit 1
 fi
 
 echo "[Daemon] Installing into ${BIN} ..."
