@@ -39,15 +39,10 @@ int _vec_remove(void *arr, size_t pos, void *dest);
 #define vec_push(arr, x) \
     do \
     { \
-        arr = _vec_push(arr, &x); \
-    } while (0)
-
-#define vec_push_rval(arr, x) \
-    do \
-    { \
         __auto_type temp = x; \
         arr = _vec_push(arr, &temp); \
     } while (0)
+
 #define vec_pop(arr, xptr) _vec_pop(arr, xptr)
 #define vec_remove(arr, pos, xptr) _vec_remove(arr, pos, xptr)
 

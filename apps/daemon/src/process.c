@@ -88,7 +88,7 @@ pd_create(const struct project_settings project, const struct service_settings s
 {
     char **command = vec_create(char *);
     for (size_t i = 0; i < vec_length(service.command); i++)
-        vec_push_rval(command, str_dup(service.command[i]));
+        vec_push(command, str_dup(service.command[i]));
     vec_push(command, command_terminate);
 
     char ***env = vec_create(char **);

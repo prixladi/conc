@@ -133,7 +133,7 @@ projects_settings_get(void)
     {
         struct project project = store.projects[i];
         pthread_mutex_lock(project.lock);
-        vec_push_rval(copy, project_settings_dup(project.settings));
+        vec_push(copy, project_settings_dup(project.settings));
         pthread_mutex_unlock(project.lock);
     }
 
@@ -153,7 +153,7 @@ projects_info_get(void)
     {
         struct project project = store.projects[i];
         pthread_mutex_lock(project.lock);
-        vec_push_rval(infos, project_info_create(project));
+        vec_push(infos, project_info_create(project));
         pthread_mutex_unlock(project.lock);
     }
 

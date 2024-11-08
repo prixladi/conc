@@ -36,13 +36,13 @@ test__vec_push()
 {
     int *vec = vec_create(int);
 
-    vec_push_rval(vec, 1);
-    vec_push_rval(vec, 2);
-    vec_push_rval(vec, 3);
-    vec_push_rval(vec, 4);
-    vec_push_rval(vec, 5);
-    vec_push_rval(vec, 6);
-    vec_push_rval(vec, 7);
+    vec_push(vec, 1);
+    vec_push(vec, 2);
+    vec_push(vec, 3);
+    vec_push(vec, 4);
+    vec_push(vec, 5);
+    vec_push(vec, 6);
+    vec_push(vec, 7);
 
     expect(vec_length(vec) == 7, "Expected vector of length 7");
     expect(vec_capacity(vec) >= 7, "Expected vector of capacity greater or equal to 7");
@@ -56,10 +56,10 @@ test__vec_push_preallocated()
 {
     int *vec = vec_create_prealloc(int, 8);
 
-    vec_push_rval(vec, 1);
-    vec_push_rval(vec, 2);
-    vec_push_rval(vec, 3);
-    vec_push_rval(vec, 4);
+    vec_push(vec, 1);
+    vec_push(vec, 2);
+    vec_push(vec, 3);
+    vec_push(vec, 4);
 
     expect(vec_length(vec) == 4, "Expected vector of length 4");
     expect(vec_capacity(vec) == 8, "Expected preallocated vector capacity");
@@ -73,13 +73,13 @@ test__vec_access()
 {
     int *vec = vec_create(int);
 
-    vec_push_rval(vec, 1);
-    vec_push_rval(vec, 2);
-    vec_push_rval(vec, 3);
-    vec_push_rval(vec, 4);
-    vec_push_rval(vec, 5);
-    vec_push_rval(vec, 6);
-    vec_push_rval(vec, 7);
+    vec_push(vec, 1);
+    vec_push(vec, 2);
+    vec_push(vec, 3);
+    vec_push(vec, 4);
+    vec_push(vec, 5);
+    vec_push(vec, 6);
+    vec_push(vec, 7);
 
     expect(vec[2] == 3, "Expected third element to be 3");
     expect(vec[5] == 6, "Expected sixth element to be 6");
@@ -93,13 +93,13 @@ test__vec_pop()
 {
     int *vec = vec_create(int);
 
-    vec_push_rval(vec, 1);
-    vec_push_rval(vec, 2);
-    vec_push_rval(vec, 3);
-    vec_push_rval(vec, 4);
-    vec_push_rval(vec, 5);
-    vec_push_rval(vec, 6);
-    vec_push_rval(vec, 7);
+    vec_push(vec, 1);
+    vec_push(vec, 2);
+    vec_push(vec, 3);
+    vec_push(vec, 4);
+    vec_push(vec, 5);
+    vec_push(vec, 6);
+    vec_push(vec, 7);
 
     int out = 0;
     vec_pop(vec, &out);
@@ -126,13 +126,13 @@ test__vec_remove()
 {
     int *vec = vec_create(int);
 
-    vec_push_rval(vec, 1);
-    vec_push_rval(vec, 2);
-    vec_push_rval(vec, 3);
-    vec_push_rval(vec, 4);
-    vec_push_rval(vec, 5);
-    vec_push_rval(vec, 6);
-    vec_push_rval(vec, 7);
+    vec_push(vec, 1);
+    vec_push(vec, 2);
+    vec_push(vec, 3);
+    vec_push(vec, 4);
+    vec_push(vec, 5);
+    vec_push(vec, 6);
+    vec_push(vec, 7);
 
     int out = 0;
     vec_remove(vec, 1, &out);
@@ -159,13 +159,13 @@ test__vec_dup()
 {
     int *vec = vec_create(int);
 
-    vec_push_rval(vec, 1);
-    vec_push_rval(vec, 2);
-    vec_push_rval(vec, 3);
-    vec_push_rval(vec, 4);
-    vec_push_rval(vec, 5);
-    vec_push_rval(vec, 6);
-    vec_push_rval(vec, 7);
+    vec_push(vec, 1);
+    vec_push(vec, 2);
+    vec_push(vec, 3);
+    vec_push(vec, 4);
+    vec_push(vec, 5);
+    vec_push(vec, 6);
+    vec_push(vec, 7);
 
     int *vec2 = vec_dup(vec);
 
@@ -173,7 +173,7 @@ test__vec_dup()
     expect(vec_capacity(vec) == vec_capacity(vec2), "Expected duplicated vectors to have the same capacity");
     expect(vec_stride(vec) == vec_stride(vec2), "Expected duplicated vectors to have the same stride");
 
-    vec_push_rval(vec2, 8);
+    vec_push(vec2, 8);
 
     expect(vec_length(vec) == 7, "Expected original vector length be still the same after push to duplicate");
     expect(vec_length(vec2) == 8, "Expected duplicate vector to have length 8");
@@ -195,13 +195,13 @@ test__vec_for_each()
 {
     int *vec = vec_create(int);
 
-    vec_push_rval(vec, 1);
-    vec_push_rval(vec, 2);
-    vec_push_rval(vec, 3);
-    vec_push_rval(vec, 4);
-    vec_push_rval(vec, 5);
-    vec_push_rval(vec, 6);
-    vec_push_rval(vec, 7);
+    vec_push(vec, 1);
+    vec_push(vec, 2);
+    vec_push(vec, 3);
+    vec_push(vec, 4);
+    vec_push(vec, 5);
+    vec_push(vec, 6);
+    vec_push(vec, 7);
 
     vec_for_each(vec, test__vec_for_each_callback);
 
@@ -216,13 +216,13 @@ test__vec_methods_with_pointers()
 {
     int **vec = vec_create(char *);
 
-    vec_push_rval(vec, alloc_int(1));
-    vec_push_rval(vec, alloc_int(2));
-    vec_push_rval(vec, alloc_int(3));
-    vec_push_rval(vec, alloc_int(4));
-    vec_push_rval(vec, alloc_int(5));
-    vec_push_rval(vec, alloc_int(6));
-    vec_push_rval(vec, alloc_int(7));
+    vec_push(vec, alloc_int(1));
+    vec_push(vec, alloc_int(2));
+    vec_push(vec, alloc_int(3));
+    vec_push(vec, alloc_int(4));
+    vec_push(vec, alloc_int(5));
+    vec_push(vec, alloc_int(6));
+    vec_push(vec, alloc_int(7));
 
     expect(vec_length(vec) == 7, "Expected vector of length 7");
     expect(*vec[2] == 3, "Expected correct second element");
