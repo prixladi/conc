@@ -6,24 +6,24 @@ HEADERS = src/external/*.h src/utils/*.h src/*.h
 .PHONY: build install run
 
 setup: 
-	mkdir run && mkdir build
+	mkdir -p run && mkdir -p build
 
 build: FLAGS += -O2
-build: 
+build: setup
 	$(CC) $(FLAGS) $(SOURCES) -o ./build/concd
 
 run: build
 	./build/concd -w ./run
 
 build_debug_address: FLAGS += -fsanitize=undefined,address -g -D __DEBUG__
-build_debug_address: 
+build_debug_address: setup
 	$(CC) $(FLAGS) $(SOURCES) -o ./build/concd-debug
 
 run_debug_address: build_debug_address
 	./build/concd-debug -w ./run
 
 build_debug_thread: FLAGS += -fsanitize=undefined,thread -g -D __DEBUG__
-build_debug_thread: 
+build_debug_thread: setup
 	$(CC) $(FLAGS) $(SOURCES) -o ./build/concd-debug
 
 run_debug_thread: build_debug_thread
