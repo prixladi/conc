@@ -1,8 +1,11 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "../expect.h"
 
 #include "../../src/utils/vector.h"
+
+static int *alloc_int(int i);
 
 char *
 test__vec_create()
@@ -29,7 +32,7 @@ test__vec_create_prealloc()
 }
 
 char *
-test__vec_push_basic()
+test__vec_push()
 {
     int *vec = vec_create(int);
 
@@ -49,7 +52,7 @@ test__vec_push_basic()
 }
 
 char *
-test__vec_push_basic_preallocated()
+test__vec_push_preallocated()
 {
     int *vec = vec_create_prealloc(int, 8);
 
@@ -60,6 +63,26 @@ test__vec_push_basic_preallocated()
 
     expect(vec_length(vec) == 4, "Expected vector of length 4");
     expect(vec_capacity(vec) == 8, "Expected preallocated vector capacity");
+
+    vec_free(vec);
+    return NULL;
+}
+
+char *
+test__vec_access()
+{
+    int *vec = vec_create(int);
+
+    vec_push_rval(vec, 1);
+    vec_push_rval(vec, 2);
+    vec_push_rval(vec, 3);
+    vec_push_rval(vec, 4);
+    vec_push_rval(vec, 5);
+    vec_push_rval(vec, 6);
+    vec_push_rval(vec, 7);
+
+    expect(vec[2] == 3, "Expected third element to be 3");
+    expect(vec[5] == 6, "Expected sixth element to be 6");
 
     vec_free(vec);
     return NULL;
@@ -150,6 +173,11 @@ test__vec_dup()
     expect(vec_capacity(vec) == vec_capacity(vec2), "Expected duplicated vectors to have the same capacity");
     expect(vec_stride(vec) == vec_stride(vec2), "Expected duplicated vectors to have the same stride");
 
+    vec_push_rval(vec2, 8);
+
+    expect(vec_length(vec) == 7, "Expected original vector length be still the same after push to duplicate");
+    expect(vec_length(vec2) == 8, "Expected duplicate vector to have length 8");
+
     vec_free(vec);
     vec_free(vec2);
     return NULL;
@@ -181,4 +209,122 @@ test__vec_for_each()
 
     vec_free(vec);
     return NULL;
+}
+
+char *
+test__vec_methods_with_pointers()
+{
+    int **vec = vec_create(char *);
+
+    vec_push_rval(vec, alloc_int(1));
+    vec_push_rval(vec, alloc_int(2));
+    vec_push_rval(vec, alloc_int(3));
+    vec_push_rval(vec, alloc_int(4));
+    vec_push_rval(vec, alloc_int(5));
+    vec_push_rval(vec, alloc_int(6));
+    vec_push_rval(vec, alloc_int(7));
+
+    expect(vec_length(vec) == 7, "Expected vector of length 7");
+    expect(*vec[2] == 3, "Expected correct second element");
+
+    int *out = NULL;
+
+    vec_pop(vec, &out);
+
+    expect(vec_length(vec) == 6, "Expected vector of length 6");
+    expect(*out == 7, "Expected correct popped element");
+
+    free(out);
+
+    vec_remove(vec, 3, &out);
+
+    expect(vec_length(vec) == 5, "Expected vector of length 5");
+    expect(*out == 4, "Expected correct removed element");
+
+    free(out);
+
+    vec_for_each(vec, free);
+    vec_free(vec);
+    return NULL;
+}
+
+struct test_vector_struct
+{
+    char *name;
+    int num;
+};
+
+char *
+test__vec_methods_with_struct()
+{
+    struct test_vector_struct *vec = vec_create(struct test_vector_struct);
+
+    struct test_vector_struct first = { .name = "first", .num = 1 };
+    struct test_vector_struct second = { .name = "second", .num = 2 };
+    struct test_vector_struct third = { .name = "third", .num = 3 };
+    struct test_vector_struct fourth = { .name = "fourth", .num = 4 };
+    struct test_vector_struct fifth = { .name = "fifth", .num = 5 };
+
+    vec_push(vec, first);
+    vec_push(vec, second);
+    vec_push(vec, third);
+    vec_push(vec, fourth);
+    vec_push(vec, fifth);
+
+    expect(vec_length(vec) == 5, "Expected vector of length 5");
+
+    struct test_vector_struct out;
+
+    vec_pop(vec, &out);
+
+    expect(out.num == 5, "Expected correct popped struct");
+
+    vec_remove(vec, 1, &out);
+
+    expect(out.num == 2, "Expected correct removed struct");
+
+    vec_free(vec);
+    return NULL;
+}
+
+
+char *
+test__vec_methods_with_structs()
+{
+    struct test_vector_struct *vec = vec_create(struct test_vector_struct);
+
+    struct test_vector_struct first = { .name = "first", .num = 1 };
+    struct test_vector_struct second = { .name = "second", .num = 2 };
+    struct test_vector_struct third = { .name = "third", .num = 3 };
+    struct test_vector_struct fourth = { .name = "fourth", .num = 4 };
+    struct test_vector_struct fifth = { .name = "fifth", .num = 5 };
+
+    vec_push(vec, first);
+    vec_push(vec, second);
+    vec_push(vec, third);
+    vec_push(vec, fourth);
+    vec_push(vec, fifth);
+
+    expect(vec_length(vec) == 5, "Expected vector of length 5");
+
+    struct test_vector_struct out;
+
+    vec_pop(vec, &out);
+
+    expect(out.num == 5, "Expected correct popped struct");
+
+    vec_remove(vec, 1, &out);
+
+    expect(out.num == 2, "Expected correct removed struct");
+
+    vec_free(vec);
+    return NULL;
+}
+
+static int *
+alloc_int(int i)
+{
+    int *val = malloc(sizeof(int));
+    *val = i;
+    return val;
 }
