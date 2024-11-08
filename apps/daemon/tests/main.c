@@ -2,6 +2,7 @@
 
 #include "utils/vector-tests.h"
 #include "utils/string-tests.h"
+#include "utils/fs-tests.h"
 
 #define run(test, name) \
     do \
@@ -42,6 +43,13 @@ main()
     run(test__str_printf__without_formatting, "str printf without formatting");
     run(test__int_to_str, "int to str");
     run(test__int_to_str_negative, "int to str negative");
+    printf("\n");
+
+    printf("Fs tests:\n");
+    run(test__is_path_absolute__root, "is path absolute (root)");
+    run(test__is_path_absolute__usr_dir, "is path absolute (usr dir)");
+    run(test__is_path_absolute__relative, "is path absolute (relative)");
+    run(test__is_path_absolute__relative_with_dot, "is path absolute (relative with dot)");
 
     return 0;
 }

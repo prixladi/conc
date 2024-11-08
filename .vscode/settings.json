@@ -40,6 +40,7 @@
     "thread": "c",
     "time.h": "c",
     "vector.h": "c",
-    "vector-tests.h": "c"
+    "vector-tests.h": "c",
+    "string-tests.h": "c"
   }
 }

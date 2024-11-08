@@ -12,8 +12,6 @@ pub struct ActiveTable {
     headers: Vec<(&'static str, u16)>,
 }
 
-impl ActiveTable {}
-
 impl ActiveTable {
     pub fn new() -> Self {
         let mut state = TableState::default();
