@@ -22,8 +22,10 @@ struct Cli {
 #[derive(Debug, Subcommand)]
 enum Command {
     /// Opens a interactive mode
+    #[clap(visible_alias("i"))]
     Interactive,
     /// Create new project or replaces existing
+    #[clap(visible_alias("up"))]
     Upsert {
         /// path to the settings file or directory containing the settings file (conc.json), defaults to current dir
         settings_path: Option<String>,
@@ -79,7 +81,8 @@ enum Command {
         project: String,
     },
     /// Remove a project
-    Rm {
+    #[clap(visible_alias("rm"))]
+    Remove {
         /// name of the project
         project: String,
     },
@@ -168,7 +171,7 @@ fn run() -> Output {
 
         Command::Settings { project } => requester.get_project_settings(&project).into(),
 
-        Command::Rm { project } => requester.remove_project(&project).into(),
+        Command::Remove { project } => requester.remove_project(&project).into(),
 
         Command::Upsert { settings_path } => {
             let settings = ProjectSettings::find_parse_and_populate(settings_path)
