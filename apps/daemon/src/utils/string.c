@@ -39,18 +39,6 @@ str_printf(const char *format, ...)
 }
 
 char *
-int_to_str(int i)
-{
-    return str_printf("%d", i);
-}
-
-char *
-unsigned_long_to_str(unsigned long i)
-{
-    return str_printf("%lu", i);
-}
-
-char *
 _str_concat(const char *fst, ...)
 {
     va_list strings;
@@ -77,4 +65,16 @@ _str_concat(const char *fst, ...)
     va_end(strings);
 
     return result;
+}
+
+char *
+int_to_str(int i)
+{
+    return str_printf("%d", i);
+}
+
+char *
+unsigned_long_to_str(unsigned long i)
+{
+    return str_printf("%lu", i);
 }

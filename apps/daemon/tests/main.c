@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "utils/vector-tests.h"
+#include "utils/string-tests.h"
 
 #define run(test, name) \
     do \
@@ -35,6 +36,12 @@ main()
     printf("\n");
 
     printf("String tests:\n");
+    run(test__str_dup, "str dup");
+    run(test__str_dup_null, "str dup null");
+    run(test__str_printf, "str printf");
+    run(test__str_printf__without_formatting, "str printf without formatting");
+    run(test__int_to_str, "int to str");
+    run(test__int_to_str_negative, "int to str negative");
 
     return 0;
 }
