@@ -38,6 +38,8 @@
     "type_traits": "c",
     "utility": "c",
     "thread": "c",
-    "time.h": "c"
+    "time.h": "c",
+    "vector.h": "c",
+    "vector-tests.h": "c"
   }
 }
