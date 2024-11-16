@@ -39,6 +39,7 @@ impl From<Vec<String>> for ErrorResponse {
             "project_not_found" => Self::ProjectNotFound(raw),
             "service_not_found" => Self::ServiceNotFound(raw),
             x if x.starts_with("settings.")
+                || x.starts_with("env.")
                 || x == "unknown_command"
                 || x == "invalid_argument_count" =>
             {

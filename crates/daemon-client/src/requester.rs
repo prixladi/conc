@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     protocol::{
         requests::{
@@ -19,11 +21,15 @@ type Res<T> = Result<T, ErrorResponse>;
 #[derive(Debug, Clone)]
 pub struct Requester {
     socket_client: SocketClient,
+    use_caller_env: bool,
 }
 
 impl Requester {
-    pub fn new(socket_client: SocketClient) -> Self {
-        Self { socket_client }
+    pub fn new(socket_client: SocketClient, use_caller_env: bool) -> Self {
+        Self {
+            socket_client,
+            use_caller_env,
+        }
     }
 
     pub fn client(&self) -> &SocketClient {
@@ -60,13 +66,19 @@ impl Requester {
     }
 
     pub fn start_project(&self, project_name: &str) -> Res<ProjectInfo> {
-        self.send_request(ProjectStartRequest { project_name })
-            .map(|res| res.value)
+        self.send_request(ProjectStartRequest {
+            project_name,
+            env: self.get_request_env(),
+        })
+        .map(|res| res.value)
     }
 
     pub fn restart_project(&self, project_name: &str) -> Res<ProjectInfo> {
-        self.send_request(ProjectRestartRequest { project_name })
-            .map(|res| res.value)
+        self.send_request(ProjectRestartRequest {
+            project_name,
+            env: self.get_request_env(),
+        })
+        .map(|res| res.value)
     }
 
     pub fn stop_project(&self, project_name: &str) -> Res<ProjectInfo> {
@@ -96,6 +108,7 @@ impl Requester {
         self.send_request(ServiceStartRequest {
             project_name,
             service_name,
+            env: self.get_request_env(),
         })
         .map(|res| res.value)
     }
@@ -104,6 +117,7 @@ impl Requester {
         self.send_request(ServiceRestartRequest {
             project_name,
             service_name,
+            env: self.get_request_env(),
         })
         .map(|res| res.value)
     }
@@ -121,5 +135,14 @@ impl Requester {
         let resp = self.socket_client.send(req_string.as_bytes())?;
         let parts: Vec<String> = resp.split(ARG_SEPARATOR_STR).map(String::from).collect();
         R::try_from(parts.clone()).map_err(|_| ErrorResponse::from(parts))
+    }
+
+    fn get_request_env(&self) -> String {
+        if self.use_caller_env {
+            let map: HashMap<String, String> = std::env::vars().collect();
+            serde_json::to_string(&map).unwrap()
+        } else {
+            String::from("{}")
+        }
     }
 }

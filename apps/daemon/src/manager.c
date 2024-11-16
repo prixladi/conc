@@ -23,7 +23,7 @@ struct project_store
     pthread_mutex_t *lock;
 };
 
-static enum d_result project_services_start(struct project_settings project);
+static enum d_result project_services_start(struct project_settings project, const struct env_variable *env);
 static enum d_result project_services_stop(struct project_settings project);
 static enum d_result project_services_stop_and_remove(struct project_settings project);
 
@@ -251,7 +251,7 @@ project_upsert(const struct project_settings settings)
 }
 
 enum m_result
-project_start(const char *proj_name)
+project_start(const char *proj_name, const struct env_variable *env)
 {
     pthread_mutex_lock(store.lock);
 
@@ -265,7 +265,7 @@ project_start(const char *proj_name)
     pthread_mutex_lock(project.lock);
 
     pthread_mutex_unlock(store.lock);
-    enum d_result result = project_services_start(project.settings);
+    enum d_result result = project_services_start(project.settings, env);
     pthread_mutex_unlock(project.lock);
 
     if (result < D_OK)
@@ -274,7 +274,7 @@ project_start(const char *proj_name)
 }
 
 enum m_result
-project_restart(const char *proj_name)
+project_restart(const char *proj_name, const struct env_variable *env)
 {
     pthread_mutex_lock(store.lock);
 
@@ -296,7 +296,7 @@ project_restart(const char *proj_name)
         return M_DRIVER_ERROR;
     }
 
-    result = project_services_start(project.settings);
+    result = project_services_start(project.settings, env);
 
     pthread_mutex_unlock(project.lock);
 
@@ -390,7 +390,7 @@ service_info_get(const char *proj_name, const char *serv_name, struct service_in
 }
 
 enum m_result
-service_start(const char *proj_name, const char *serv_name)
+service_start(const char *proj_name, const char *serv_name, const struct env_variable *env)
 {
     pthread_mutex_lock(store.lock);
 
@@ -412,7 +412,7 @@ service_start(const char *proj_name, const char *serv_name)
         return M_SERVICE_NOT_FOUND;
     }
 
-    enum d_result start_result = d_service_start(project.settings, service);
+    enum d_result start_result = d_service_start(project.settings, service, env);
 
     pthread_mutex_unlock(project.lock);
 
@@ -424,7 +424,7 @@ service_start(const char *proj_name, const char *serv_name)
 }
 
 enum m_result
-service_restart(const char *proj_name, const char *serv_name)
+service_restart(const char *proj_name, const char *serv_name, const struct env_variable *env)
 {
     pthread_mutex_lock(store.lock);
 
@@ -453,7 +453,7 @@ service_restart(const char *proj_name, const char *serv_name)
         return M_DRIVER_ERROR;
     }
 
-    result = d_service_start(project.settings, service);
+    result = d_service_start(project.settings, service, env);
 
     pthread_mutex_unlock(project.lock);
 
@@ -521,12 +521,12 @@ project_info_free(struct project_info info)
 }
 
 static enum d_result
-project_services_start(struct project_settings project)
+project_services_start(struct project_settings project, const struct env_variable *env)
 {
     enum d_result final_result = D_NO_ACTION;
     for (size_t i = 0; i < vec_length(project.services); i++)
     {
-        enum d_result result = d_service_start(project, project.services[i]);
+        enum d_result result = d_service_start(project, project.services[i], env);
         if (result <= D_OK && final_result >= D_OK)
             final_result = result;
     }

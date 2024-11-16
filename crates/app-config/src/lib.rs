@@ -7,6 +7,7 @@ const SOCKET_DEBUG_LOCATION: &str = "../daemon/run/conc.sock";
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct AppConfig {
+    pub use_caller_env: bool,
     pub daemon_socket_path: String,
 }
 
@@ -33,6 +34,7 @@ impl AppConfig {
     pub fn new() -> Result<Self, AppConfigError> {
         if cfg!(debug_assertions) {
             return Ok(Self {
+                use_caller_env: true,
                 daemon_socket_path: String::from(SOCKET_DEBUG_LOCATION),
             });
         }

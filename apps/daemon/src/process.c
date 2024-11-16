@@ -28,15 +28,16 @@ struct process_descriptor
 static void handle_child(struct process_descriptor pd);
 
 static struct process_descriptor pd_create(const struct project_settings project, const struct service_settings service,
-                                           const char *logfile);
+                                           const struct env_variable *env, const char *logfile);
 static char **env_pair_create(struct env_variable var);
 
 static void pd_free(struct process_descriptor pd);
 
 int
-process_start(const struct project_settings project, const struct service_settings settings, const char *logfile_path)
+process_start(const struct project_settings project, const struct service_settings settings,
+              const struct env_variable *env, const char *logfile_path)
 {
-    struct process_descriptor pd = pd_create(project, settings, logfile_path);
+    struct process_descriptor pd = pd_create(project, settings, env, logfile_path);
     pid_t pid = fork();
     if (pid == 0)
     {
@@ -84,7 +85,8 @@ handle_child(struct process_descriptor pd)
 }
 
 static struct process_descriptor
-pd_create(const struct project_settings project, const struct service_settings service, const char *logfile_path_i)
+pd_create(const struct project_settings project, const struct service_settings service,
+          const struct env_variable *c_env, const char *logfile_path_i)
 {
     char **command = vec_create(char *);
     for (size_t i = 0; i < vec_length(service.command); i++)
@@ -103,6 +105,14 @@ pd_create(const struct project_settings project, const struct service_settings s
             if (strcmp(env[j][0], project.env[i].key) == 0)
                 continue;
         char **env_pair = env_pair_create(project.env[i]);
+        vec_push(env, env_pair);
+    }
+    for (size_t i = 0; i < vec_length(c_env); i++)
+    {
+        for (size_t j = 0; j < vec_length(env); j++)
+            if (strcmp(env[j][0], c_env[i].key) == 0)
+                continue;
+        char **env_pair = env_pair_create(c_env[i]);
         vec_push(env, env_pair);
     }
 

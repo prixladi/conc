@@ -37,7 +37,8 @@ enum d_result d_project_init(const struct project_settings settings);
 enum d_result d_project_remove(const struct project_settings settings);
 
 enum d_result d_service_info_get(const char *proj_name, const char *serv_name, struct d_service_info *info);
-enum d_result d_service_start(const struct project_settings project, const struct service_settings service_settings);
+enum d_result d_service_start(const struct project_settings project, const struct service_settings service_settings,
+                              const struct env_variable *env);
 enum d_result d_service_stop(const char *proj_name, const struct service_settings service_settings);
 
 void d_service_info_free(struct d_service_info info);

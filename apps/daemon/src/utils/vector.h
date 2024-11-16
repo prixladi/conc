@@ -17,7 +17,7 @@ void *_vec_dup(void *arr);
 void _vec_free(void *arr);
 void _vec_scoped(void *arr);
 
-size_t _vector_field_get(void *arr, size_t field);
+size_t _vector_field_get(const void *arr, size_t field);
 void _vector_field_set(void *arr, size_t field, size_t value);
 
 void *_vector_resize(void *arr);

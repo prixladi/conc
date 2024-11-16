@@ -50,6 +50,6 @@ paths_join(char *p1, char *p2)
 
     if (p1[strlen(p1) - 1] == '/')
         return str_concat(p1, p2);
-        
+
     return str_printf("%s/%s", p1, p2);
 }

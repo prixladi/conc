@@ -42,7 +42,7 @@ _vec_scoped(void *arr)
 }
 
 size_t
-_vector_field_get(void *arr, size_t field)
+_vector_field_get(const void *arr, size_t field)
 {
     return ((size_t *)(arr)-VECTOR_FIELDS)[field];
 }

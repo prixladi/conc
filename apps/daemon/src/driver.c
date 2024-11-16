@@ -172,14 +172,15 @@ d_service_info_get(const char *proj_name, const char *serv_name, struct d_servic
 }
 
 enum d_result
-d_service_start(const struct project_settings project, const struct service_settings service_settings)
+d_service_start(const struct project_settings project, const struct service_settings service_settings,
+                const struct env_variable *env)
 {
     struct service_process_info process_info = get_service_info(project.name, service_settings.name);
     if (process_info.pid > 0)
         return D_NO_ACTION;
 
     scoped char *logfile_path = get_service_logfile_path(project.name, service_settings.name);
-    int pid = process_start(project, service_settings, logfile_path);
+    int pid = process_start(project, service_settings, env, logfile_path);
 
     time_t c_time = 0;
     struct stat sts;

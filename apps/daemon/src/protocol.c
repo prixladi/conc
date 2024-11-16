@@ -62,9 +62,9 @@ dispatch_command(const char *input)
     if (response == NULL)
         response = match_and_handle("PROJECT-UPSERT", command, 1, handle_project_upsert);
     if (response == NULL)
-        response = match_and_handle("PROJECT-START", command, 1, handle_project_start);
+        response = match_and_handle("PROJECT-START", command, 2, handle_project_start);
     if (response == NULL)
-        response = match_and_handle("PROJECT-RESTART", command, 1, handle_project_restart);
+        response = match_and_handle("PROJECT-RESTART", command, 2, handle_project_restart);
     if (response == NULL)
         response = match_and_handle("PROJECT-STOP", command, 1, handle_project_stop);
     if (response == NULL)
@@ -74,9 +74,9 @@ dispatch_command(const char *input)
     if (response == NULL)
         response = match_and_handle("SERVICE-INFO", command, 2, handle_service_info);
     if (response == NULL)
-        response = match_and_handle("SERVICE-START", command, 2, handle_service_start);
+        response = match_and_handle("SERVICE-START", command, 3, handle_service_start);
     if (response == NULL)
-        response = match_and_handle("SERVICE-RESTART", command, 2, handle_service_restart);
+        response = match_and_handle("SERVICE-RESTART", command, 3, handle_service_restart);
     if (response == NULL)
         response = match_and_handle("SERVICE-STOP", command, 2, handle_service_stop);
 
@@ -290,7 +290,14 @@ handle_project_upsert(char **command)
 static char *
 handle_project_start(char **command)
 {
-    int result = project_start(command[0]);
+    struct env_variable *env[1];
+    char *parse_error = environment_vars_parse(command[1], env);
+    if (parse_error != NULL)
+        return resp_error(parse_error);
+
+    int result = project_start(command[0], *env);
+    environment_vars_free(*env);
+
     if (result < M_OK)
         return handle_error_results(result);
     return handle_project_info(command);
@@ -299,7 +306,14 @@ handle_project_start(char **command)
 static char *
 handle_project_restart(char **command)
 {
-    int result = project_restart(command[0]);
+    struct env_variable *env[1];
+    char *parse_error = environment_vars_parse(command[1], env);
+    if (parse_error != NULL)
+        return resp_error(parse_error);
+
+    int result = project_restart(command[0], *env);
+    environment_vars_free(*env);
+
     if (result < M_OK)
         return handle_error_results(result);
     return handle_project_info(command);
@@ -367,7 +381,14 @@ handle_service_info(char **command)
 static char *
 handle_service_start(char **command)
 {
-    int result = service_start(command[0], command[1]);
+    struct env_variable *env[1];
+    char *parse_error = environment_vars_parse(command[2], env);
+    if (parse_error != NULL)
+        return resp_error(parse_error);
+
+    int result = service_start(command[0], command[1], *env);
+    environment_vars_free(*env);
+
     if (result < M_OK)
         return handle_error_results(result);
 
@@ -377,7 +398,14 @@ handle_service_start(char **command)
 static char *
 handle_service_restart(char **command)
 {
-    int result = service_restart(command[0], command[1]);
+    struct env_variable *env[1];
+    char *parse_error = environment_vars_parse(command[2], env);
+    if (parse_error != NULL)
+        return resp_error(parse_error);
+
+    int result = service_restart(command[0], command[1], *env);
+    environment_vars_free(*env);
+
     if (result < M_OK)
         return handle_error_results(result);
 

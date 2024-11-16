@@ -116,7 +116,7 @@ fn run() -> Output {
         return Output::socket_not_alive(&socket_client.socket_path);
     }
 
-    let requester = Requester::new(socket_client);
+    let requester = Requester::new(socket_client, config.use_caller_env);
     match cli.command {
         Command::Interactive => interact(requester).into(),
 

@@ -21,6 +21,8 @@
 #define SETTINGS_DUPLICATE_SERVICE_NAME_ERROR(s) str_printf("settings.service.%s.name.duplicate", s ? s : "")
 #define SETTINGS_INVALID_SERVICE_COMMAND_ERROR(s) str_printf("settings.service.%s.command.invalid", s ? s : "")
 
+#define ENV_PARSE_ERROR() str_dup("env.parse")
+
 static struct service_settings service_settings_parse(struct cJSON *json);
 static struct env_variable *env_vars_parse(struct cJSON *js);
 
@@ -110,6 +112,21 @@ project_settings_parse(const char *data, struct project_settings *settings)
 }
 
 char *
+environment_vars_parse(const char *data, struct env_variable **vars)
+{
+    cJSON *json = cJSON_Parse(data);
+    if (json == NULL || json->type != cJSON_Object)
+    {
+        cJSON_Delete(json);
+        return ENV_PARSE_ERROR();
+    }
+
+    (*vars) = env_vars_parse(json->child);
+    cJSON_Delete(json);
+    return NULL;
+}
+
+char *
 project_settings_stringify(const struct project_settings settings)
 {
     cJSON *root = cJSON_CreateObject();
@@ -187,8 +204,7 @@ project_settings_free(struct project_settings settings)
     }
     if (settings.env != NULL)
     {
-        vec_for_each(settings.env, env_variable_free);
-        vec_free(settings.env);
+        environment_vars_free(settings.env);
     }
     free(settings.name);
     free(settings.cwd);
@@ -197,6 +213,13 @@ project_settings_free(struct project_settings settings)
     settings.env = NULL;
     settings.cwd = NULL;
     settings.services = NULL;
+}
+
+void
+environment_vars_free(struct env_variable *vars)
+{
+    vec_for_each(vars, env_variable_free);
+    vec_free(vars);
 }
 
 static struct service_settings

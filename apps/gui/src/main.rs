@@ -40,7 +40,7 @@ struct App {
 impl App {
     fn new(config: AppConfig) -> (Self, Task<Message>) {
         let socket_client = SocketClient::new(&config.daemon_socket_path);
-        let requester = Requester::new(socket_client);
+        let requester = Requester::new(socket_client, config.use_caller_env);
         let theme = Theme::Dark;
 
         let page_view = get_page(Page::Projects);

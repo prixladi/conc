@@ -4,6 +4,6 @@
 #include "settings.h"
 
 int process_start(const struct project_settings project, const struct service_settings settings,
-                  const char *logfile_path);
+                  const struct env_variable *env, const char *logfile_path);
 
 #endif

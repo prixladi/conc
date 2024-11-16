@@ -64,21 +64,23 @@ impl<'a> Request<ProjectInfoResponse> for ProjectUpsertRequest<'a> {
 
 pub(crate) struct ProjectStartRequest<'a> {
     pub(crate) project_name: &'a str,
+    pub(crate) env: String,
 }
 
 impl<'a> Request<ProjectInfoResponse> for ProjectStartRequest<'a> {
     fn serialize(&self) -> String {
-        serialize_parts(vec!["PROJECT-START", self.project_name])
+        serialize_parts(vec!["PROJECT-START", self.project_name, &self.env])
     }
 }
 
 pub(crate) struct ProjectRestartRequest<'a> {
     pub(crate) project_name: &'a str,
+    pub(crate) env: String,
 }
 
 impl<'a> Request<ProjectInfoResponse> for ProjectRestartRequest<'a> {
     fn serialize(&self) -> String {
-        serialize_parts(vec!["PROJECT-RESTART", self.project_name])
+        serialize_parts(vec!["PROJECT-RESTART", self.project_name, &self.env])
     }
 }
 
@@ -126,17 +128,24 @@ impl<'a> Request<ServiceInfoResponse> for ServiceInfoRequest<'a> {
 pub(crate) struct ServiceStartRequest<'a> {
     pub(crate) project_name: &'a str,
     pub(crate) service_name: &'a str,
+    pub(crate) env: String,
 }
 
 impl<'a> Request<ServiceInfoResponse> for ServiceStartRequest<'a> {
     fn serialize(&self) -> String {
-        serialize_parts(vec!["SERVICE-START", self.project_name, self.service_name])
+        serialize_parts(vec![
+            "SERVICE-START",
+            self.project_name,
+            self.service_name,
+            &self.env,
+        ])
     }
 }
 
 pub(crate) struct ServiceRestartRequest<'a> {
     pub(crate) project_name: &'a str,
     pub(crate) service_name: &'a str,
+    pub(crate) env: String,
 }
 
 impl<'a> Request<ServiceInfoResponse> for ServiceRestartRequest<'a> {
@@ -145,6 +154,7 @@ impl<'a> Request<ServiceInfoResponse> for ServiceRestartRequest<'a> {
             "SERVICE-RESTART",
             self.project_name,
             self.service_name,
+            &self.env,
         ])
     }
 }
