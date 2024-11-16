@@ -13,7 +13,7 @@ static void graceful_stop_handler(int signal);
 static void restart_handler(int signal);
 
 static struct server *server;
-static volatile bool running = true;
+static volatile bool restarting = false;
 
 int
 main(int argc, char **argv)
@@ -51,8 +51,9 @@ main(int argc, char **argv)
     // systemd sends 'hang up' with expectation of a restart
     signal(SIGHUP, config.is_daemon ? restart_handler : graceful_stop_handler);
 
-    while (running)
+    do
     {
+        restarting = false;
         if (manager_init() != 0)
         {
             log_critical("Unable to init the manager, exiting.\n");
@@ -65,9 +66,10 @@ main(int argc, char **argv)
 
         server = server_run_async(server_opts);
         server_wait_and_free(server);
+        server = NULL;
 
         manager_stop();
-    }
+    } while (restarting);
 
     return 0;
 }
@@ -76,17 +78,19 @@ static void
 graceful_stop_handler(int signal)
 {
     (void)signal;
-    running = false;
     // Intentionally not using 'log_*' or 'printf' because it uses non-async-signal-safe functions
     write(STDOUT_FILENO, "[SGN] Received terminate signal, stopping\n", 43);
-    server_stop(server);
+    if (server != NULL)
+        server_stop(server);
 }
 
 static void
 restart_handler(int signal)
 {
     (void)signal;
+    restarting = true;
     // Intentionally not using 'log_*' or 'printf' because it uses non-async-signal-safe functions
     write(STDOUT_FILENO, "[SGN] Received restart signal, restarting\n", 43);
-    server_stop(server);
+    if (server != NULL)
+        server_stop(server);
 }

@@ -77,12 +77,21 @@ server_run(void *data)
     struct server *server = data;
 
     int server_socket = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (server_socket < 0)
+    {
+        log_critical("Unable to create server_socket FD\n");
+        return NULL;
+    }
 
     struct sockaddr_un server_addr = { .sun_family = AF_UNIX };
     strcpy(server_addr.sun_path, SOCKET_PATH);
 
     unlink(SOCKET_PATH);
-    bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr));
+    if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
+    {
+        log_critical("Unable to bind socket server port\n");
+        return NULL;
+    }
 
     listen(server_socket, MAX_WAITING_REQUESTS);
 
