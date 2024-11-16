@@ -44,7 +44,6 @@ impl From<std::io::Error> for ProjectSettingsError {
 pub enum EnvValue {
     Str(String),
     Num(i32),
-    FromEnv { from_env: String },
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -187,7 +186,6 @@ fn populate_env(envs: HashMap<String, EnvValue>) -> HashMap<String, EnvValue> {
             let val = match value {
                 EnvValue::Str(value) => value,
                 EnvValue::Num(value) => value.to_string(),
-                EnvValue::FromEnv { from_env } => std::env::var(from_env).unwrap_or_default(),
             };
 
             (key, EnvValue::Str(val))
