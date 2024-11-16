@@ -33,6 +33,8 @@ static char **env_pair_create(struct env_variable var);
 
 static void pd_free(struct process_descriptor pd);
 
+static bool env_exists(char ***current_env, struct env_variable env);
+
 int
 process_start(const struct project_settings project, const struct service_settings settings,
               const struct env_variable *env, const char *logfile_path)
@@ -94,25 +96,26 @@ pd_create(const struct project_settings project, const struct service_settings s
     vec_push(command, command_terminate);
 
     char ***env = vec_create(char **);
+
+    for (size_t i = 0; i < vec_length(c_env); i++)
+    {
+        if (env_exists(env, c_env[i]))
+            continue;
+        char **env_pair = env_pair_create(c_env[i]);
+        vec_push(env, env_pair);
+    }
     for (size_t i = 0; i < vec_length(service.env); i++)
     {
+        if (env_exists(env, service.env[i]))
+            continue;
         char **env_pair = env_pair_create(service.env[i]);
         vec_push(env, env_pair);
     }
     for (size_t i = 0; i < vec_length(project.env); i++)
     {
-        for (size_t j = 0; j < vec_length(env); j++)
-            if (strcmp(env[j][0], project.env[i].key) == 0)
-                continue;
+        if (env_exists(env, project.env[i]))
+            continue;
         char **env_pair = env_pair_create(project.env[i]);
-        vec_push(env, env_pair);
-    }
-    for (size_t i = 0; i < vec_length(c_env); i++)
-    {
-        for (size_t j = 0; j < vec_length(env); j++)
-            if (strcmp(env[j][0], c_env[i].key) == 0)
-                continue;
-        char **env_pair = env_pair_create(c_env[i]);
         vec_push(env, env_pair);
     }
 
@@ -162,4 +165,15 @@ pd_free(struct process_descriptor pd)
     pd.logfile_path = NULL;
     pd.pwd = NULL;
     pd.command = NULL;
+}
+
+static bool
+env_exists(char ***current_env, struct env_variable env)
+{
+    for (size_t j = 0; j < vec_length(current_env); j++)
+    {
+        if (strcmp(current_env[j][0], env.key) == 0)
+            return true;
+    }
+    return false;
 }
