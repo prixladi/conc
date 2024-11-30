@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -e
+set -eu
 
 BIN=$PREFIX/concg
 
@@ -11,16 +11,6 @@ fi
 
 echo "[GUI] Installing into ${BIN} ..."
 
-sudo cp -f ../../target/release/gui "$BIN"
-
-CONFIG="{
-    \"daemon_socket_path\": \"$HOME/.conc/run/conc.sock\",
-    \"use_caller_env\": true
-}"
-CONFIG_PATH="$HOME/.conc/conf.json"
-
-echo "[GUI] Creating gui config '$CONFIG_PATH'"
-
-echo "$CONFIG" | tee "$CONFIG_PATH" >/dev/null
+sudo cp -f ../../target/release/concg "$BIN"
 
 echo "[GUI] Installed!"

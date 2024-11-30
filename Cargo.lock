@@ -614,23 +614,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1462739cb27611015575c0c11df5df7601141071f07518d56fcc1be504cbec97"
 
 [[package]]
-name = "cli"
-version = "0.1.0"
-dependencies = [
- "app-config",
- "clap",
- "color-eyre",
- "crossterm",
- "daemon-client",
- "project-settings",
- "ratatui",
- "serde",
- "serde_json",
- "strum",
- "thiserror",
-]
-
-[[package]]
 name = "clipboard-win"
 version = "5.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -765,6 +748,40 @@ dependencies = [
  "rustversion",
  "ryu",
  "static_assertions",
+]
+
+[[package]]
+name = "concc"
+version = "0.1.0"
+dependencies = [
+ "app-config",
+ "clap",
+ "color-eyre",
+ "crossterm",
+ "daemon-client",
+ "project-settings",
+ "ratatui",
+ "serde",
+ "serde_json",
+ "strum",
+ "thiserror",
+]
+
+[[package]]
+name = "concg"
+version = "0.1.0"
+dependencies = [
+ "app-config",
+ "chrono",
+ "daemon-client",
+ "iced",
+ "iced_fonts",
+ "open",
+ "project-settings",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -1548,23 +1565,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6bf0b36e6f090b7e1d8a4b49c0cb81c1f8376f72198c65dd3ad9ff3556b8b78c"
 dependencies = [
  "bitflags 2.6.0",
-]
-
-[[package]]
-name = "gui"
-version = "0.1.0"
-dependencies = [
- "app-config",
- "chrono",
- "daemon-client",
- "iced",
- "iced_fonts",
- "open",
- "project-settings",
- "serde",
- "serde_json",
- "tokio",
- "tracing-subscriber",
 ]
 
 [[package]]

@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -e
+set -eu
 
 BIN=$PREFIX/concc
 
@@ -11,16 +11,6 @@ fi
 
 echo "[CLI] Installing into ${BIN} ..."
 
-sudo cp -f ../../target/release/cli "$BIN"
-
-CONFIG="{
-    \"daemon_socket_path\": \"$HOME/.conc/run/conc.sock\",
-    \"use_caller_env\": true
-}"
-CONFIG_PATH="$HOME/.conc/conf.json"
-
-echo "[CLI] Creating cli config '$CONFIG_PATH'"
-
-echo "$CONFIG" | tee "$CONFIG_PATH" >/dev/null
+sudo cp -f ../../target/release/concc "$BIN"
 
 echo "[CLI] Installed!"

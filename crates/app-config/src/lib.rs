@@ -3,6 +3,7 @@ use std::path::Path;
 
 const HOME_ENV_VAR: &str = "HOME";
 const CONF_RELATIVE_LOCATION: &str = ".conc/conf.json";
+const SOCKET_RELATIVE_LOCATION: &str = ".conc/run/conc.sock";
 const SOCKET_DEBUG_LOCATION: &str = "../daemon/run/conc.sock";
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -15,8 +16,6 @@ pub struct AppConfig {
 pub enum AppConfigError {
     #[error("Unable to read 'HOME' env variable was not set. Error: {inner}")]
     HomeNotFound { inner: std::env::VarError },
-    #[error("Unable to read configuration file '{path}'. Error: {inner}")]
-    ConfigFileNotFound { path: String, inner: std::io::Error },
     #[error("Unable to parse config from configuration file '{path}'. Error: {inner}")]
     ConfigFileNotParsable {
         path: String,
@@ -46,16 +45,23 @@ impl AppConfig {
             .unwrap()
             .to_string();
 
-        let data = std::fs::read_to_string(&conc_config).map_err(|e| {
-            AppConfigError::ConfigFileNotFound {
-                path: conc_config.clone(),
-                inner: e,
-            }
-        })?;
+        let data = std::fs::read_to_string(&conc_config);
 
-        serde_json::from_str(&data).map_err(|e| AppConfigError::ConfigFileNotParsable {
-            path: conc_config.clone(),
-            inner: e,
-        })
+        match data {
+            Ok(data) => {
+                serde_json::from_str(&data).map_err(|e| AppConfigError::ConfigFileNotParsable {
+                    path: conc_config.clone(),
+                    inner: e,
+                })
+            }
+            Err(_) => Ok(Self {
+                use_caller_env: true,
+                daemon_socket_path: Path::new(&home_dir)
+                    .join(SOCKET_RELATIVE_LOCATION)
+                    .to_str()
+                    .unwrap()
+                    .to_string(),
+            }),
+        }
     }
 }
