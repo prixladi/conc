@@ -35,7 +35,7 @@ There is currently no distribution of binaries so you need to compile the projec
 - [gcc](https://gcc.gnu.org/) - to compile the **daemon**
 - [cargo](https://github.com/rust-lang/cargo) - to compile the **cli** and **gui**
 
-### Unix like
+### Linux
 
 Run `make install` to install the **daemon**, the **cli**, and the **gui**, and then run `systemctl --user start concd` to start the **daemon**. This will install `concd` as a systemd user service service and `concc` and `concg` as a binary to the `/usr/local/bin` directory, which can be used from the command line `concc -h`, which prints help info of the **cli** or `concg`, which starts the **gui**.
 
@@ -43,7 +43,7 @@ If you want to install just individual parts, you can run `make install_{daemon/
 
 ### Other
 
-The project is currently heavily dependent on many Unix features such as `Unix socket` and `unistd.h` in libc, so there is no way to install **conc** on other systems.
+The project is currently heavily dependent on many **POSIX** features such as `Unix socket` and `unistd` from libc, and it should work on any POSIX compliant system but it was only tested on **Linux**. Because of this it will not work Windows and there is currently not plan to support it.
 
 ## Usage
 
