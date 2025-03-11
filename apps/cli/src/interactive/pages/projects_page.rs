@@ -51,7 +51,7 @@ impl PageView for ProjectsPage {
                 selected_project.map(|project| requester.restart_project(&project.name).unwrap());
                 Ok(Action::None)
             }
-            KeyCode::Enter | KeyCode::Right => match selected_project {
+            KeyCode::Enter | KeyCode::Right | KeyCode::Char('l') => match selected_project {
                 Some(project) => Ok(Action::GotoPage(Page::Project(project.name))),
                 None => Ok(Action::None),
             },
@@ -70,7 +70,7 @@ impl PageView for ProjectsPage {
 
     fn render(&mut self, area: Rect, buf: &mut Buffer) {
         let block = CommonBlock::new(String::from("Projects"))
-            .add_instruction(("Open project", "enter"))
+            .add_instruction(("Open project", "l"))
             .add_instruction(("Start project", "s"))
             .add_instruction(("Stop project", "d"))
             .add_instruction(("Restart project", "r"))
