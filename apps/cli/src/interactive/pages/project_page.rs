@@ -71,14 +71,16 @@ impl PageView for ProjectPage {
                     &settings,
                 )?))
             }
-            KeyCode::Char('l') => {
+            KeyCode::Enter => {
                 let action = selected_service
                     .map(|service| Action::OpenLogs(service.logfile_path))
                     .unwrap_or(Action::None);
 
                 Ok(action)
             }
-            KeyCode::Left | KeyCode::Char('b') => Ok(Action::GotoPage(Page::Projects)),
+            KeyCode::Left | KeyCode::Char('h') => {
+                Ok(Action::GotoPage(Page::Projects))
+            }
             event => {
                 let total_count = self
                     .project
@@ -107,9 +109,9 @@ impl PageView for ProjectPage {
             .add_instruction(("Start service", "s"))
             .add_instruction(("Stop service", "d"))
             .add_instruction(("Restart service", "r"))
-            .add_instruction(("Service logs", "l"))
+            .add_instruction(("Service logs", "enter"))
             .add_instruction(("Project settings", "o"))
-            .add_instruction(("Back", "b"))
+            .add_instruction(("Back", "h"))
             .add_instruction(("Quit", "q"));
 
         let rows = project
