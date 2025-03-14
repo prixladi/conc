@@ -4,7 +4,10 @@ use crossterm::event::KeyEvent;
 use daemon_client::Requester;
 use project_page::ProjectPage;
 use projects_page::ProjectsPage;
-use ratatui::{buffer::Buffer, layout::Rect};
+use ratatui::{
+    buffer::Buffer,
+    layout::{Position, Rect},
+};
 
 use super::ActionResult;
 
@@ -21,6 +24,13 @@ pub trait PageView {
     fn handle_key_event(&mut self, key_event: KeyEvent, requester: &Requester) -> ActionResult;
     fn refresh(&mut self, requester: &Requester) -> Result<(), Box<dyn Error>>;
     fn render(&mut self, area: Rect, buf: &mut Buffer);
+    fn on_mount(&mut self) {}
+    fn cursor_position(&self, _: Rect) -> Option<Position> {
+        None
+    }
+    fn is_in_raw_mode(&self) -> bool {
+        false
+    }
 }
 
 pub struct PageManager {
@@ -46,6 +56,7 @@ impl PageManager {
         };
 
         mem::swap(&mut view, &mut self.view);
+        view.on_mount();
         self.cache.insert(self.page.clone(), view);
 
         self.page = page;
