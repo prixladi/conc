@@ -1,5 +1,5 @@
 use ratatui::{
-    style::Stylize,
+    style::{Color, Stylize},
     symbols::border,
     text::{Line, Span},
     widgets::Block,
@@ -10,6 +10,7 @@ type Instruction = (&'static str, &'static str);
 pub struct CommonBlock {
     title: String,
     instructions: Vec<Instruction>,
+    border_color: Color,
 }
 
 impl CommonBlock {
@@ -17,11 +18,17 @@ impl CommonBlock {
         Self {
             title,
             instructions: vec![],
+            border_color: Color::Gray,
         }
     }
 
     pub fn add_instruction(mut self, ins: Instruction) -> Self {
         self.instructions.push(ins);
+        self
+    }
+
+    pub fn set_border_color(mut self, color: Color) -> Self {
+        self.border_color = color;
         self
     }
 }
@@ -34,7 +41,7 @@ impl From<CommonBlock> for Block<'_> {
             .flat_map(|(key, value)| {
                 vec![
                     format!(" {} ", key).into(),
-                    format!("<{}>", value).blue().bold(),
+                    format!("<{}>", value).magenta().bold(),
                 ]
             })
             .collect();
@@ -45,8 +52,9 @@ impl From<CommonBlock> for Block<'_> {
         let title = Line::from(format!(" {} ", value.title.bold())).left_aligned();
 
         Block::bordered()
+            .border_style(value.border_color)
             .title(title)
             .title_bottom(instructions)
-            .border_set(border::THICK)
+            .border_set(border::ROUNDED)
     }
 }

@@ -14,11 +14,8 @@ pub struct ActiveTable {
 
 impl ActiveTable {
     pub fn new() -> Self {
-        let mut state = TableState::default();
-        state.select_first();
-
         Self {
-            state,
+            state: TableState::default(),
             headers: vec![],
         }
     }
@@ -55,6 +52,10 @@ impl ActiveTable {
         area: Rect,
         buf: &mut Buffer,
     ) {
+        if self.state.selected().is_none() {
+            self.state.select_first();
+        }
+
         let headers = self
             .headers
             .iter()

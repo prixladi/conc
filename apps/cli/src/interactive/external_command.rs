@@ -4,7 +4,7 @@ use std::{
 };
 
 use crossterm::{
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
 use ratatui::{prelude::CrosstermBackend, Terminal};
@@ -14,7 +14,6 @@ pub(super) fn open_log_file_in_less(
     path: String,
 ) -> std::io::Result<()> {
     stdout().execute(LeaveAlternateScreen)?;
-    disable_raw_mode()?;
     Command::new("less")
         .arg("-R")
         .arg("+GF")
@@ -22,7 +21,6 @@ pub(super) fn open_log_file_in_less(
         .status()?;
 
     stdout().execute(EnterAlternateScreen)?;
-    enable_raw_mode()?;
     terminal.clear()?;
     Ok(())
 }
@@ -32,14 +30,12 @@ pub(super) fn open_string_in_less(
     str: String,
 ) -> std::io::Result<()> {
     stdout().execute(LeaveAlternateScreen)?;
-    disable_raw_mode()?;
     Command::new("bash")
         .arg("-c")
         .arg(format!("echo \'{}\' | less", str))
         .status()?;
 
     stdout().execute(EnterAlternateScreen)?;
-    enable_raw_mode()?;
     terminal.clear()?;
     Ok(())
 }

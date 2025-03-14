@@ -1,13 +1,19 @@
-use std::error::Error;
+use std::{error::Error, vec};
 
 use crossterm::event::{KeyCode, KeyEvent};
-use daemon_client::{ProjectInfo, Requester, ServiceStatus};
+use daemon_client::{ProjectInfo, Requester, ServiceInfo, ServiceStatus};
 use project_settings::ProjectSettings;
-use ratatui::{buffer::Buffer, layout::Rect, style::Stylize, text::Span, widgets::Row};
+use ratatui::{
+    buffer::Buffer,
+    layout::{Constraint, Layout, Position, Rect},
+    style::{Color, Stylize},
+    text::Span,
+    widgets::Row,
+};
 
 use crate::{
     interactive::{
-        components::{ActiveTable, CommonBlock},
+        components::{ActiveTable, CommonBlock, Input},
         Action, ActionResult,
     },
     utils::start_time_to_age,
@@ -15,11 +21,20 @@ use crate::{
 
 use super::{Page, PageView};
 
+#[derive(Debug, PartialEq)]
+enum Focus {
+    Table,
+    Search,
+}
+
 #[derive(Debug)]
 pub(super) struct ProjectPage {
     project_name: String,
     project: Option<ProjectInfo>,
+
+    focus: Focus,
     table: ActiveTable,
+    search: Input,
 }
 
 impl ProjectPage {
@@ -30,21 +45,72 @@ impl ProjectPage {
             .ad_header(("PID", 25))
             .ad_header(("AGE", 25));
 
+        let input = Input::new();
+
         ProjectPage {
             project_name,
             project: None,
             table,
+            focus: Focus::Table,
+            search: input,
         }
     }
 }
 
 impl PageView for ProjectPage {
+    fn refresh(&mut self, requester: &Requester) -> Result<(), Box<dyn Error>> {
+        self.project = Some(requester.get_project_info(&self.project_name)?);
+        Ok(())
+    }
+
     fn handle_key_event(&mut self, key_event: KeyEvent, requester: &Requester) -> ActionResult {
-        let selected_service = self.table.selected().and_then(|i| {
-            self.project
-                .clone()
-                .map(|project| project.services[i].clone())
-        });
+        match self.focus {
+            Focus::Table => self.handle_key_event_table(key_event, requester),
+            Focus::Search => self.handle_key_event_search(key_event),
+        }
+    }
+
+    fn cursor_position(&self, area: Rect) -> Option<Position> {
+        match self.focus {
+            Focus::Table => None,
+            Focus::Search => {
+                let [search_area, _] = self.get_full_layout(area);
+                Some(Position::new(
+                    search_area.x + self.search.len() as u16 + 1,
+                    search_area.y + 1,
+                ))
+            }
+        }
+    }
+
+    fn on_mount(&mut self) {
+        self.focus = Focus::Table;
+        self.search.clear();
+    }
+
+    fn is_in_raw_mode(&self) -> bool {
+        self.focus == Focus::Search
+    }
+
+    fn render(&mut self, area: Rect, buf: &mut Buffer) {
+        if self.search.is_empty() && self.focus == Focus::Table {
+            self.render_table(area, buf);
+            return;
+        }
+
+        let [search_area, table_area] = self.get_full_layout(area);
+        self.render_search(search_area, buf);
+        self.render_table(table_area, buf);
+    }
+}
+
+impl ProjectPage {
+    fn handle_key_event_table(
+        &mut self,
+        key_event: KeyEvent,
+        requester: &Requester,
+    ) -> ActionResult {
+        let selected_service = self.get_selected_service();
 
         match key_event.code {
             KeyCode::Char('s') => {
@@ -79,43 +145,92 @@ impl PageView for ProjectPage {
                 Ok(action)
             }
             KeyCode::Left | KeyCode::Char('h') => Ok(Action::GotoPage(Page::Projects)),
+            KeyCode::Char('/') => {
+                self.focus = Focus::Search;
+                Ok(Action::None)
+            }
             event => {
-                let total_count = self
-                    .project
-                    .as_ref()
-                    .map(|proj| proj.services.len())
-                    .unwrap_or_default();
-
-                self.table.handle_key_code(event, total_count);
+                let service_count = self.get_filtered_services().len();
+                self.table.handle_key_code(event, service_count);
                 Ok(Action::None)
             }
         }
     }
 
-    fn refresh(&mut self, requester: &Requester) -> Result<(), Box<dyn Error>> {
-        self.project = Some(requester.get_project_info(&self.project_name)?);
-        Ok(())
+    fn handle_key_event_search(&mut self, key_event: KeyEvent) -> ActionResult {
+        match key_event.code {
+            KeyCode::Esc => {
+                self.focus = Focus::Table;
+                self.search.clear();
+            }
+            KeyCode::Char('/') | KeyCode::Enter => self.focus = Focus::Table,
+            code => self.search.handle_key_code(code),
+        }
+
+        Ok(Action::None)
     }
 
-    fn render(&mut self, area: Rect, buf: &mut Buffer) {
+    fn get_filtered_services(&self) -> Vec<ServiceInfo> {
+        match &self.project {
+            Some(project) => project
+                .services
+                .iter()
+                .filter(|service| {
+                    self.search.is_empty() || service.name.contains(&self.search.value())
+                })
+                .cloned()
+                .collect(),
+            None => vec![],
+        }
+    }
+
+    fn get_selected_service(&self) -> Option<ServiceInfo> {
+        self.table.selected().and_then(|i| {
+            let services = self.get_filtered_services();
+            if services.is_empty() {
+                None
+            } else if i > services.len() {
+                Some(services[0].clone())
+            } else {
+                Some(services[i].clone())
+            }
+        })
+    }
+
+    fn get_full_layout(&self, area: Rect) -> [Rect; 2] {
+        let vertical = Layout::vertical([Constraint::Length(3), Constraint::Min(1)]);
+        vertical.areas(area)
+    }
+
+    fn render_search(&mut self, area: Rect, buf: &mut Buffer) {
+        let block = CommonBlock::new(String::from("Search"))
+            .set_border_color(Color::LightRed)
+            .add_instruction(("Search", "/"))
+            .add_instruction(("Clear", "escape"));
+
+        self.search.render(block.into(), area, buf);
+    }
+
+    fn render_table(&mut self, area: Rect, buf: &mut Buffer) {
         if self.project.is_none() {
             return;
         }
         let project = self.project.as_ref().unwrap();
 
         let block = CommonBlock::new(format!("Project: {}", project.name))
-            .add_instruction(("Start service", "s"))
-            .add_instruction(("Stop service", "d"))
-            .add_instruction(("Restart service", "r"))
-            .add_instruction(("Service logs", "enter"))
+            .set_border_color(Color::LightBlue)
+            .add_instruction(("Search", "/"))
+            .add_instruction(("Start", "s"))
+            .add_instruction(("Stop", "d"))
+            .add_instruction(("Restart", "r"))
+            .add_instruction(("Logs", "enter"))
             .add_instruction(("Project settings", "o"))
             .add_instruction(("Back", "h"))
             .add_instruction(("Quit", "q"));
 
-        let rows = project
-            .services
+        let rows = self
+            .get_filtered_services()
             .iter()
-            .cloned()
             .map(|service| {
                 let status: Span = service.status.to_string().into();
                 let name: Span = service.name.clone().into();

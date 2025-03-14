@@ -63,7 +63,13 @@ impl App {
     }
 
     fn draw(&mut self, frame: &mut Frame) {
-        frame.render_widget(self, frame.area());
+        let area = frame.area();
+
+        if let Some(cp) = self.page_manager.view().cursor_position(area) {
+            frame.set_cursor_position(cp)
+        }
+
+        frame.render_widget(self, area);
     }
 
     fn handle_events(&mut self) -> ActionResult {
@@ -80,12 +86,15 @@ impl App {
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent) -> ActionResult {
+        let view = self.page_manager.view();
+
+        if view.is_in_raw_mode() {
+            return view.handle_key_event(key_event, &self.requester);
+        }
+
         match key_event.code {
             KeyCode::Char('q') | KeyCode::Esc => Ok(Action::Exit),
-            _ => self
-                .page_manager
-                .view()
-                .handle_key_event(key_event, &self.requester),
+            _ => view.handle_key_event(key_event, &self.requester),
         }
     }
 }
