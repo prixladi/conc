@@ -111,7 +111,7 @@ impl CopyToClipboardButton {
     }
 }
 
-impl<'a> From<CopyToClipboardButton> for Element<'a, Message> {
+impl From<CopyToClipboardButton> for Element<'_, Message> {
     fn from(value: CopyToClipboardButton) -> Self {
         action_button(
             Some(Message::CopyToClipboard {

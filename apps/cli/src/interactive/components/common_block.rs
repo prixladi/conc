@@ -26,7 +26,7 @@ impl CommonBlock {
     }
 }
 
-impl<'a> From<CommonBlock> for Block<'a> {
+impl From<CommonBlock> for Block<'_> {
     fn from(value: CommonBlock) -> Self {
         let mut instructions: Vec<Span<'_>> = value
             .instructions

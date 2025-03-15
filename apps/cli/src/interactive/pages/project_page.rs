@@ -78,9 +78,7 @@ impl PageView for ProjectPage {
 
                 Ok(action)
             }
-            KeyCode::Left | KeyCode::Char('h') => {
-                Ok(Action::GotoPage(Page::Projects))
-            }
+            KeyCode::Left | KeyCode::Char('h') => Ok(Action::GotoPage(Page::Projects)),
             event => {
                 let total_count = self
                     .project

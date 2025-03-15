@@ -22,7 +22,7 @@ impl Menu {
     }
 }
 
-impl<'a> From<Menu> for Element<'a, Message> {
+impl From<Menu> for Element<'_, Message> {
     fn from(value: Menu) -> Self {
         let mut project_panel = column![].spacing(8);
         for project in value.projects.iter() {
