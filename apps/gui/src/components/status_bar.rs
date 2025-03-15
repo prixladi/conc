@@ -20,7 +20,7 @@ impl StatusErrorBar {
     }
 }
 
-impl<'a> From<StatusErrorBar> for Element<'a, Message> {
+impl From<StatusErrorBar> for Element<'_, Message> {
     fn from(value: StatusErrorBar) -> Self {
         let is_error = value.status.is_err();
         let formatted_date =
@@ -54,7 +54,7 @@ impl StatusInfoBar {
     }
 }
 
-impl<'a> From<StatusInfoBar> for Element<'a, Message> {
+impl From<StatusInfoBar> for Element<'_, Message> {
     fn from(value: StatusInfoBar) -> Self {
         let formatted_version = text(format!("v{}", env!("CARGO_PKG_VERSION")));
         let socket = format!("Using the daemon socket at unix://{}", value.socket_path);

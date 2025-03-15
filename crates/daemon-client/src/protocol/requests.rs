@@ -36,7 +36,7 @@ pub(crate) struct ProjectSettingsRequest<'a> {
     pub(crate) project_name: &'a str,
 }
 
-impl<'a> Request<ProjectSettingsResponse> for ProjectSettingsRequest<'a> {
+impl Request<ProjectSettingsResponse> for ProjectSettingsRequest<'_> {
     fn serialize(&self) -> String {
         serialize_parts(vec!["PROJECT-SETTINGS", self.project_name])
     }
@@ -46,7 +46,7 @@ pub(crate) struct ProjectInfoRequest<'a> {
     pub(crate) project_name: &'a str,
 }
 
-impl<'a> Request<ProjectInfoResponse> for ProjectInfoRequest<'a> {
+impl Request<ProjectInfoResponse> for ProjectInfoRequest<'_> {
     fn serialize(&self) -> String {
         serialize_parts(vec!["PROJECT-INFO", self.project_name])
     }
@@ -56,7 +56,7 @@ pub(crate) struct ProjectUpsertRequest<'a> {
     pub(crate) settings_json: &'a str,
 }
 
-impl<'a> Request<ProjectInfoResponse> for ProjectUpsertRequest<'a> {
+impl Request<ProjectInfoResponse> for ProjectUpsertRequest<'_> {
     fn serialize(&self) -> String {
         serialize_parts(vec!["PROJECT-UPSERT", self.settings_json])
     }
@@ -67,7 +67,7 @@ pub(crate) struct ProjectStartRequest<'a> {
     pub(crate) env: String,
 }
 
-impl<'a> Request<ProjectInfoResponse> for ProjectStartRequest<'a> {
+impl Request<ProjectInfoResponse> for ProjectStartRequest<'_> {
     fn serialize(&self) -> String {
         serialize_parts(vec!["PROJECT-START", self.project_name, &self.env])
     }
@@ -78,7 +78,7 @@ pub(crate) struct ProjectRestartRequest<'a> {
     pub(crate) env: String,
 }
 
-impl<'a> Request<ProjectInfoResponse> for ProjectRestartRequest<'a> {
+impl Request<ProjectInfoResponse> for ProjectRestartRequest<'_> {
     fn serialize(&self) -> String {
         serialize_parts(vec!["PROJECT-RESTART", self.project_name, &self.env])
     }
@@ -88,7 +88,7 @@ pub(crate) struct ProjectStopRequest<'a> {
     pub(crate) project_name: &'a str,
 }
 
-impl<'a> Request<ProjectInfoResponse> for ProjectStopRequest<'a> {
+impl Request<ProjectInfoResponse> for ProjectStopRequest<'_> {
     fn serialize(&self) -> String {
         serialize_parts(vec!["PROJECT-STOP", self.project_name])
     }
@@ -98,7 +98,7 @@ pub(crate) struct ProjectRemoveRequest<'a> {
     pub(crate) project_name: &'a str,
 }
 
-impl<'a> Request<NoContentResponse> for ProjectRemoveRequest<'a> {
+impl Request<NoContentResponse> for ProjectRemoveRequest<'_> {
     fn serialize(&self) -> String {
         serialize_parts(vec!["PROJECT-REMOVE", self.project_name])
     }
@@ -108,7 +108,7 @@ pub(crate) struct ServicesNamesRequest<'a> {
     pub(crate) project_name: &'a str,
 }
 
-impl<'a> Request<NameListResponse> for ServicesNamesRequest<'a> {
+impl Request<NameListResponse> for ServicesNamesRequest<'_> {
     fn serialize(&self) -> String {
         serialize_parts(vec!["SERVICES-NAMES", self.project_name])
     }
@@ -119,7 +119,7 @@ pub(crate) struct ServiceInfoRequest<'a> {
     pub(crate) service_name: &'a str,
 }
 
-impl<'a> Request<ServiceInfoResponse> for ServiceInfoRequest<'a> {
+impl Request<ServiceInfoResponse> for ServiceInfoRequest<'_> {
     fn serialize(&self) -> String {
         serialize_parts(vec!["SERVICE-INFO", self.project_name, self.service_name])
     }
@@ -131,7 +131,7 @@ pub(crate) struct ServiceStartRequest<'a> {
     pub(crate) env: String,
 }
 
-impl<'a> Request<ServiceInfoResponse> for ServiceStartRequest<'a> {
+impl Request<ServiceInfoResponse> for ServiceStartRequest<'_> {
     fn serialize(&self) -> String {
         serialize_parts(vec![
             "SERVICE-START",
@@ -148,7 +148,7 @@ pub(crate) struct ServiceRestartRequest<'a> {
     pub(crate) env: String,
 }
 
-impl<'a> Request<ServiceInfoResponse> for ServiceRestartRequest<'a> {
+impl Request<ServiceInfoResponse> for ServiceRestartRequest<'_> {
     fn serialize(&self) -> String {
         serialize_parts(vec![
             "SERVICE-RESTART",
@@ -164,7 +164,7 @@ pub(crate) struct ServiceStopRequest<'a> {
     pub(crate) service_name: &'a str,
 }
 
-impl<'a> Request<ServiceInfoResponse> for ServiceStopRequest<'a> {
+impl Request<ServiceInfoResponse> for ServiceStopRequest<'_> {
     fn serialize(&self) -> String {
         serialize_parts(vec!["SERVICE-STOP", self.project_name, self.service_name])
     }
