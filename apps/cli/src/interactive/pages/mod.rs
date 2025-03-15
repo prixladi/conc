@@ -2,6 +2,7 @@ use std::{collections::HashMap, error::Error, hash::Hash, mem};
 
 use crossterm::event::KeyEvent;
 use daemon_client::Requester;
+use keybinds_page::KeybindsPage;
 use project_page::ProjectPage;
 use projects_page::ProjectsPage;
 use ratatui::{
@@ -11,6 +12,7 @@ use ratatui::{
 
 use super::ActionResult;
 
+mod keybinds_page;
 mod project_page;
 mod projects_page;
 
@@ -18,12 +20,15 @@ mod projects_page;
 pub enum Page {
     Projects,
     Project(String),
+    Keybinds(Box<Page>),
 }
 
 pub trait PageView {
     fn handle_key_event(&mut self, key_event: KeyEvent, requester: &Requester) -> ActionResult;
-    fn refresh(&mut self, requester: &Requester) -> Result<(), Box<dyn Error>>;
     fn render(&mut self, area: Rect, buf: &mut Buffer);
+    fn update(&mut self, _: &Requester) -> Result<(), Box<dyn Error>> {
+        Ok(())
+    }
     fn on_mount(&mut self) {}
     fn cursor_position(&self, _: Rect) -> Option<Position> {
         None
@@ -62,8 +67,16 @@ impl PageManager {
         self.page = page;
     }
 
+    pub fn current_page(&self) -> &Page {
+        &self.page
+    }
+
     pub fn view(&mut self) -> &mut Box<dyn PageView> {
         &mut self.view
+    }
+
+    pub fn is_in_raw_mode(&self) -> bool {
+        self.view.is_in_raw_mode()
     }
 }
 
@@ -71,5 +84,6 @@ fn create_page_view(page: Page) -> Box<dyn PageView> {
     match page {
         Page::Projects => Box::new(ProjectsPage::new()),
         Page::Project(project_name) => Box::new(ProjectPage::new(project_name)),
+        Page::Keybinds(prev_page) => Box::new(KeybindsPage::new(*prev_page)),
     }
 }

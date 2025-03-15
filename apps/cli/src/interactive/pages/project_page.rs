@@ -47,7 +47,7 @@ impl ProjectPage {
 
         let input = Input::new();
 
-        ProjectPage {
+        Self {
             project_name,
             project: None,
             table,
@@ -58,7 +58,7 @@ impl ProjectPage {
 }
 
 impl PageView for ProjectPage {
-    fn refresh(&mut self, requester: &Requester) -> Result<(), Box<dyn Error>> {
+    fn update(&mut self, requester: &Requester) -> Result<(), Box<dyn Error>> {
         self.project = Some(requester.get_project_info(&self.project_name)?);
         Ok(())
     }
@@ -129,6 +129,18 @@ impl ProjectPage {
                 if let Some(service) = selected_service {
                     requester.restart_service(&self.project_name, &service.name)?;
                 }
+                Ok(Action::None)
+            }
+            KeyCode::Char('S') => {
+                requester.start_project(&self.project_name)?;
+                Ok(Action::None)
+            }
+            KeyCode::Char('D') => {
+                requester.stop_project(&self.project_name)?;
+                Ok(Action::None)
+            }
+            KeyCode::Char('R') => {
+                requester.restart_project(&self.project_name)?;
                 Ok(Action::None)
             }
             KeyCode::Char('o') => {
@@ -219,14 +231,10 @@ impl ProjectPage {
 
         let block = CommonBlock::new(format!("Project: {}", project.name))
             .set_border_color(Color::LightBlue)
-            .add_instruction(("Search", "/"))
+            .add_instruction(("Show keybinds", "tab"))
             .add_instruction(("Start", "s"))
             .add_instruction(("Stop", "d"))
-            .add_instruction(("Restart", "r"))
-            .add_instruction(("Logs", "enter"))
-            .add_instruction(("Project settings", "o"))
-            .add_instruction(("Back", "h"))
-            .add_instruction(("Quit", "q"));
+            .add_instruction(("Logs", "enter"));
 
         let rows = self
             .get_filtered_services()
