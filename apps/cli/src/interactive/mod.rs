@@ -43,7 +43,7 @@ impl App {
 
     fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<(), Box<dyn Error>> {
         loop {
-            self.page_manager.view().refresh(&self.requester)?;
+            self.page_manager.view().update(&self.requester)?;
             terminal.draw(|frame| self.draw(frame))?;
 
             match self.handle_events()? {
@@ -86,15 +86,36 @@ impl App {
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent) -> ActionResult {
-        let view = self.page_manager.view();
-
-        if view.is_in_raw_mode() {
-            return view.handle_key_event(key_event, &self.requester);
+        if self.page_manager.is_in_raw_mode() {
+            return self.handle_key_event_page(key_event);
         }
 
+        match self.handle_key_event_global(key_event) {
+            Some(res) => res,
+            None => self.handle_key_event_page(key_event),
+        }
+    }
+
+    fn handle_key_event_page(&mut self, key_event: KeyEvent) -> ActionResult {
+        self.page_manager
+            .view()
+            .handle_key_event(key_event, &self.requester)
+    }
+
+    fn handle_key_event_global(&mut self, key_event: KeyEvent) -> Option<ActionResult> {
         match key_event.code {
-            KeyCode::Char('q') | KeyCode::Esc => Ok(Action::Exit),
-            _ => view.handle_key_event(key_event, &self.requester),
+            KeyCode::Char('q') | KeyCode::Esc if key_event.kind == KeyEventKind::Press => {
+                Some(Ok(Action::Exit))
+            }
+            KeyCode::Tab => {
+                let current_page = self.page_manager.current_page().clone();
+
+                match current_page {
+                    Page::Keybinds(_) => None,
+                    _ => Some(Ok(Action::GotoPage(Page::Keybinds(Box::new(current_page))))),
+                }
+            }
+            _ => None,
         }
     }
 }
