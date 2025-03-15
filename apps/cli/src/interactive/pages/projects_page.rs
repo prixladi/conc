@@ -44,7 +44,7 @@ impl ProjectsPage {
 
         let input = Input::new();
 
-        ProjectsPage {
+        Self {
             projects: vec![],
             table,
             focus: Focus::Table,
@@ -54,7 +54,7 @@ impl ProjectsPage {
 }
 
 impl PageView for ProjectsPage {
-    fn refresh(&mut self, requester: &Requester) -> Result<(), Box<dyn Error>> {
+    fn update(&mut self, requester: &Requester) -> Result<(), Box<dyn Error>> {
         self.projects = requester.get_projects_info()?;
         Ok(())
     }
@@ -187,12 +187,9 @@ impl ProjectsPage {
     fn render_table(&mut self, area: Rect, buf: &mut Buffer) {
         let block = CommonBlock::new(String::from("Projects"))
             .set_border_color(Color::LightYellow)
-            .add_instruction(("Search", "/"))
-            .add_instruction(("Open project", "l"))
-            .add_instruction(("Start project", "s"))
-            .add_instruction(("Stop project", "d"))
-            .add_instruction(("Restart project", "r"))
-            .add_instruction(("Quit", "q"));
+            .add_instruction(("Show keybinds", "tab"))
+            .add_instruction(("Start", "s"))
+            .add_instruction(("Stop", "d"));
 
         let rows = self
             .projects

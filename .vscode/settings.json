@@ -6,6 +6,8 @@
     "concg",
     "crossterm",
     "journalctl",
+    "Keybind",
+    "Keybinds",
     "libc",
     "logfile",
     "Outputable",
