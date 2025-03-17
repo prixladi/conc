@@ -3,12 +3,14 @@ use std::{error::Error, time::Duration};
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use daemon_client::Requester;
 use external_command::{open_log_file_in_less, open_string_in_less};
-use pages::{Page, PageManager};
+use pages::{Page, PageContext, PageManager};
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget, DefaultTerminal, Frame};
+use tui_settings::{LogPreviewSettings, TuiSettings};
 
 mod components;
 mod external_command;
 mod pages;
+mod tui_settings;
 
 pub fn interact(requester: Requester) -> Result<(), Box<dyn Error>> {
     let mut terminal = ratatui::init();
@@ -31,6 +33,7 @@ type ActionResult = Result<Action, Box<dyn Error>>;
 struct App {
     requester: Requester,
     page_manager: PageManager,
+    settings: TuiSettings,
 }
 
 impl App {
@@ -38,12 +41,16 @@ impl App {
         App {
             requester,
             page_manager: PageManager::new(Page::Projects),
+            settings: TuiSettings {
+                log_preview: LogPreviewSettings::On,
+            },
         }
     }
 
     fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<(), Box<dyn Error>> {
         loop {
-            self.page_manager.view().update(&self.requester)?;
+            let context = self.create_page_context();
+            self.page_manager.view().update(context)?;
             terminal.draw(|frame| self.draw(frame))?;
 
             match self.handle_events()? {
@@ -65,7 +72,9 @@ impl App {
     fn draw(&mut self, frame: &mut Frame) {
         let area = frame.area();
 
-        if let Some(cp) = self.page_manager.view().cursor_position(area) {
+        let context = self.create_page_context();
+        let cursor_position = self.page_manager.view().cursor_position(area, context);
+        if let Some(cp) = cursor_position {
             frame.set_cursor_position(cp)
         }
 
@@ -97,9 +106,10 @@ impl App {
     }
 
     fn handle_key_event_page(&mut self, key_event: KeyEvent) -> ActionResult {
+        let context = self.create_page_context();
         self.page_manager
             .view()
-            .handle_key_event(key_event, &self.requester)
+            .handle_key_event(key_event, context)
     }
 
     fn handle_key_event_global(&mut self, key_event: KeyEvent) -> Option<ActionResult> {
@@ -115,13 +125,30 @@ impl App {
                     _ => Some(Ok(Action::GotoPage(Page::Keybinds(Box::new(current_page))))),
                 }
             }
+            KeyCode::Char('i') => {
+                self.settings.log_preview = match self.settings.log_preview {
+                    LogPreviewSettings::On => LogPreviewSettings::Fit,
+                    LogPreviewSettings::Off => LogPreviewSettings::On,
+                    LogPreviewSettings::Fit => LogPreviewSettings::Off,
+                };
+
+                Some(Ok(Action::None))
+            }
             _ => None,
+        }
+    }
+
+    fn create_page_context(&self) -> PageContext {
+        PageContext {
+            requester: self.requester.clone(),
+            settings: self.settings.clone(),
         }
     }
 }
 
 impl Widget for &mut App {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        self.page_manager.view().render(area, buf);
+        let context = self.create_page_context();
+        self.page_manager.view().render(area, buf, context);
     }
 }

@@ -18,7 +18,7 @@ use crate::{
     utils::start_time_to_age,
 };
 
-use super::{Page, PageView};
+use super::{Page, PageContext, PageView};
 
 #[derive(Debug, PartialEq)]
 enum Focus {
@@ -54,28 +54,27 @@ impl ProjectsPage {
 }
 
 impl PageView for ProjectsPage {
-    fn update(&mut self, requester: &Requester) -> Result<(), Box<dyn Error>> {
-        self.projects = requester.get_projects_info()?;
+    fn update(&mut self, context: PageContext) -> Result<(), Box<dyn Error>> {
+        self.projects = context.requester.get_projects_info()?;
         Ok(())
     }
 
-    fn handle_key_event(&mut self, key_event: KeyEvent, requester: &Requester) -> ActionResult {
+    fn handle_key_event(&mut self, key_event: KeyEvent, context: PageContext) -> ActionResult {
         match self.focus {
-            Focus::Table => self.handle_key_event_table(key_event, requester),
+            Focus::Table => self.handle_key_event_table(key_event, &context.requester),
             Focus::Search => self.handle_key_event_search(key_event),
         }
     }
 
-    fn cursor_position(&self, area: Rect) -> Option<Position> {
+    fn cursor_position(&self, area: Rect, _: PageContext) -> Option<Position> {
         match self.focus {
             Focus::Table => None,
-            Focus::Search => {
-                let [search_area, _] = self.get_full_layout(area);
-                Some(Position::new(
+            Focus::Search => PageLayout::from(self, area).search_area.map(|search_area| {
+                Position::new(
                     search_area.x + self.search.len() as u16 + 1,
                     search_area.y + 1,
-                ))
-            }
+                )
+            }),
         }
     }
 
@@ -87,15 +86,13 @@ impl PageView for ProjectsPage {
         self.focus == Focus::Search
     }
 
-    fn render(&mut self, area: Rect, buf: &mut Buffer) {
-        if self.search.is_empty() && self.focus == Focus::Table {
-            self.render_table(area, buf);
-            return;
-        }
+    fn render(&mut self, area: Rect, buf: &mut Buffer, context: PageContext) {
+        let layout = PageLayout::from(self, area);
 
-        let [search_area, table_area] = self.get_full_layout(area);
-        self.render_search(search_area, buf);
-        self.render_table(table_area, buf);
+        if let Some(search_area) = layout.search_area {
+            self.render_search(search_area, buf);
+        }
+        self.render_table(layout.table_area, buf, context);
     }
 }
 
@@ -170,11 +167,6 @@ impl ProjectsPage {
         })
     }
 
-    fn get_full_layout(&self, area: Rect) -> [Rect; 2] {
-        let vertical = Layout::vertical([Constraint::Length(3), Constraint::Min(1)]);
-        vertical.areas(area)
-    }
-
     fn render_search(&mut self, area: Rect, buf: &mut Buffer) {
         let block = CommonBlock::new(String::from("Search"))
             .set_border_color(Color::LightRed)
@@ -184,8 +176,10 @@ impl ProjectsPage {
         self.search.render(block.into(), area, buf);
     }
 
-    fn render_table(&mut self, area: Rect, buf: &mut Buffer) {
-        let block = CommonBlock::new(String::from("Projects"))
+    fn render_table(&mut self, area: Rect, buf: &mut Buffer, context: PageContext) {
+        let title = format!("Projects ({})", self.projects.len());
+        let block = CommonBlock::new(title)
+            .add_top_info(context.settings.to_info())
             .set_border_color(Color::LightYellow)
             .add_instruction(("Show keybinds", "tab"))
             .add_instruction(("Start", "s"))
@@ -195,14 +189,15 @@ impl ProjectsPage {
             .projects
             .iter()
             .filter(|project| self.search.is_empty() || project.name.contains(&self.search.value()))
-            .map(|project| {
+            .enumerate()
+            .map(|(i, project)| {
                 let status: Span = format!(
                     "{}/{} services running",
                     project.running_service_count(),
                     project.service_count()
                 )
                 .into();
-                let name: Span = project.name.clone().into();
+                let name: Span = format!("{}. {}", i + 1, project.name).into();
                 let age = match project.newest_running_service_started_at() {
                     Some(start_time) => start_time_to_age(start_time),
                     None => String::new(),
@@ -221,5 +216,29 @@ impl ProjectsPage {
             .collect();
 
         self.table.render(rows, block.into(), area, buf);
+    }
+}
+
+struct PageLayout {
+    search_area: Option<Rect>,
+    table_area: Rect,
+}
+
+impl PageLayout {
+    fn from(page: &ProjectsPage, area: Rect) -> Self {
+        if page.search.is_empty() && page.focus != Focus::Search {
+            return PageLayout {
+                search_area: None,
+                table_area: area,
+            };
+        }
+
+        let vertical = Layout::vertical([Constraint::Length(3), Constraint::Fill(1)]);
+        let [search, table] = vertical.areas(area);
+
+        PageLayout {
+            search_area: Some(search),
+            table_area: table,
+        }
     }
 }
