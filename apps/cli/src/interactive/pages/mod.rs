@@ -10,7 +10,7 @@ use ratatui::{
     layout::{Position, Rect},
 };
 
-use super::ActionResult;
+use super::{tui_settings::TuiSettings, ActionResult};
 
 mod keybinds_page;
 mod project_page;
@@ -23,14 +23,20 @@ pub enum Page {
     Keybinds(Box<Page>),
 }
 
+#[derive(Debug)]
+pub struct PageContext {
+    pub settings: TuiSettings,
+    pub requester: Requester,
+}
+
 pub trait PageView {
-    fn handle_key_event(&mut self, key_event: KeyEvent, requester: &Requester) -> ActionResult;
-    fn render(&mut self, area: Rect, buf: &mut Buffer);
-    fn update(&mut self, _: &Requester) -> Result<(), Box<dyn Error>> {
+    fn handle_key_event(&mut self, key_event: KeyEvent, context: PageContext) -> ActionResult;
+    fn render(&mut self, area: Rect, buf: &mut Buffer, context: PageContext);
+    fn update(&mut self, _: PageContext) -> Result<(), Box<dyn Error>> {
         Ok(())
     }
     fn on_mount(&mut self) {}
-    fn cursor_position(&self, _: Rect) -> Option<Position> {
+    fn cursor_position(&self, _: Rect, _: PageContext) -> Option<Position> {
         None
     }
     fn is_in_raw_mode(&self) -> bool {

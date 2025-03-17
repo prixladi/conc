@@ -9,6 +9,7 @@ type Instruction = (&'static str, &'static str);
 
 pub struct CommonBlock {
     title: String,
+    top_info: Option<String>,
     instructions: Vec<Instruction>,
     border_color: Color,
 }
@@ -19,7 +20,13 @@ impl CommonBlock {
             title,
             instructions: vec![],
             border_color: Color::Gray,
+            top_info: None,
         }
+    }
+
+    pub fn add_top_info(mut self, info: String) -> Self {
+        self.top_info = Some(info);
+        self
     }
 
     pub fn add_instruction(mut self, ins: Instruction) -> Self {
@@ -46,15 +53,23 @@ impl From<CommonBlock> for Block<'_> {
             })
             .collect();
 
-        instructions.push(" ".into());
+        if !instructions.is_empty() {
+            instructions.push(" ".into());
+        }
 
         let instructions = Line::from(instructions).centered();
         let title = Line::from(format!(" {} ", value.title.bold())).left_aligned();
 
-        Block::bordered()
+        let mut block = Block::bordered()
             .border_style(value.border_color)
             .title(title)
             .title_bottom(instructions)
-            .border_set(border::ROUNDED)
+            .border_set(border::ROUNDED);
+
+        if let Some(top_info) = value.top_info {
+            block = block.title(Line::from(format!(" {} ", top_info)).right_aligned());
+        }
+
+        block
     }
 }

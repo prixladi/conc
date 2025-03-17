@@ -12,7 +12,9 @@ ratatui = "0.29.0"
 crossterm = "0.28.1"
 color-eyre = "0.6.3"
 strum = "0.26.3"
+rev_buf_reader = "0.3.0"
 # local crates
 daemon-client.workspace = true
 project-settings.workspace = true
 app-config.workspace = true
+ansi-to-tui = "7.0.0"

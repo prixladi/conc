@@ -1,14 +1,14 @@
 use crossterm::event::{KeyCode, KeyEvent};
-use daemon_client::Requester;
 use ratatui::{
-    layout::Constraint,
+    buffer::Buffer,
+    layout::{Constraint, Rect},
     style::{Color, Stylize},
     widgets::{Cell, Row, StatefulWidget, Table, TableState},
 };
 
 use crate::interactive::{components::CommonBlock, Action, ActionResult};
 
-use super::{Page, PageView};
+use super::{Page, PageContext, PageView};
 
 #[derive(Debug)]
 pub(super) struct KeybindsPage {
@@ -26,7 +26,7 @@ impl KeybindsPage {
 }
 
 impl PageView for KeybindsPage {
-    fn handle_key_event(&mut self, key_event: KeyEvent, _: &Requester) -> ActionResult {
+    fn handle_key_event(&mut self, key_event: KeyEvent, _: PageContext) -> ActionResult {
         match key_event.code {
             KeyCode::Tab | KeyCode::Esc | KeyCode::Char('q') => {
                 Ok(Action::GotoPage(self.for_page.clone()))
@@ -58,7 +58,7 @@ impl PageView for KeybindsPage {
         true
     }
 
-    fn render(&mut self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer) {
+    fn render(&mut self, area: Rect, buf: &mut Buffer, _: PageContext) {
         let (title, binds) = match &self.for_page {
             Page::Projects => (String::from("PROJECTS"), get_projects_page_keybinds()),
             Page::Project(project) => (
@@ -95,6 +95,7 @@ fn get_projects_page_keybinds() -> Vec<(&'static str, Vec<&'static str>)> {
         ("Open project", vec!["enter", "k", "right"]),
         ("Next project", vec!["j", "down"]),
         ("Previous project", vec!["l", "up"]),
+        ("Change log preview mode", vec!["i"]),
         ("Quit app", vec!["q", "esc"]),
         ("Show keybinds", vec!["tab"]),
     ]
@@ -110,8 +111,9 @@ fn get_project_page_keybinds() -> Vec<(&'static str, Vec<&'static str>)> {
         ("Previous service", vec!["l", "up"]),
         ("Open logs", vec!["enter"]),
         ("Go back to projects", vec!["j", "left"]),
-        ("Quit app", vec!["q", "esc"]),
+        ("Change log preview mode", vec!["i"]),
         ("Open project settings", vec!["o"]),
+        ("Quit app", vec!["q", "esc"]),
         ("Start project", vec!["S"]),
         ("Stop project", vec!["D"]),
         ("Restart project", vec!["R"]),
