@@ -1,6 +1,6 @@
 # Conc
 
-Conc is a simple desktop process manager.
+Conc is a simple desktop service runner and manager. It allows user to define services organized into project groups that can be after that managed from **cli** or **gui**.
 
 ## Architecture
 
