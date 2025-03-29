@@ -27,9 +27,9 @@ use crate::{
 use super::{Page, PageContext, PageView};
 
 #[derive(Debug, PartialEq)]
-enum Focus {
-    Table,
-    Search,
+enum Mode {
+    Normal,
+    Search(Option<usize>),
 }
 
 #[derive(Debug)]
@@ -38,7 +38,7 @@ pub(super) struct ProjectPage {
     project: Option<ProjectInfo>,
     logs: Vec<String>,
 
-    focus: Focus,
+    mode: Mode,
     table: ActiveTable,
     search: Input,
 }
@@ -57,7 +57,7 @@ impl ProjectPage {
             project_name,
             project: None,
             table,
-            focus: Focus::Table,
+            mode: Mode::Normal,
             search: input,
             logs: vec![],
         }
@@ -80,16 +80,22 @@ impl PageView for ProjectPage {
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent, context: PageContext) -> ActionResult {
-        match self.focus {
-            Focus::Table => self.handle_key_event_table(key_event, &context.requester),
-            Focus::Search => self.handle_key_event_search(key_event),
+        if self.table.is_control_key_code(key_event.code) {
+            let service_count = self.get_services().len();
+            self.table.handle_key_code(key_event.code, service_count);
+            return Ok(Action::None);
+        }
+
+        match self.mode {
+            Mode::Normal => self.handle_key_event(key_event, &context.requester),
+            Mode::Search(prev_selected) => self.handle_key_event_search(key_event, prev_selected),
         }
     }
 
     fn cursor_position(&self, area: Rect, context: PageContext) -> Option<Position> {
-        match self.focus {
-            Focus::Table => None,
-            Focus::Search => {
+        match self.mode {
+            Mode::Normal => None,
+            Mode::Search(_) => {
                 let layout = PageLayout::from(self, area, &context.settings);
                 layout.search_area.map(|search_area| {
                     Position::new(
@@ -102,12 +108,15 @@ impl PageView for ProjectPage {
     }
 
     fn on_mount(&mut self) {
-        self.focus = Focus::Table;
+        self.mode = Mode::Normal;
         self.search.clear();
     }
 
     fn is_in_raw_mode(&self) -> bool {
-        self.focus == Focus::Search
+        match self.mode {
+            Mode::Normal => false,
+            Mode::Search(_) => true,
+        }
     }
 
     fn render(&mut self, area: Rect, buf: &mut Buffer, context: PageContext) {
@@ -125,11 +134,7 @@ impl PageView for ProjectPage {
 }
 
 impl ProjectPage {
-    fn handle_key_event_table(
-        &mut self,
-        key_event: KeyEvent,
-        requester: &Requester,
-    ) -> ActionResult {
+    fn handle_key_event(&mut self, key_event: KeyEvent, requester: &Requester) -> ActionResult {
         let selected_service = self.get_selected_service();
 
         match key_event.code {
@@ -178,63 +183,44 @@ impl ProjectPage {
             }
             KeyCode::Left | KeyCode::Char('h') => Ok(Action::GotoPage(Page::Projects)),
             KeyCode::Char('/') => {
-                self.focus = Focus::Search;
+                self.mode = Mode::Search(self.table.selected());
                 Ok(Action::None)
             }
-            event => {
-                let service_count = self.get_filtered_services().len();
-                self.table.handle_key_code(event, service_count);
-                Ok(Action::None)
-            }
+            _ => Ok(Action::None),
         }
     }
 
-    fn handle_key_event_search(&mut self, key_event: KeyEvent) -> ActionResult {
+    fn handle_key_event_search(
+        &mut self,
+        key_event: KeyEvent,
+        prev_selected: Option<usize>,
+    ) -> ActionResult {
         match key_event.code {
             KeyCode::Esc => {
-                self.focus = Focus::Table;
+                self.table.select(prev_selected);
                 self.search.clear();
+                self.mode = Mode::Normal;
             }
-            KeyCode::Char('/') | KeyCode::Enter => self.focus = Focus::Table,
+            KeyCode::Enter | KeyCode::Char('/') => {
+                let selected_service = self
+                    .get_selected_service()
+                    .and_then(|selected| self.get_service_index(&selected.name))
+                    .or(prev_selected);
+
+                self.table.select(selected_service);
+                self.search.clear();
+                self.mode = Mode::Normal
+            }
             code => self.search.handle_key_code(code),
         }
 
         Ok(Action::None)
     }
 
-    fn get_filtered_services(&self) -> Vec<ServiceInfo> {
-        match &self.project {
-            Some(project) => project
-                .services
-                .iter()
-                .filter(|service| {
-                    self.search.is_empty() || service.name.contains(&self.search.value())
-                })
-                .cloned()
-                .collect(),
-            None => vec![],
-        }
-    }
-
-    fn get_selected_service(&self) -> Option<ServiceInfo> {
-        let selected = self.table.selected().unwrap_or_default();
-        let services = self.get_filtered_services();
-
-        if services.is_empty() {
-            None
-        } else if selected == services.len() {
-            Some(services[0].clone())
-        } else if selected >= services.len() {
-            services.last().cloned()
-        } else {
-            Some(services[selected].clone())
-        }
-    }
-
     fn render_search(&mut self, area: Rect, buf: &mut Buffer) {
         let block = CommonBlock::new(String::from("Search"))
             .set_border_color(Color::LightRed)
-            .add_instruction(("Search", "/"))
+            .add_instruction(("Confirm", "/"))
             .add_instruction(("Clear", "escape"));
 
         self.search.render(block.into(), area, buf);
@@ -260,7 +246,7 @@ impl ProjectPage {
             .add_instruction(("Logs", "enter"));
 
         let rows = self
-            .get_filtered_services()
+            .get_services()
             .iter()
             .enumerate()
             .map(|(i, service)| {
@@ -305,6 +291,52 @@ impl ProjectPage {
     }
 }
 
+impl ProjectPage {
+    fn get_services(&self) -> Vec<ServiceInfo> {
+        match &self.project {
+            Some(project) => match self.mode {
+                Mode::Normal => project.services.clone(),
+                Mode::Search(_) => project
+                    .services
+                    .iter()
+                    .filter(|service| {
+                        self.search.is_empty() || service.name.contains(&self.search.value())
+                    })
+                    .cloned()
+                    .collect(),
+            },
+            None => vec![],
+        }
+    }
+
+    fn get_service_index(&self, service_name: &str) -> Option<usize> {
+        self.project.as_ref().and_then(|project| {
+            project
+                .services
+                .iter()
+                .enumerate()
+                .filter(|(_, s)| s.name == service_name)
+                .map(|(i, _)| i)
+                .next()
+        })
+    }
+
+    fn get_selected_service(&self) -> Option<ServiceInfo> {
+        let selected = self.table.selected().unwrap_or_default();
+        let services = self.get_services();
+
+        if services.is_empty() {
+            None
+        } else if selected == services.len() {
+            Some(services[0].clone())
+        } else if selected >= services.len() {
+            services.last().cloned()
+        } else {
+            Some(services[selected].clone())
+        }
+    }
+}
+
 struct PageLayout {
     search_area: Option<Rect>,
     table_area: Rect,
@@ -327,7 +359,7 @@ impl PageLayout {
 
         let max_table_line_count = max(TABLE_OVERHEAD + service_count, MIN_FORCED_TABLE_LINE_COUNT);
 
-        let show_search = !page.search.is_empty() || page.focus == Focus::Search;
+        let show_search = page.is_in_raw_mode();
 
         let table_line_display_count = match settings.log_preview {
             LogPreviewSettings::On => min(MAX_FORCED_TABLE_LINE_COUNT, max_table_line_count),
@@ -376,7 +408,7 @@ impl PageLayout {
 
         let vertical = Layout::vertical([
             Constraint::Length(SEARCH_BAR_HEIGHT),
-            Constraint::Max(table_line_display_count - SEARCH_BAR_HEIGHT),
+            Constraint::Max(table_line_display_count),
             Constraint::Fill(1),
         ]);
         let [search, table, logs] = vertical.areas(area);
