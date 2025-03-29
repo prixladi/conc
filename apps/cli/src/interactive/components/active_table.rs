@@ -25,6 +25,10 @@ impl ActiveTable {
         self
     }
 
+    pub fn is_control_key_code(&self, code: KeyCode) -> bool {
+        matches!(code, KeyCode::Down | KeyCode::Up | KeyCode::Char('j') | KeyCode::Char('k'))
+    }
+
     pub fn handle_key_code(&mut self, code: KeyCode, total_elements: usize) {
         if total_elements == 0 {
             return;
@@ -76,6 +80,10 @@ impl ActiveTable {
 
     pub fn selected(&self) -> Option<usize> {
         self.state.selected()
+    }
+
+    pub fn select(&mut self, index: Option<usize>) {
+        self.state.select(index);
     }
 }
 
