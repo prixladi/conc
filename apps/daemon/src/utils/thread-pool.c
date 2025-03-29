@@ -18,7 +18,7 @@ enum thread_pool_state
 {
     IDLE,
     RUNNING,
-    EXITING,
+    STOPPING,
 };
 
 struct thread_pool_job
@@ -33,7 +33,7 @@ struct thread_pool_job
 struct thread_pool
 {
     char *name;
-    int size;
+    int concurrency;
 
     int job_queue_capacity;
     int job_queue_size;
@@ -53,14 +53,14 @@ static void thread_pool_job_free(struct thread_pool_job *job);
 static void wait_for_workers(struct thread_pool *pool);
 
 struct thread_pool *
-thread_pool_create(int size, int capacity, char *_name)
+thread_pool_create(int concurrency, int capacity, char *pool_name)
 {
-    char *prefix = _name == NULL ? DEFAULT_THREAD_POOL_NAME : _name;
+    char *prefix = pool_name == NULL ? DEFAULT_THREAD_POOL_NAME : pool_name;
     char *name = str_concat(prefix, DEFAULT_THREAD_POOL_NAME_SUFFIX);
 
-    if (size < 1)
+    if (concurrency < 1)
     {
-        log_error("Unable to initialize thread_pool '%s' with size '%d'\n", name, size);
+        log_error("Unable to initialize thread_pool '%s' with concurrency '%d'\n", name, concurrency);
         return NULL;
     }
 
@@ -84,7 +84,7 @@ thread_pool_create(int size, int capacity, char *_name)
     struct thread_pool *pool = calloc(1, sizeof(struct thread_pool));
 
     pool->name = name;
-    pool->size = size;
+    pool->concurrency = concurrency;
     pool->job_queue_capacity = capacity;
     pool->job_queue_size = 0;
     pool->lock = lock;
@@ -106,10 +106,12 @@ thread_pool_start(struct thread_pool *pool)
     }
 
     pool->state = RUNNING;
-    pool->worker_threads = malloc(sizeof(pthread_t) * pool->size);
+    if (pool->worker_threads)
+        free(pool->worker_threads);
+    pool->worker_threads = malloc(sizeof(pthread_t) * pool->concurrency);
 
     log_info("Starting thread_pool '%s'\n", pool->name);
-    for (int i = 0; i < pool->size; i++)
+    for (int i = 0; i < pool->concurrency; i++)
     {
         log_trace(pool->name, "Starting worker - '%d'\n", i);
         pthread_t thr;
@@ -131,6 +133,14 @@ thread_pool_queue_job(struct thread_pool *pool, char *name, void *(*run)(void *)
     job->args = args;
 
     pthread_mutex_lock(pool->lock);
+
+    if (pool->state == STOPPING)
+    {
+        pthread_mutex_unlock(pool->lock);
+        thread_pool_job_free(job);
+        log_error("Thread pool '%s' is stopping unable to queue job at the moment", pool->name);
+        return 2;
+    }
 
     if (pool->job_queue_capacity > 0 && pool->job_queue_size >= pool->job_queue_capacity)
     {
@@ -158,7 +168,7 @@ thread_pool_queue_job(struct thread_pool *pool, char *name, void *(*run)(void *)
 }
 
 int
-thread_pool_stop_and_wait(struct thread_pool *pool)
+thread_pool_finish_and_stop(struct thread_pool *pool)
 {
     log_info("Thread_pool '%s' stopping\n", pool->name);
 
@@ -170,7 +180,7 @@ thread_pool_stop_and_wait(struct thread_pool *pool)
         return 1;
     }
 
-    pool->state = EXITING;
+    pool->state = STOPPING;
 
     pthread_mutex_unlock(pool->lock);
     pthread_cond_broadcast(pool->cond);
@@ -185,7 +195,7 @@ thread_pool_stop_and_wait(struct thread_pool *pool)
 }
 
 int
-thread_pool_pause_and_wait(struct thread_pool *pool)
+thread_pool_wait_and_pause(struct thread_pool *pool)
 {
     log_info("Thread_pool '%s' pausing\n", pool->name);
 
@@ -284,7 +294,7 @@ run_worker(void *arg)
 
             thread_pool_job_free(job);
         }
-        else if (pool->state == EXITING)
+        else if (pool->state == STOPPING)
         {
             log_trace(pool->name, "State of the thread_pool is 'exiting' and the queue is empty, exiting worker\n");
             pthread_mutex_unlock(pool->lock);
@@ -305,7 +315,7 @@ static void
 wait_for_workers(struct thread_pool *pool)
 {
     log_trace(pool->name, "Waiting for worker threads to finish\n");
-    for (int i = 0; i < pool->size; i++)
+    for (int i = 0; i < pool->concurrency; i++)
     {
         pthread_join(pool->worker_threads[i], NULL);
         log_trace(pool->name, "Joined worker - '%d'\n", i);

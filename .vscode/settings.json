@@ -43,6 +43,10 @@
     "time.h": "c",
     "vector.h": "c",
     "vector-tests.h": "c",
-    "string-tests.h": "c"
+    "string-tests.h": "c",
+    "expect.h": "c",
+    "thread-pool.h": "c",
+    "stdbool.h": "c",
+    "pthread.h": "c"
   }
 }
