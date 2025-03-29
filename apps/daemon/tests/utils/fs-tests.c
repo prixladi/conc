@@ -4,7 +4,7 @@
 
 #include "../expect.h"
 
-#include "../../src/utils/fs.h"
+#include "../../src/utils/fs.c"
 
 char *
 test__is_path_absolute__root()

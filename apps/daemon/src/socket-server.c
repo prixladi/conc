@@ -128,7 +128,7 @@ server_run(void *data)
 
     log_info("Socket server stopping\n");
 
-    thread_pool_stop_and_wait(pool);
+    thread_pool_finish_and_stop(pool);
     thread_pool_free(pool);
 
     return NULL;
@@ -163,6 +163,7 @@ client_socket_handle(void *data)
     if (close(opts->client_socket) > 0)
         log_error("Unable to close client socket '%d'\n", opts->client_socket);
 
+    // TODO: probably need to free opts
     return NULL;
 }
 

@@ -4,7 +4,7 @@
 
 #include "../expect.h"
 
-#include "../../src/utils/string.h"
+#include "../../src/utils/string.c"
 
 char *
 test__str_dup()

@@ -3,7 +3,7 @@
 
 #include "../expect.h"
 
-#include "../../src/utils/vector.h"
+#include "../../src/utils/vector.c"
 
 static int *alloc_int(int i);
 
