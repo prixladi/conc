@@ -41,7 +41,7 @@ impl SocketClient {
         unix_stream.shutdown(Shutdown::Write)?;
 
         // TODO: this whole block could be avoided by using 'unix_stream.read_to_string'
-        // but for some reason it sometimes it sometimes stay hanging as if socket connection
+        // but for some reason it sometimes stays hanging as if the socket connection
         // would not get closed from the server side, this is solved by checking for 'buffer[n - 1] == 0'
         let mut response = vec![];
         loop {

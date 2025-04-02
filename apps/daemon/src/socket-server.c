@@ -163,7 +163,6 @@ client_socket_handle(void *data)
     if (close(opts->client_socket) > 0)
         log_error("Unable to close client socket '%d'\n", opts->client_socket);
 
-    // TODO: probably need to free opts
     return NULL;
 }
 
