@@ -195,6 +195,8 @@ d_service_start(const struct project_settings project, const struct service_sett
     if (write_service_meta_file(project.name, service_settings.name, info) > 0)
     {
         log_error("Unable to write service meta for service '%s' in project '%s'\n", service_settings.name, project.name);
+        if (pid > 0)
+            kill_pid(pid);
         return D_FS_ERROR;
     }
 
