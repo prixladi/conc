@@ -17,10 +17,14 @@ pub enum ProjectSettingsError {
     ParserError { inner: serde_json::Error },
     #[error("project name is empty")]
     EmptyProjectName,
+    #[error("project name is invalid, characters must be alphanumeric or '-' or '_'")]
+    InvalidProjectName,
     #[error("no service was specified")]
     EmptyServices,
     #[error("service name is empty")]
     EmptyServiceName,
+    #[error("service '{service_name}' is invalid, characters must be alphanumeric or '-' or '_'")]
+    InvalidServiceName { service_name: String },
     #[error("service '{service_name}' is declared more than once")]
     DuplicateServiceName { service_name: String },
     #[error("service '{service_name}' has an empty command")]
@@ -124,6 +128,11 @@ fn try_parse(value: &str) -> Result<ProjectSettings, ProjectSettingsError> {
     if settings.name.is_empty() {
         return Err(ProjectSettingsError::EmptyProjectName);
     }
+
+    if !is_name_valid(&settings.name) {
+        return Err(ProjectSettingsError::InvalidProjectName);
+    }
+
     if settings.services.is_empty() {
         return Err(ProjectSettingsError::EmptyServices);
     }
@@ -136,6 +145,11 @@ fn try_parse(value: &str) -> Result<ProjectSettings, ProjectSettingsError> {
         }
 
         let name = service.name.clone();
+
+        if !is_name_valid(&name) {
+            return Err(ProjectSettingsError::InvalidServiceName { service_name: name });
+        }
+
         if service.command.is_empty() {
             return Err(ProjectSettingsError::EmptyCommand { service_name: name });
         }
@@ -191,6 +205,11 @@ fn populate_env(envs: HashMap<String, EnvValue>) -> HashMap<String, EnvValue> {
             (key, EnvValue::Str(val))
         })
         .collect()
+}
+
+fn is_name_valid(name: &str) -> bool {
+    name.chars()
+        .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
 }
 
 fn ordered_map<S: Serializer, K: Ord + Serialize, V: Serialize>(
