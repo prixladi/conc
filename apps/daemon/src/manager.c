@@ -243,7 +243,7 @@ project_upsert(const struct project_settings settings)
         pthread_mutex_unlock(store.lock);
         return M_DRIVER_ERROR;
     }
-    vec_push(store.projects, new_project);
+    vec_unshift(store.projects, new_project);
 
     pthread_mutex_unlock(store.lock);
 

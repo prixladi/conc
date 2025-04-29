@@ -23,6 +23,7 @@ void _vector_field_set(void *arr, size_t field, size_t value);
 void *_vector_resize(void *arr);
 
 void *_vec_push(void *arr, void *xptr);
+void *_vec_unshift(void *arr, void *xptr);
 int _vec_pop(void *arr, void *dest);
 int _vec_remove(void *arr, size_t pos, void *dest);
 
@@ -41,6 +42,13 @@ int _vec_remove(void *arr, size_t pos, void *dest);
     { \
         __auto_type temp = x; \
         arr = _vec_push(arr, &temp); \
+    } while (0)
+
+#define vec_unshift(arr, x) \
+    do \
+    { \
+        __auto_type temp = x; \
+        arr = _vec_unshift(arr, &temp); \
     } while (0)
 
 #define vec_pop(arr, xptr) _vec_pop(arr, xptr)

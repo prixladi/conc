@@ -3,6 +3,7 @@
 char *test__vec_create();
 char *test__vec_create_prealloc();
 char *test__vec_push();
+char *test__vec_unshift();
 char *test__vec_push_preallocated();
 char *test__vec_access();
 char *test__vec_pop();

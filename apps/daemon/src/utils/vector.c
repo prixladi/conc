@@ -77,6 +77,19 @@ _vec_push(void *arr, void *xptr)
     return arr;
 }
 
+void *
+_vec_unshift(void *arr, void *xptr)
+{
+    if (vec_length(arr) >= vec_capacity(arr))
+        arr = _vector_resize(arr);
+
+    if (vec_length(arr))
+        memmove((BYTE_PTR)arr + vec_stride(arr), arr, vec_length(arr) * vec_stride(arr));
+    memcpy(arr, xptr, vec_stride(arr));
+    _vector_field_set(arr, LENGTH, vec_length(arr) + 1);
+    return arr;
+}
+
 int
 _vec_pop(void *arr, void *dest)
 {
