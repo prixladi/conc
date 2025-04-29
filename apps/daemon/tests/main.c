@@ -33,6 +33,7 @@ main()
     run(test__vec_create, "vector create");
     run(test__vec_create_prealloc, "vector create prealloc");
     run(test__vec_push, "vector push basic");
+    run(test__vec_push, "vector unshift basic");
     run(test__vec_push_preallocated, "vector push preallocated");
     run(test__vec_access, "vector access");
     run(test__vec_pop, "vector pop");

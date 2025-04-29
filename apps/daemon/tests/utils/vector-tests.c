@@ -10,31 +10,29 @@ static int *alloc_int(int i);
 char *
 test__vec_create()
 {
-    int *vec = vec_create(int);
+    vec_scoped int *vec = vec_create(int);
 
     expect(vec_length(vec) == 0, "Expected empty vector length");
     expect(vec_capacity(vec) == VECTOR_DEFAULT_CAPACITY, "Expected empty vector capacity");
 
-    vec_free(vec);
     return NULL;
 }
 
 char *
 test__vec_create_prealloc()
 {
-    int *vec = vec_create_prealloc(int, 8);
+    vec_scoped int *vec = vec_create_prealloc(int, 8);
 
     expect(vec_length(vec) == 0, "Expected empty vector length");
     expect(vec_capacity(vec) == 8, "Expected preallocated vector capacity");
 
-    vec_free(vec);
     return NULL;
 }
 
 char *
 test__vec_push()
 {
-    int *vec = vec_create(int);
+    vec_scoped int *vec = vec_create(int);
 
     vec_push(vec, 1);
     vec_push(vec, 2);
@@ -47,14 +45,32 @@ test__vec_push()
     expect(vec_length(vec) == 7, "Expected vector of length 7");
     expect(vec_capacity(vec) >= 7, "Expected vector of capacity greater or equal to 7");
 
-    vec_free(vec);
+    return NULL;
+}
+
+char *
+test__vec_unshift()
+{
+    vec_scoped int *vec = vec_create(int);
+
+    vec_unshift(vec, 1);
+    vec_unshift(vec, 2);
+    vec_unshift(vec, 3);
+    vec_unshift(vec, 4);
+    vec_unshift(vec, 5);
+    vec_unshift(vec, 6);
+    vec_unshift(vec, 7);
+
+    expect(vec_length(vec) == 7, "Expected vector of length 7");
+    expect(vec_capacity(vec) >= 7, "Expected vector of capacity greater or equal to 7");
+
     return NULL;
 }
 
 char *
 test__vec_push_preallocated()
 {
-    int *vec = vec_create_prealloc(int, 8);
+    vec_scoped int *vec = vec_create_prealloc(int, 8);
 
     vec_push(vec, 1);
     vec_push(vec, 2);
@@ -64,14 +80,13 @@ test__vec_push_preallocated()
     expect(vec_length(vec) == 4, "Expected vector of length 4");
     expect(vec_capacity(vec) == 8, "Expected preallocated vector capacity");
 
-    vec_free(vec);
     return NULL;
 }
 
 char *
 test__vec_access()
 {
-    int *vec = vec_create(int);
+    vec_scoped int *vec = vec_create(int);
 
     vec_push(vec, 1);
     vec_push(vec, 2);
@@ -80,23 +95,26 @@ test__vec_access()
     vec_push(vec, 5);
     vec_push(vec, 6);
     vec_push(vec, 7);
+    vec_unshift(vec, 0);
 
-    expect(vec[2] == 3, "Expected third element to be 3");
-    expect(vec[5] == 6, "Expected sixth element to be 6");
+    expect(vec[0] == 0, "Expected first element to be 0");
+    expect(vec[2] == 2, "Expected third element to be 2");
+    expect(vec[5] == 5, "Expected sixth element to be 5");
 
-    vec_free(vec);
     return NULL;
 }
 
 char *
 test__vec_pop()
 {
-    int *vec = vec_create(int);
+    vec_scoped int *vec = vec_create(int);
 
+    vec_unshift(vec, 0);
     vec_push(vec, 1);
     vec_push(vec, 2);
     vec_push(vec, 3);
     vec_push(vec, 4);
+    vec_unshift(vec, -1);
     vec_push(vec, 5);
     vec_push(vec, 6);
     vec_push(vec, 7);
@@ -105,7 +123,7 @@ test__vec_pop()
     vec_pop(vec, &out);
 
     expect(out == 7, "Expected popped element to be 7");
-    expect(vec_length(vec) == 6, "Expected vector of length 6");
+    expect(vec_length(vec) == 8, "Expected vector of length 8");
 
     vec_pop(vec, NULL);
     vec_pop(vec, NULL);
@@ -115,16 +133,21 @@ test__vec_pop()
     vec_pop(vec, &out);
 
     expect(out == 1, "Expected popped element to be 1");
+    expect(vec_length(vec) == 2, "Expected vector of length 2");
+
+    vec_pop(vec, NULL);
+    vec_pop(vec, &out);
+
+    expect(out == -1, "Expected popped element to be -1");
     expect(vec_length(vec) == 0, "Expected vector of length 0");
 
-    vec_free(vec);
     return NULL;
 }
 
 char *
 test__vec_remove()
 {
-    int *vec = vec_create(int);
+    vec_scoped int *vec = vec_create(int);
 
     vec_push(vec, 1);
     vec_push(vec, 2);
@@ -150,14 +173,13 @@ test__vec_remove()
     expect(out == 7, "Expected popped element to be 7");
     expect(vec_length(vec) == 0, "Expected vector of length 0");
 
-    vec_free(vec);
     return NULL;
 }
 
 char *
 test__vec_dup()
 {
-    int *vec = vec_create(int);
+    vec_scoped int *vec = vec_create(int);
 
     vec_push(vec, 1);
     vec_push(vec, 2);
@@ -167,7 +189,7 @@ test__vec_dup()
     vec_push(vec, 6);
     vec_push(vec, 7);
 
-    int *vec2 = vec_dup(vec);
+    vec_scoped int *vec2 = vec_dup(vec);
 
     expect(vec_length(vec) == vec_length(vec2), "Expected duplicated vectors to have the same length");
     expect(vec_capacity(vec) == vec_capacity(vec2), "Expected duplicated vectors to have the same capacity");
@@ -178,8 +200,6 @@ test__vec_dup()
     expect(vec_length(vec) == 7, "Expected original vector length be still the same after push to duplicate");
     expect(vec_length(vec2) == 8, "Expected duplicate vector to have length 8");
 
-    vec_free(vec);
-    vec_free(vec2);
     return NULL;
 }
 
@@ -193,7 +213,7 @@ test__vec_for_each_callback(int x)
 char *
 test__vec_for_each()
 {
-    int *vec = vec_create(int);
+    vec_scoped int *vec = vec_create(int);
 
     vec_push(vec, 1);
     vec_push(vec, 2);
@@ -207,14 +227,13 @@ test__vec_for_each()
 
     expect(test__vec_for_each_counter == 1 + 2 + 3 + 4 + 5 + 6 + 7, "Expected counter to be sum of all elements");
 
-    vec_free(vec);
     return NULL;
 }
 
 char *
 test__vec_methods_with_pointers()
 {
-    int **vec = vec_create(char *);
+    vec_scoped int **vec = vec_create(char *);
 
     vec_push(vec, alloc_int(1));
     vec_push(vec, alloc_int(2));
@@ -244,7 +263,6 @@ test__vec_methods_with_pointers()
     free(out);
 
     vec_for_each(vec, free);
-    vec_free(vec);
     return NULL;
 }
 
@@ -257,7 +275,7 @@ struct test_vector_struct
 char *
 test__vec_methods_with_struct()
 {
-    struct test_vector_struct *vec = vec_create(struct test_vector_struct);
+    vec_scoped struct test_vector_struct *vec = vec_create(struct test_vector_struct);
 
     struct test_vector_struct first = { .name = "first", .num = 1 };
     struct test_vector_struct second = { .name = "second", .num = 2 };
@@ -283,7 +301,6 @@ test__vec_methods_with_struct()
 
     expect(out.num == 2, "Expected correct removed struct");
 
-    vec_free(vec);
     return NULL;
 }
 
@@ -291,21 +308,23 @@ test__vec_methods_with_struct()
 char *
 test__vec_methods_with_structs()
 {
-    struct test_vector_struct *vec = vec_create(struct test_vector_struct);
+    vec_scoped struct test_vector_struct *vec = vec_create(struct test_vector_struct);
 
     struct test_vector_struct first = { .name = "first", .num = 1 };
     struct test_vector_struct second = { .name = "second", .num = 2 };
     struct test_vector_struct third = { .name = "third", .num = 3 };
     struct test_vector_struct fourth = { .name = "fourth", .num = 4 };
     struct test_vector_struct fifth = { .name = "fifth", .num = 5 };
+    struct test_vector_struct before_first = { .name = "before_first", .num = 0 };
 
     vec_push(vec, first);
     vec_push(vec, second);
     vec_push(vec, third);
     vec_push(vec, fourth);
     vec_push(vec, fifth);
+    vec_unshift(vec, before_first);
 
-    expect(vec_length(vec) == 5, "Expected vector of length 5");
+    expect(vec_length(vec) == 6, "Expected vector of length 6");
 
     struct test_vector_struct out;
 
@@ -315,9 +334,12 @@ test__vec_methods_with_structs()
 
     vec_remove(vec, 1, &out);
 
-    expect(out.num == 2, "Expected correct removed struct");
+    expect(out.num == 1, "Expected correct removed struct");
 
-    vec_free(vec);
+    vec_remove(vec, 0, &out);
+
+    expect(out.num == 0, "Expected correct removed struct");
+
     return NULL;
 }
 
