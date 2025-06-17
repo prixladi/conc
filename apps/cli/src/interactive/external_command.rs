@@ -1,5 +1,5 @@
 use std::{
-    io::{stdout, Stdout},
+    io::{self, stdout, Stdout},
     process::Command,
 };
 
@@ -9,16 +9,37 @@ use crossterm::{
 };
 use ratatui::{prelude::CrosstermBackend, Terminal};
 
-pub(super) fn open_log_file_in_less(
+#[derive(Debug, thiserror::Error)]
+pub enum ExternalCommandError {
+    #[error("IO error occurred while executing external command: {inner}")]
+    IO { inner: io::Error },
+    #[error("Unable to determine command for action '{action}', check your application config")]
+    MissingCommand { action: String },
+}
+
+impl From<io::Error> for ExternalCommandError {
+    fn from(value: io::Error) -> Self {
+        Self::IO { inner: value }
+    }
+}
+
+pub(super) fn open_log_file(
     terminal: &mut Terminal<CrosstermBackend<Stdout>>,
+    viewer: &[String],
     path: String,
-) -> std::io::Result<()> {
+) -> Result<(), ExternalCommandError> {
     stdout().execute(LeaveAlternateScreen)?;
-    Command::new("less")
-        .arg("-R")
-        .arg("+GF")
-        .arg(path)
-        .status()?;
+
+    let command_str = viewer.first().ok_or(ExternalCommandError::MissingCommand {
+        action: String::from("open_log_file"),
+    })?;
+
+    let mut command = Command::new(command_str);
+    for arg in viewer.iter().skip(1) {
+        command.arg(arg);
+    }
+    command.arg(path);
+    command.status()?;
 
     stdout().execute(EnterAlternateScreen)?;
     terminal.clear()?;
