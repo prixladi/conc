@@ -1,8 +1,9 @@
 use std::{error::Error, time::Duration};
 
+use app_config::AppConfig;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use daemon_client::Requester;
-use external_command::{open_log_file_in_less, open_string_in_less};
+use external_command::{open_log_file, open_string_in_less};
 use pages::{Page, PageContext, PageManager};
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget, DefaultTerminal, Frame};
 use tui_settings::{LogPreviewSettings, TuiSettings};
@@ -12,10 +13,10 @@ mod external_command;
 mod pages;
 mod tui_settings;
 
-pub fn interact(requester: Requester) -> Result<(), Box<dyn Error>> {
+pub fn interact(requester: Requester, config: AppConfig) -> Result<(), Box<dyn Error>> {
     let mut terminal = ratatui::init();
     terminal.clear().unwrap();
-    let res = App::new(requester).run(&mut terminal);
+    let res = App::new(requester, config).run(&mut terminal);
     ratatui::restore();
     res
 }
@@ -34,16 +35,18 @@ struct App {
     requester: Requester,
     page_manager: PageManager,
     settings: TuiSettings,
+    config: AppConfig,
 }
 
 impl App {
-    fn new(requester: Requester) -> Self {
+    fn new(requester: Requester, config: AppConfig) -> Self {
         App {
             requester,
             page_manager: PageManager::new(Page::Projects),
             settings: TuiSettings {
                 log_preview: LogPreviewSettings::On,
             },
+            config,
         }
     }
 
@@ -59,7 +62,7 @@ impl App {
                     self.page_manager.goto_page(page);
                 }
                 Action::OpenLogs(path) => {
-                    open_log_file_in_less(terminal, path)?;
+                    open_log_file(terminal, &self.config.log_view_command, path)?;
                 }
                 Action::OpenString(str) => {
                     open_string_in_less(terminal, str)?;
