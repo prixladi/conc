@@ -635,6 +635,9 @@ service_info_create(const char *proj_name, const char *serv_name)
     case D_STOPPED:
         status = STOPPED;
         break;
+    case D_EXITED:
+        status = EXITED;
+        break;
     default:
         status = IDLE;
         break;
@@ -644,7 +647,8 @@ service_info_create(const char *proj_name, const char *serv_name)
                                  .status = status,
                                  .logfile_path = logfile_path,
                                  .pid = d_info.pid,
-                                 .start_time = d_info.start_time };
+                                 .start_time = d_info.start_time,
+                                 .stop_time = d_info.stop_time };
 
     d_service_info_free(d_info);
 

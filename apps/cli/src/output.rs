@@ -135,7 +135,7 @@ fn format_services_info(services: Vec<ServiceInfo>) -> String {
 
     for service in services {
         service_names_column.push(service.name);
-        service_statuses_column.push(format_service_status(service.status));
+        service_statuses_column.push(service.status.to_string());
         service_pids_column.push(service.pid.to_string());
 
         let age = match service.status {
@@ -151,14 +151,6 @@ fn format_services_info(services: Vec<ServiceInfo>) -> String {
         service_pids_column,
         service_ages_column,
     ])
-}
-
-fn format_service_status(service_status: ServiceStatus) -> String {
-    match service_status {
-        ServiceStatus::IDLE => String::from("IDLE"),
-        ServiceStatus::RUNNING => String::from("RUNNING"),
-        ServiceStatus::STOPPED => String::from("STOPPED"),
-    }
 }
 
 fn format_table(columns: Vec<Vec<String>>) -> String {

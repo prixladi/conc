@@ -237,6 +237,7 @@ pub enum ServiceStatus {
     IDLE,
     RUNNING,
     STOPPED,
+    EXITED,
 }
 
 impl Display for ServiceStatus {
@@ -245,6 +246,7 @@ impl Display for ServiceStatus {
             ServiceStatus::IDLE => "Idle",
             ServiceStatus::RUNNING => "Running",
             ServiceStatus::STOPPED => "Stopped",
+            ServiceStatus::EXITED => "Exited",
         };
 
         write!(f, "{}", str)
@@ -259,6 +261,7 @@ impl TryFrom<&str> for ServiceStatus {
             "IDLE" => Ok(Self::IDLE),
             "RUNNING" => Ok(Self::RUNNING),
             "STOPPED" => Ok(Self::STOPPED),
+            "EXITED" => Ok(Self::EXITED),
             _ => Err(()),
         }
     }
@@ -276,6 +279,7 @@ pub struct ServiceInfo {
     pub status: ServiceStatus,
     pub pid: i32,
     pub start_time: u64,
+    pub stop_time: u64,
     pub logfile_path: String,
 }
 
@@ -292,9 +296,10 @@ impl TryFrom<&str> for ServiceInfo {
         let status = ServiceStatus::try_from(parts[1])?;
         let pid = parts[2].parse::<i32>().map_err(|_| ())?;
         let start_time = parts[3].parse::<u64>().map_err(|_| ())?;
-        let logfile_path = String::from(match parts[4] {
+        let stop_time = parts[4].parse::<u64>().map_err(|_| ())?;
+        let logfile_path = String::from(match parts[5] {
             "-" => "/dev/null",
-            _ => parts[4],
+            _ => parts[5],
         });
 
         Ok(Self {
@@ -302,6 +307,7 @@ impl TryFrom<&str> for ServiceInfo {
             status,
             pid,
             start_time,
+            stop_time,
             logfile_path,
         })
     }

@@ -22,6 +22,7 @@ enum service_status
     IDLE,
     RUNNING,
     STOPPED,
+    EXITED,
 };
 
 struct service_info
@@ -31,6 +32,7 @@ struct service_info
     char *logfile_path;
     int pid;
     time_t start_time;
+    time_t stop_time;
 };
 
 struct project_info
