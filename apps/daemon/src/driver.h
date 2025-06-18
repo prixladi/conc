@@ -17,6 +17,7 @@ enum d_service_status
 {
     D_NONE,
     D_RUNNING,
+    D_EXITED,
     D_STOPPED,
 };
 
@@ -26,6 +27,7 @@ struct d_service_info
     char *logfile_path;
     int pid;
     time_t start_time;
+    time_t stop_time;
 };
 
 enum d_result driver_mount(void);

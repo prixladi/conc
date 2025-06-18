@@ -476,11 +476,14 @@ format_service_info(const struct service_info info)
     case STOPPED:
         status = "STOPPED";
         break;
+    case EXITED:
+        status = "EXITED";
+        break;
     default:
         status = "IDLE";
         break;
     }
 
     char *logfile_path = info.logfile_path ? info.logfile_path : "-";
-    return str_printf("%s %s %d %ld %s", info.name, status, info.pid, info.start_time, logfile_path);
+    return str_printf("%s %s %d %ld %ld %s", info.name, status, info.pid, info.start_time, info.stop_time, logfile_path);
 }

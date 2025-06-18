@@ -27,6 +27,7 @@ struct service_process_info
 {
     int pid;
     time_t c_time;
+    time_t s_time;
 };
 
 static int ensure_project_dir_exists(const char *proj_name);
@@ -162,9 +163,16 @@ d_service_info_get(const char *proj_name, const char *serv_name, struct d_servic
 {
     struct service_process_info process_info = get_service_info(proj_name, serv_name);
 
-    info->status = process_info.pid > 0 ? D_RUNNING : process_info.pid == 0 ? D_STOPPED : D_NONE;
+    if (process_info.pid > 0)
+        info->status = D_RUNNING;
+    else if (process_info.pid == 0)
+        info->status = process_info.s_time == 0 ? D_EXITED : D_STOPPED;
+    else
+        info->status = D_NONE;
+
     info->pid = process_info.pid;
     info->start_time = process_info.c_time;
+    info->stop_time = process_info.s_time;
     scoped char *log_path = get_service_logfile_path(proj_name, serv_name);
     info->logfile_path = realpath(log_path, NULL);
 
@@ -218,6 +226,14 @@ d_service_stop(const char *proj_name, const struct service_settings service_sett
         return D_PROC_ERROR;
     }
 
+    process_info.s_time = time(NULL);
+
+    if (write_service_meta_file(proj_name, service_settings.name, process_info) > 0)
+    {
+        log_error("Unable to write service meta for service '%s' in project '%s'\n", service_settings.name, proj_name);
+        return D_FS_ERROR;
+    }
+
     return D_OK;
 }
 
@@ -237,6 +253,7 @@ get_service_info(const char *proj_name, const char *serv_name)
     {
         info.pid = -1;
         info.c_time = 0;
+        info.s_time = 0;
         return info;
     }
 
@@ -280,7 +297,7 @@ write_service_meta_file(const char *proj_name, const char *serv_name, struct ser
         return 1;
     }
 
-    fprintf(fp, "%d\n%ld", info.pid, info.c_time);
+    fprintf(fp, "%d\n%ld\n%ld", info.pid, info.c_time, info.s_time);
     fclose(fp);
     return 0;
 }
@@ -289,6 +306,10 @@ write_service_meta_file(const char *proj_name, const char *serv_name, struct ser
 static bool
 try_parse_service_meta_file(const char *proj_name, const char *serv_name, struct service_process_info *info)
 {
+    info->pid = 0;
+    info->c_time = 0;
+    info->s_time = 0;
+
     FILE *fp = open_service_meta_file(proj_name, serv_name, "r");
     if (fp == NULL)
         return false;
@@ -318,8 +339,22 @@ try_parse_service_meta_file(const char *proj_name, const char *serv_name, struct
         }
     }
 
+    if (fgets(buffer, MAX_META_LINE_LEN, fp))
+    {
+        buffer[strcspn(buffer, "\n")] = '\0';
+        time_t s_time = atoll(buffer);
+        if (s_time != 0)
+        {
+            info->s_time = s_time;
+            parsed++;
+        }
+    }
+
     fclose(fp);
-    return parsed == 2;
+    // TODO: >= 2 is here to keep compatibility with older version.
+    // Probably create some migration that will add 0 to new line of
+    // each service meta file and changed next line to parsed === 3
+    return parsed >= 2;
 }
 
 static FILE *
