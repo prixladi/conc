@@ -81,7 +81,7 @@
               ${packages.daemon.out}/bin/concd
             '';
           };
-          wantedBy = [ "multi-user.target" ];
+          wantedBy = [ "default.target" ];
         };
       }
     );
