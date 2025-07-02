@@ -46,13 +46,15 @@ process_start(const struct project_settings project, const struct service_settin
         handle_child(pd);
         log_critical("Unable to execute process '%s' with pid %d and pwd '%s', aborting", pd.id, pid, pd.pwd);
         pd_free(pd);
-        exit(127);
+        _exit(127);
     }
 
     pd_free(pd);
     return pid;
 }
 
+// TODO: this whole function runs inc the child process after fork()
+// It should probably just use async-signal-safe functions, need to learn more about this
 static void
 handle_child(struct process_descriptor pd)
 {
