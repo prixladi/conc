@@ -191,13 +191,19 @@ impl TryFrom<Vec<String>> for ProjectsInfoResponse {
         }
 
         let mut values = vec![];
+        let mut current_is_name = true;
         for line in &data[1..] {
-            if !line.contains(" ") {
+            if line.is_empty() {
+                current_is_name = true;
+                continue;
+            }
+            if current_is_name {
                 let project_info = ProjectInfo {
                     name: String::from(line),
                     services: vec![],
                 };
                 values.push(project_info);
+                current_is_name = false;
                 continue;
             }
 

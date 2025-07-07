@@ -6,17 +6,55 @@
 
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-utils.follows = "flake-utils";
+      };
+    };
   };
 
   outputs =
-    { nixpkgs, flake-utils, ... }:
+    {
+      nixpkgs,
+      flake-utils,
+      rust-overlay,
+      ...
+    }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        pkgs = import nixpkgs { inherit system; };
+        overlays = [ (import rust-overlay) ];
+        pkgs = import nixpkgs {
+          inherit system overlays;
+        };
         version = "0.0.1";
       in
       rec {
+        devShells.default =
+          with pkgs;
+          mkShell rec {
+            hardeningDisable = [ "all" ];
+            buildInputs =
+              packages.daemon.buildInputs
+              ++ (with pkgs; [
+                rust-bin.stable."1.85.0".default
+
+                libxkbcommon
+                libGL
+
+                # WINIT_UNIX_BACKEND=x11
+                xorg.libXcursor
+                xorg.libXrandr
+                xorg.libXi
+                xorg.libX11
+              ]);
+
+            LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
+            WINIT_UNIX_BACKEND = "x11";
+          };
+
         packages.daemon = pkgs.stdenv.mkDerivation {
           pname = "concd";
           version = version;

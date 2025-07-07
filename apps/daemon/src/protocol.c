@@ -2,7 +2,6 @@
 #include <assert.h>
 #include <stdbool.h>
 
-#include "utils/log.h"
 #include "utils/vector.h"
 #include "utils/string.h"
 #include "utils/memory.h"
@@ -204,6 +203,10 @@ handle_projects_info(char **_command)
     vec_scoped char **parts = vec_create(char *);
     for (size_t i = 0; i < project_count; i++)
     {
+        // Append extra separator, to make parsing projects easier
+        if (i > 0)
+            vec_push(parts, str_dup(""));
+
         struct project_info info = infos[i];
         size_t service_count = vec_length(info.services);
 
