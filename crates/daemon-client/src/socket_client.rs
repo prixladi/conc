@@ -1,9 +1,9 @@
+use std::fs;
 use std::io::{self, Read, Write};
 use std::net::Shutdown;
 use std::os::unix::fs::FileTypeExt;
 use std::os::unix::net::UnixStream;
 use std::str;
-use std::{fs, vec};
 
 #[derive(Debug, Clone)]
 pub struct SocketClient {
@@ -40,27 +40,18 @@ impl SocketClient {
         unix_stream.write_all(b"\0")?;
         unix_stream.shutdown(Shutdown::Write)?;
 
-        // TODO: this whole block could be avoided by using 'unix_stream.read_to_string'
-        // but for some reason it sometimes stays hanging as if the socket connection
-        // would not get closed from the server side, this is solved by checking for 'buffer[n - 1] == 0'
-        let mut response = vec![];
-        loop {
-            let mut buffer = [0; 512];
-            let n = unix_stream.read(&mut buffer[..])?;
+        let mut response = String::new();
 
-            response.extend_from_slice(&buffer[..n]);
+        unix_stream.read_to_string(&mut response)?;
 
-            if n == 0 || buffer[n - 1] == 0 {
-                let _ = unix_stream.shutdown(Shutdown::Read);
-                break;
+        let last_char = response.chars().last();
+
+        if let Some(lc) = last_char {
+            if lc == '\0' {
+                response.truncate(response.len() - 1);
             }
         }
 
-        if !response.is_empty() && response[response.len() - 1] == 0 {
-            response.pop();
-        }
-        let response_string =
-            String::from_utf8(response).expect("Expected utf8 string as a response from daemon");
-        Ok(response_string)
+        Ok(response)
     }
 }

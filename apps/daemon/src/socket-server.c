@@ -141,6 +141,7 @@ client_socket_handle(void *data)
 
     int total_length = 0;
     scoped char *input = read_input(opts->client_socket, &total_length);
+    shutdown(opts->client_socket, SHUT_RD);
 
     // one character message containing just '\0' is threated as a health check
     bool is_health_check = input[0] == '\0';
@@ -158,6 +159,7 @@ client_socket_handle(void *data)
     }
 
     write(opts->client_socket, response, strlen(response) + 1); // we also want to send '\0' as a end of message indicator
+    shutdown(opts->client_socket, SHUT_WR);
 
     log_trace(TRACE_NAME, "Closing socket connection '%d'\n", opts->client_socket);
     if (close(opts->client_socket) > 0)
