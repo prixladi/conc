@@ -260,7 +260,7 @@ env_vars_parse(struct cJSON *js)
 {
     struct env_variable *env_vars = vec_create(struct env_variable);
     struct cJSON *e = js;
-    do
+    while (e)
     {
         if (e->type != cJSON_String)
             continue;
@@ -270,7 +270,8 @@ env_vars_parse(struct cJSON *js)
             .value = str_dup(e->valuestring),
         };
         vec_push(env_vars, env_var);
-    } while ((e = e->next));
+        e = e->next;
+    };
 
     return env_vars;
 }
