@@ -2,10 +2,12 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <string.h>
+#include <fcntl.h>
+#include <signal.h>
+
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 
 #include "utils/log.h"
 #include "utils/fs.h"
@@ -58,6 +60,11 @@ process_start(const struct project_settings project, const struct service_settin
 static void
 handle_child(struct process_descriptor pd)
 {
+    signal(SIGCHLD, SIG_DFL);
+    signal(SIGINT, SIG_DFL);
+    signal(SIGTERM, SIG_DFL);
+    signal(SIGPIPE, SIG_DFL);
+
     int current_pid = getpid();
 
     static const int OPEN_FLAGS = O_APPEND | O_CREAT | O_WRONLY;
@@ -86,6 +93,7 @@ handle_child(struct process_descriptor pd)
         chdir(pd.pwd);
 
     execvp(pd.command[0], pd.command);
+    perror("exec");
 }
 
 static struct process_descriptor
