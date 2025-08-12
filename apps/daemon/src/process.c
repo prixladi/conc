@@ -13,6 +13,7 @@
 #include "utils/fs.h"
 #include "utils/string.h"
 #include "utils/vector.h"
+#include "utils/time.h"
 
 #include "process.h"
 
@@ -55,6 +56,23 @@ process_start(const struct project_settings project, const struct service_settin
     return pid;
 }
 
+int
+process_kill_pid_pg(int pid)
+{
+    int attempt = 0;
+    while (++attempt < 2000)
+    {
+        if (attempt < 10 || attempt % 50 == 0)
+            if (killpg(pid, attempt >= 1000 ? SIGKILL : SIGTERM) != 0)
+                return 0;
+
+        if (attempt)
+            sleep_ms(5);
+    };
+
+    return 1;
+}
+
 // TODO: this whole function runs inc the child process after fork()
 // It should probably just use async-signal-safe functions, need to learn more about this
 static void
@@ -66,6 +84,12 @@ handle_child(struct process_descriptor pd)
     signal(SIGPIPE, SIG_DFL);
 
     int current_pid = getpid();
+
+    if (setsid() == -1)
+    {
+        log_critical("Unable to sed sid for process '%s' with pid %d, aborting", pd.id, current_pid);
+        _exit(123);
+    }
 
     static const int OPEN_FLAGS = O_APPEND | O_CREAT | O_WRONLY;
     static const int CREATE_FLAGS = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;

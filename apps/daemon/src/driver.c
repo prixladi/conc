@@ -12,7 +12,6 @@
 #include "utils/string.h"
 #include "utils/vector.h"
 #include "utils/log.h"
-#include "utils/time.h"
 #include "utils/fs.h"
 #include "utils/memory.h"
 
@@ -51,7 +50,6 @@ static int remove_dir_f(char *path);
 
 static struct service_process_info get_service_info(const char *proj_name, const char *serv_name);
 static bool try_get_pid_info(int pid, struct stat *sts);
-static int kill_pid(int pid);
 
 enum d_result
 driver_mount(void)
@@ -204,7 +202,7 @@ d_service_start(const struct project_settings project, const struct service_sett
     {
         log_error("Unable to write service meta for service '%s' in project '%s'\n", service_settings.name, project.name);
         if (pid > 0)
-            kill_pid(pid);
+            process_kill_pid_pg(pid);
         return D_FS_ERROR;
     }
 
@@ -220,7 +218,7 @@ d_service_stop(const char *proj_name, const struct service_settings service_sett
 
     log_debug("Stopping process '%s/%s - %d'\n", proj_name, service_settings.name, process_info.pid);
 
-    if (kill_pid(process_info.pid) > 0)
+    if (process_kill_pid_pg(process_info.pid) > 0)
     {
         log_error("Unable to kill PID '%d'\n", process_info.pid);
         return D_PROC_ERROR;
@@ -420,27 +418,4 @@ try_get_pid_info(int pid, struct stat *sts)
 {
     scoped char *proc = str_printf("/proc/%d", pid);
     return stat(proc, sts) != -1;
-}
-
-static int
-kill_pid(int pid)
-{
-    struct stat sts;
-    if (try_get_pid_info(pid, &sts) == false)
-        return 0;
-
-    int attempt = 0;
-    do
-    {
-        if (attempt < 10 || attempt % 50 == 0)
-            kill(pid, attempt >= 400 ? SIGKILL : SIGTERM);
-
-        if (attempt)
-            sleep_ms(5);
-
-        if (try_get_pid_info(pid, &sts) == false)
-            return 0;
-    } while (++attempt < 700);
-
-    return attempt;
 }
