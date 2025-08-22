@@ -1,5 +1,3 @@
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <stdlib.h>
 #include <dirent.h>
 #include <stdio.h>
@@ -8,6 +6,10 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <dirent.h>
+
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include "utils/string.h"
 #include "utils/vector.h"
@@ -45,11 +47,12 @@ static char *get_service_dir_path(const char *proj_name, const char *serv_name);
 static char *get_service_meta_file_path(const char *proj_name, const char *serv_name);
 static char *get_service_logfile_path(const char *proj_name, const char *serv_name);
 
+static struct service_process_info get_service_info(const char *proj_name, const char *serv_name);
+static bool try_get_process_info(int pid, struct stat *sts);
+static bool is_proccess_running(int pid);
+
 static int remove_file_f(char *path);
 static int remove_dir_f(char *path);
-
-static struct service_process_info get_service_info(const char *proj_name, const char *serv_name);
-static bool try_get_pid_info(int pid, struct stat *sts);
 
 enum d_result
 driver_mount(void)
@@ -190,7 +193,7 @@ d_service_start(const struct project_settings project, const struct service_sett
 
     time_t c_time = 0;
     struct stat sts;
-    if (try_get_pid_info(pid, &sts))
+    if (try_get_process_info(pid, &sts))
         c_time = sts.st_ctime;
 
     struct service_process_info info = {
@@ -255,8 +258,7 @@ get_service_info(const char *proj_name, const char *serv_name)
         return info;
     }
 
-    struct stat sts;
-    if (try_get_pid_info(info.pid, &sts) == false || info.c_time != sts.st_ctime)
+    if (info.pid > 0 && !is_proccess_running(info.pid))
         info.pid = 0;
 
     return info;
@@ -399,6 +401,21 @@ get_service_logfile_path(const char *proj_name, const char *serv_name)
     return str_printf("%s/%s/%s/%s", root_projects_dir, proj_name, serv_name, logfile_name);
 }
 
+static bool
+try_get_process_info(int pid, struct stat *sts)
+{
+    scoped char *proc = str_printf("/proc/%d", pid);
+    return stat(proc, sts) != -1;
+}
+
+static bool
+is_proccess_running(int pid)
+{
+    int status;
+    pid_t res = waitpid(pid, &status, WNOHANG);
+    return res == 0;
+}
+
 static int
 remove_file_f(char *_path)
 {
@@ -411,11 +428,4 @@ remove_dir_f(char *_path)
 {
     scoped char *path = _path;
     return rmdir(path);
-}
-
-static bool
-try_get_pid_info(int pid, struct stat *sts)
-{
-    scoped char *proc = str_printf("/proc/%d", pid);
-    return stat(proc, sts) != -1;
 }
