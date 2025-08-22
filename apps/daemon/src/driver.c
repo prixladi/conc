@@ -48,7 +48,6 @@ static char *get_service_meta_file_path(const char *proj_name, const char *serv_
 static char *get_service_logfile_path(const char *proj_name, const char *serv_name);
 
 static struct service_process_info get_service_info(const char *proj_name, const char *serv_name);
-static bool try_get_process_info(int pid, struct stat *sts);
 static bool is_proccess_running(int pid);
 
 static int remove_file_f(char *path);
@@ -192,8 +191,11 @@ d_service_start(const struct project_settings project, const struct service_sett
     int pid = process_start(project, service_settings, env, logfile_path);
 
     time_t c_time = 0;
+    
     struct stat sts;
-    if (try_get_process_info(pid, &sts))
+    scoped char *proc = str_printf("/proc/%d", pid);
+    // TODO: maybe i should just use UTC.now instead of this, idk
+    if (stat(proc, &sts) == 0)
         c_time = sts.st_ctime;
 
     struct service_process_info info = {
@@ -399,13 +401,6 @@ static char *
 get_service_logfile_path(const char *proj_name, const char *serv_name)
 {
     return str_printf("%s/%s/%s/%s", root_projects_dir, proj_name, serv_name, logfile_name);
-}
-
-static bool
-try_get_process_info(int pid, struct stat *sts)
-{
-    scoped char *proc = str_printf("/proc/%d", pid);
-    return stat(proc, sts) != -1;
 }
 
 static bool
