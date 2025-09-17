@@ -2,6 +2,8 @@
 
 Conc is a simple desktop service runner and manager. It allows user to define services organized into project groups that can be after that managed from **cli** or **gui**.
 
+![usage gif](./assets/example.gif)
+
 ## Architecture
 
 The core of the application (daemon) is intended to run as a system service. **Cli** and **gui** run as user applications and communicate with a **daemon** through a Unix socket.
