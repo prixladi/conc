@@ -104,6 +104,16 @@ impl Request<NoContentResponse> for ProjectRemoveRequest<'_> {
     }
 }
 
+pub(crate) struct ProjectClearLogsRequest<'a> {
+    pub(crate) project_name: &'a str,
+}
+
+impl Request<NoContentResponse> for ProjectClearLogsRequest<'_> {
+    fn serialize(&self) -> String {
+        serialize_parts(vec!["PROJECT-CLEAR-LOGS", self.project_name])
+    }
+}
+
 pub(crate) struct ServicesNamesRequest<'a> {
     pub(crate) project_name: &'a str,
 }
@@ -167,6 +177,17 @@ pub(crate) struct ServiceStopRequest<'a> {
 impl Request<ServiceInfoResponse> for ServiceStopRequest<'_> {
     fn serialize(&self) -> String {
         serialize_parts(vec!["SERVICE-STOP", self.project_name, self.service_name])
+    }
+}
+
+pub(crate) struct ServiceClearLogsRequest<'a> {
+    pub(crate) project_name: &'a str,
+    pub(crate) service_name: &'a str,
+}
+
+impl Request<NoContentResponse> for ServiceClearLogsRequest<'_> {
+    fn serialize(&self) -> String {
+        serialize_parts(vec!["SERVICE-CLEAR-LOGS", self.project_name, self.service_name])
     }
 }
 

@@ -46,6 +46,7 @@ static char *get_project_meta_file_path(const char *proj_name);
 static char *get_service_dir_path(const char *proj_name, const char *serv_name);
 static char *get_service_meta_file_path(const char *proj_name, const char *serv_name);
 static char *get_service_logfile_path(const char *proj_name, const char *serv_name);
+static bool clear_service_logfile(const char *proj_name, const char *serv_name);
 
 static struct service_process_info get_service_info(const char *proj_name, const char *serv_name);
 static bool is_proccess_running(int pid);
@@ -191,7 +192,7 @@ d_service_start(const struct project_settings project, const struct service_sett
     int pid = process_start(project, service_settings, env, logfile_path);
 
     time_t c_time = 0;
-    
+
     struct stat sts;
     scoped char *proc = str_printf("/proc/%d", pid);
     // TODO: maybe i should just use UTC.now instead of this, idk
@@ -238,6 +239,13 @@ d_service_stop(const char *proj_name, const struct service_settings service_sett
     }
 
     return D_OK;
+}
+
+enum d_result
+d_service_clear_logs(const char *proj_name, const struct service_settings service_settings)
+{
+    bool res = clear_service_logfile(proj_name, service_settings.name);
+    return res ? D_OK : D_FS_ERROR;
 }
 
 void
@@ -371,6 +379,18 @@ open_service_meta_file(const char *proj_name, const char *serv_name, const char 
 {
     scoped char *meta_file_path = get_service_meta_file_path(proj_name, serv_name);
     return fopen(meta_file_path, modes);
+}
+
+static bool
+clear_service_logfile(const char *proj_name, const char *serv_name)
+{
+    scoped char *meta_file_path = get_service_logfile_path(proj_name, serv_name);
+    FILE *file = fopen(meta_file_path, "w");
+    if (!file)
+        return false;
+
+    fclose(file);
+    return true;
 }
 
 static char *

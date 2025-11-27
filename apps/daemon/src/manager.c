@@ -26,6 +26,7 @@ struct project_store
 static enum d_result project_services_start(struct project_settings project, const struct env_variable *env);
 static enum d_result project_services_stop(struct project_settings project);
 static enum d_result project_services_stop_and_remove(struct project_settings project);
+static enum d_result project_services_clear_logs(struct project_settings project);
 
 static bool try_find_project(const char *proj_name, struct project *project, int *pos);
 static bool try_find_service(const char *serv_name, const struct project project, struct service_settings *service);
@@ -270,6 +271,8 @@ project_start(const char *proj_name, const struct env_variable *env)
 
     if (result < D_OK)
         return M_DRIVER_ERROR;
+    if (result == D_NO_ACTION)
+        return M_NO_ACTION;
     return M_OK;
 }
 
@@ -325,6 +328,33 @@ project_stop(const char *proj_name)
 
     if (result < D_OK)
         return M_DRIVER_ERROR;
+    if (result == D_NO_ACTION)
+        return M_NO_ACTION;
+    return M_OK;
+}
+
+enum m_result
+project_clear_logs(const char *proj_name)
+{
+    pthread_mutex_lock(store.lock);
+
+    struct project project;
+    if (try_find_project(proj_name, &project, NULL) == false)
+    {
+        pthread_mutex_unlock(store.lock);
+        return M_PROJECT_NOT_FOUND;
+    }
+
+    pthread_mutex_lock(project.lock);
+
+    pthread_mutex_unlock(store.lock);
+    enum d_result result = project_services_clear_logs(project.settings);
+    pthread_mutex_unlock(project.lock);
+
+    if (result < D_OK)
+        return M_DRIVER_ERROR;
+    if (result == D_NO_ACTION)
+        return M_NO_ACTION;
     return M_OK;
 }
 
@@ -496,6 +526,38 @@ service_stop(const char *proj_name, const char *serv_name)
     return M_OK;
 }
 
+enum m_result
+service_clear_logs(const char *proj_name, const char *serv_name)
+{
+    pthread_mutex_lock(store.lock);
+
+    struct project project;
+    if (try_find_project(proj_name, &project, NULL) == false)
+    {
+        pthread_mutex_unlock(store.lock);
+        return M_PROJECT_NOT_FOUND;
+    }
+
+    pthread_mutex_lock(project.lock);
+
+    pthread_mutex_unlock(store.lock);
+
+    struct service_settings service;
+    if (try_find_service(serv_name, project, &service) == false)
+    {
+        pthread_mutex_unlock(project.lock);
+        return M_SERVICE_NOT_FOUND;
+    }
+
+    enum d_result stop_result = d_service_clear_logs(project.settings.name, service);
+
+    pthread_mutex_unlock(project.lock);
+
+    if (stop_result < D_OK)
+        return M_DRIVER_ERROR;
+    return M_OK;
+}
+
 void
 service_info_free(struct service_info info)
 {
@@ -541,6 +603,20 @@ project_services_stop(struct project_settings project)
     for (size_t i = 0; i < vec_length(project.services); i++)
     {
         enum d_result result = d_service_stop(project.name, project.services[i]);
+        if (result <= D_OK && final_result >= D_OK)
+            final_result = result;
+    }
+
+    return final_result;
+}
+
+static enum d_result
+project_services_clear_logs(struct project_settings project)
+{
+    enum d_result final_result = D_NO_ACTION;
+    for (size_t i = 0; i < vec_length(project.services); i++)
+    {
+        enum d_result result = d_service_clear_logs(project.name, project.services[i]);
         if (result <= D_OK && final_result >= D_OK)
             final_result = result;
     }

@@ -3,11 +3,11 @@ use std::collections::HashMap;
 use crate::{
     protocol::{
         requests::{
-            ProjectInfoRequest, ProjectRemoveRequest, ProjectRestartRequest,
-            ProjectSettingsRequest, ProjectStartRequest, ProjectStopRequest, ProjectUpsertRequest,
-            ProjectsInfoRequest, ProjectsNamesRequest, ProjectsSettingsRequest, Request,
-            ServiceInfoRequest, ServiceRestartRequest, ServiceStartRequest, ServiceStopRequest,
-            ServicesNamesRequest,
+            ProjectClearLogsRequest, ProjectInfoRequest, ProjectRemoveRequest,
+            ProjectRestartRequest, ProjectSettingsRequest, ProjectStartRequest, ProjectStopRequest,
+            ProjectUpsertRequest, ProjectsInfoRequest, ProjectsNamesRequest,
+            ProjectsSettingsRequest, Request, ServiceClearLogsRequest, ServiceInfoRequest,
+            ServiceRestartRequest, ServiceStartRequest, ServiceStopRequest, ServicesNamesRequest,
         },
         responses::ErrorResponse,
         ARG_SEPARATOR_STR,
@@ -91,6 +91,11 @@ impl Requester {
             .map(|_| ())
     }
 
+    pub fn clear_project_logs(&self, project_name: &str) -> Res<()> {
+        self.send_request(ProjectClearLogsRequest { project_name })
+            .map(|_| ())
+    }
+
     pub fn get_service_names(&self, project_name: &str) -> Res<Vec<String>> {
         self.send_request(ServicesNamesRequest { project_name })
             .map(|res| res.values)
@@ -128,6 +133,14 @@ impl Requester {
             service_name,
         })
         .map(|res| res.value)
+    }
+
+    pub fn clear_service_logs(&self, project_name: &str, service_name: &str) -> Res<()> {
+        self.send_request(ServiceClearLogsRequest {
+            project_name,
+            service_name,
+        })
+        .map(|_| ())
     }
 
     fn send_request<R: Response>(&self, req: impl Request<R>) -> Res<R> {
