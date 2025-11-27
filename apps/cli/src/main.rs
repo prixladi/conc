@@ -75,6 +75,14 @@ enum Command {
         /// name of the service
         service: Option<String>,
     },
+    /// Clear logs of a project or a service
+    #[clap(visible_alias("cl"))]
+    ClearLogs {
+        /// name of the project
+        project: String,
+        /// name of the service
+        service: Option<String>,
+    },
     /// Get project settings
     Settings {
         /// name of the project
@@ -169,9 +177,19 @@ fn run() -> Output {
             service: None,
         } => requester.stop_project(&project).into(),
 
-        Command::Settings { project } => requester.get_project_settings(&project).into(),
-
         Command::Remove { project } => requester.remove_project(&project).into(),
+
+        Command::ClearLogs {
+            project,
+            service: None,
+        } => requester.clear_project_logs(&project).into(),
+
+        Command::ClearLogs {
+            project,
+            service: Some(service),
+        } => requester.clear_service_logs(&project, &service).into(),
+
+        Command::Settings { project } => requester.get_project_settings(&project).into(),
 
         Command::Upsert { settings_path } => {
             let settings = ProjectSettings::find_parse_and_populate(settings_path)

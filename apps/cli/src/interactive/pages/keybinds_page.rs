@@ -107,6 +107,7 @@ fn get_project_page_keybinds() -> Vec<(&'static str, Vec<&'static str>)> {
         ("Start service", vec!["s"]),
         ("Stop service", vec!["d"]),
         ("Restart service", vec!["r"]),
+        ("Clear service logs", vec!["ctrl+l"]),
         ("Next service", vec!["j", "down"]),
         ("Previous service", vec!["l", "up"]),
         ("Open logs", vec!["enter"]),

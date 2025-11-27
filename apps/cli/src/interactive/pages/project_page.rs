@@ -3,7 +3,7 @@ use std::{error::Error, vec};
 use std::cmp::{max, min};
 
 use ansi_to_tui::IntoText;
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use daemon_client::{ProjectInfo, Requester, ServiceInfo, ServiceStatus};
 use project_settings::ProjectSettings;
 use ratatui::text::Text;
@@ -153,6 +153,14 @@ impl ProjectPage {
             KeyCode::Char('r') => {
                 if let Some(service) = selected_service {
                     requester.restart_service(&self.project_name, &service.name)?;
+                }
+                Ok(Action::None)
+            }
+            KeyCode::Char('l') => {
+                if let Some(service) = selected_service {
+                    if key_event.modifiers.contains(KeyModifiers::CONTROL) {
+                        requester.clear_service_logs(&self.project_name, &service.name)?;
+                    }
                 }
                 Ok(Action::None)
             }
