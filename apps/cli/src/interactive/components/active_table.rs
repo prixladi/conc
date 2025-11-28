@@ -1,4 +1,4 @@
-use crossterm::event::KeyCode;
+use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Rect},
@@ -25,18 +25,21 @@ impl ActiveTable {
         self
     }
 
-    pub fn is_control_key_code(&self, code: KeyCode) -> bool {
-        matches!(code, KeyCode::Down | KeyCode::Up | KeyCode::Char('j') | KeyCode::Char('k'))
+    pub fn _is_control_key_event(&self, event: KeyEvent) -> bool {
+        matches!(
+            event.code,
+            KeyCode::Down | KeyCode::Up | KeyCode::Char('j') | KeyCode::Char('k')
+        )
     }
 
-    pub fn handle_key_code(&mut self, code: KeyCode, total_elements: usize) {
+    pub fn handle_key_event(&mut self, event: KeyEvent, total_elements: usize) {
         if total_elements == 0 {
             return;
         };
 
         let current = self.selected().unwrap_or(0);
 
-        match code {
+        match event.code {
             KeyCode::Down | KeyCode::Char('j') => match current >= total_elements - 1 {
                 true => self.state.select_first(),
                 false => self.state.select_next(),

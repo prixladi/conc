@@ -15,6 +15,9 @@ use ratatui::{
     widgets::{Paragraph, Row, Widget},
 };
 
+use crate::interactive::keybind_utils::{
+    is_char_event, is_ctrl_alt_char_event, is_shift_char_event,
+};
 use crate::interactive::tui_settings::{LogPreviewSettings, TuiSettings};
 use crate::{
     interactive::{
@@ -80,12 +83,6 @@ impl PageView for ProjectPage {
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent, context: PageContext) -> ActionResult {
-        if self.table.is_control_key_code(key_event.code) {
-            let service_count = self.get_services().len();
-            self.table.handle_key_code(key_event.code, service_count);
-            return Ok(Action::None);
-        }
-
         match self.mode {
             Mode::Normal => self.handle_key_event(key_event, &context.requester),
             Mode::Search(prev_selected) => self.handle_key_event_search(key_event, prev_selected),
@@ -137,65 +134,78 @@ impl ProjectPage {
     fn handle_key_event(&mut self, key_event: KeyEvent, requester: &Requester) -> ActionResult {
         let selected_service = self.get_selected_service();
 
-        match key_event.code {
-            KeyCode::Char('s') => {
-                if let Some(service) = selected_service {
-                    requester.start_service(&self.project_name, &service.name)?;
-                }
-                Ok(Action::None)
+        if is_char_event(&key_event, 's') {
+            if let Some(service) = selected_service {
+                requester.start_service(&self.project_name, &service.name)?;
             }
-            KeyCode::Char('d') => {
-                if let Some(service) = selected_service {
-                    requester.stop_service(&self.project_name, &service.name)?;
-                }
-                Ok(Action::None)
-            }
-            KeyCode::Char('r') => {
-                if let Some(service) = selected_service {
-                    requester.restart_service(&self.project_name, &service.name)?;
-                }
-                Ok(Action::None)
-            }
-            KeyCode::Char('l') => {
-                if let Some(service) = selected_service {
-                    if key_event.modifiers.contains(KeyModifiers::CONTROL) {
-                        requester.clear_service_logs(&self.project_name, &service.name)?;
-                    }
-                }
-                Ok(Action::None)
-            }
-            KeyCode::Char('S') => {
-                requester.start_project(&self.project_name)?;
-                Ok(Action::None)
-            }
-            KeyCode::Char('D') => {
-                requester.stop_project(&self.project_name)?;
-                Ok(Action::None)
-            }
-            KeyCode::Char('R') => {
-                requester.restart_project(&self.project_name)?;
-                Ok(Action::None)
-            }
-            KeyCode::Char('o') => {
-                let settings = requester.get_project_settings(&self.project_name)?;
-                Ok(Action::OpenString(ProjectSettings::prettify_json(
-                    &settings,
-                )?))
-            }
-            KeyCode::Enter => {
-                let action = selected_service
-                    .map(|service| Action::OpenLogs(service.logfile_path))
-                    .unwrap_or(Action::None);
-
-                Ok(action)
-            }
-            KeyCode::Left | KeyCode::Char('h') => Ok(Action::GotoPage(Page::Projects)),
-            KeyCode::Char('/') => {
-                self.mode = Mode::Search(self.table.selected());
-                Ok(Action::None)
-            }
-            _ => Ok(Action::None),
+            return Ok(Action::None);
         }
+
+        if is_char_event(&key_event, 'd') {
+            if let Some(service) = selected_service {
+                requester.stop_service(&self.project_name, &service.name)?;
+            }
+            return Ok(Action::None);
+        }
+
+        if is_char_event(&key_event, 'r') {
+            if let Some(service) = selected_service {
+                requester.restart_service(&self.project_name, &service.name)?;
+            }
+            return Ok(Action::None);
+        }
+
+        if is_ctrl_alt_char_event(&key_event, 'l') {
+            if let Some(service) = selected_service {
+                if key_event.modifiers.contains(KeyModifiers::CONTROL) {
+                    requester.clear_service_logs(&self.project_name, &service.name)?;
+                }
+            }
+            return Ok(Action::None);
+        }
+
+        if is_shift_char_event(&key_event, 's') {
+            requester.start_project(&self.project_name)?;
+            return Ok(Action::None);
+        }
+
+        if is_shift_char_event(&key_event, 'd') {
+            requester.stop_project(&self.project_name)?;
+            return Ok(Action::None);
+        }
+
+        if is_shift_char_event(&key_event, 'r') {
+            requester.restart_project(&self.project_name)?;
+            return Ok(Action::None);
+        }
+
+        if is_char_event(&key_event, 'o') {
+            let settings = requester.get_project_settings(&self.project_name)?;
+            return Ok(Action::OpenString(ProjectSettings::prettify_json(
+                &settings,
+            )?));
+        }
+
+        if key_event.code == KeyCode::Enter {
+            let action = selected_service
+                .map(|service| Action::OpenLogs(service.logfile_path))
+                .unwrap_or(Action::None);
+
+            return Ok(action);
+        }
+
+        if key_event.code == KeyCode::Left || is_char_event(&key_event, 'h') {
+            return Ok(Action::GotoPage(Page::Projects));
+        }
+
+        if is_char_event(&key_event, '/') {
+            self.mode = Mode::Search(self.table.selected());
+            return Ok(Action::None);
+        }
+
+        let service_count = self.get_services().len();
+        self.table.handle_key_event(key_event, service_count);
+        Ok(Action::None)
     }
 
     fn handle_key_event_search(

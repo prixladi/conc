@@ -13,6 +13,7 @@ use ratatui::{
 use crate::{
     interactive::{
         components::{ActiveTable, CommonBlock, Input},
+        keybind_utils::{is_char_event, is_ctrl_alt_char_event},
         Action, ActionResult,
     },
     utils::start_time_to_age,
@@ -60,12 +61,6 @@ impl PageView for ProjectsPage {
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent, context: PageContext) -> ActionResult {
-        if self.table.is_control_key_code(key_event.code) {
-            let project_count = self.get_filtered_projects().len();
-            self.table.handle_key_code(key_event.code, project_count);
-            return Ok(Action::None);
-        }
-
         match self.mode {
             Mode::Normal => self.handle_key_event(key_event, &context.requester),
             Mode::Search(prev_selected) => self.handle_key_event_search(key_event, prev_selected),
@@ -110,29 +105,47 @@ impl ProjectsPage {
     fn handle_key_event(&mut self, key_event: KeyEvent, requester: &Requester) -> ActionResult {
         let selected_project = self.get_selected_project();
 
-        match key_event.code {
-            KeyCode::Char('s') => {
-                selected_project.map(|project| requester.start_project(&project.name).unwrap());
-                Ok(Action::None)
+        if is_char_event(&key_event, 's') {
+            selected_project.map(|project| requester.start_project(&project.name).unwrap());
+            return Ok(Action::None);
+        }
+
+        if is_char_event(&key_event, 'd') {
+            selected_project.map(|project| requester.stop_project(&project.name).unwrap());
+            return Ok(Action::None);
+        }
+
+        if is_char_event(&key_event, 'r') {
+            selected_project.map(|project| requester.restart_project(&project.name).unwrap());
+            return Ok(Action::None);
+        }
+
+        if is_ctrl_alt_char_event(&key_event, 'l') {
+            if let Some(project) = selected_project {
+                requester.clear_project_logs(&project.name).unwrap();
             }
-            KeyCode::Char('d') => {
-                selected_project.map(|project| requester.stop_project(&project.name).unwrap());
-                Ok(Action::None)
-            }
-            KeyCode::Char('r') => {
-                selected_project.map(|project| requester.restart_project(&project.name).unwrap());
-                Ok(Action::None)
-            }
-            KeyCode::Enter | KeyCode::Right | KeyCode::Char('l') => match selected_project {
+            return Ok(Action::None);
+        }
+
+        if key_event.code == KeyCode::Enter
+            || key_event.code == KeyCode::Right
+            || is_char_event(&key_event, 'l')
+        {
+            return match selected_project {
                 Some(project) => Ok(Action::GotoPage(Page::Project(project.name))),
                 None => Ok(Action::None),
-            },
-            KeyCode::Char('/') => {
-                self.mode = Mode::Search(self.table.selected());
-                Ok(Action::None)
-            }
-            _ => Ok(Action::None),
+            };
         }
+
+        if is_char_event(&key_event, '/') {
+            self.mode = Mode::Search(self.table.selected());
+            return Ok(Action::None);
+        }
+
+        let project_count = self.get_filtered_projects().len();
+        self.table.handle_key_event(key_event, project_count);
+
+        Ok(Action::None)
     }
 
     fn handle_key_event_search(

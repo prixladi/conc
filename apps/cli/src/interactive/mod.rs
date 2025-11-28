@@ -12,6 +12,7 @@ mod components;
 mod external_command;
 mod pages;
 mod tui_settings;
+mod keybind_utils;
 
 pub fn interact(requester: Requester, config: AppConfig) -> Result<(), Box<dyn Error>> {
     let mut terminal = ratatui::init();
