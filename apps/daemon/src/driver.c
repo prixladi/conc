@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <dirent.h>
+#include <time.h>
 
 #include <sys/wait.h>
 #include <sys/stat.h>
@@ -191,13 +191,14 @@ d_service_start(const struct project_settings project, const struct service_sett
     scoped char *logfile_path = get_service_logfile_path(project.name, service_settings.name);
     int pid = process_start(project, service_settings, env, logfile_path);
 
-    time_t c_time = 0;
+    time_t c_time = time(NULL);
 
+#ifndef __MACH__
     struct stat sts;
     scoped char *proc = str_printf("/proc/%d", pid);
-    // TODO: maybe i should just use UTC.now instead of this, idk
     if (stat(proc, &sts) == 0)
         c_time = sts.st_ctime;
+#endif
 
     struct service_process_info info = {
         .pid = pid,
