@@ -80,7 +80,7 @@ fn menu_button_with_icon(
     icon: Bootstrap,
     active: bool,
     message: Message,
-) -> Element<Message> {
+) -> Element<'_, Message> {
     let icon = container(text(icon_to_string(icon)).font(BOOTSTRAP_FONT).size(18))
         .padding(Padding::default().bottom(4));
 

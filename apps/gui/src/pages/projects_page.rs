@@ -32,7 +32,7 @@ impl PageView for ProjectsPage {
         }
     }
 
-    fn view(&self) -> Element<Message> {
+    fn view(&self) -> Element<'_, Message> {
         let mut names = vec![];
         let mut statuses = vec![];
         let mut actions = vec![];

@@ -65,7 +65,7 @@ impl<'a, F: Fn(&str) -> Message> From<InfoTable<'a, F>> for Element<'a, Message>
     }
 }
 
-fn column_tile(text: &str, padding_left: i32) -> Element<Message> {
+fn column_tile(text: &str, padding_left: i32) -> Element<'_, Message> {
     container(text)
         .padding(Padding::default().left(padding_left as f32))
         .into()

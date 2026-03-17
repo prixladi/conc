@@ -33,7 +33,7 @@ impl PageView for SettingsPage {
         Ok(())
     }
 
-    fn view(&self) -> Element<Message> {
+    fn view(&self) -> Element<'_, Message> {
         let mut view = column![];
 
         let theme_picker = column![

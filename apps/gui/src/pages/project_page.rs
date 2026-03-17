@@ -48,7 +48,7 @@ impl PageView for ProjectPage {
         }
     }
 
-    fn view(&self) -> Element<Message> {
+    fn view(&self) -> Element<'_, Message> {
         let mut view = column![];
         if self.project.is_none() {
             return view.into();

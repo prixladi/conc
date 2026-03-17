@@ -42,7 +42,7 @@ pub trait PageView {
     }
     fn page(&self) -> Page;
     fn refresh(&mut self, data: PageData) -> Result<(), String>;
-    fn view(&self) -> Element<Message>;
+    fn view(&self) -> Element<'_, Message>;
 }
 
 #[derive(Clone)]

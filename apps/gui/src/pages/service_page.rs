@@ -58,7 +58,7 @@ impl PageView for ServicePage {
         }
     }
 
-    fn view(&self) -> Element<Message> {
+    fn view(&self) -> Element<'_, Message> {
         let mut view = column![];
         if self.service.is_none() {
             return view.into();

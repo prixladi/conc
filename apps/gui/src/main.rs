@@ -122,7 +122,7 @@ impl App {
         }
     }
 
-    fn view(&self) -> Element<Message> {
+    fn view(&self) -> Element<'_, Message> {
         let view = self.page_view.view();
 
         let menu = Menu::new(self.project_names.clone(), self.page_view.page());
