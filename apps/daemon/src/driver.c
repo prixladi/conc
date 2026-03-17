@@ -385,8 +385,8 @@ open_service_meta_file(const char *proj_name, const char *serv_name, const char 
 static bool
 clear_service_logfile(const char *proj_name, const char *serv_name)
 {
-    scoped char *meta_file_path = get_service_logfile_path(proj_name, serv_name);
-    FILE *file = fopen(meta_file_path, "w");
+    scoped char *log_file_path = get_service_logfile_path(proj_name, serv_name);
+    FILE *file = fopen(log_file_path, "w");
     if (!file)
         return false;
 

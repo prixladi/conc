@@ -187,7 +187,11 @@ pub(crate) struct ServiceClearLogsRequest<'a> {
 
 impl Request<NoContentResponse> for ServiceClearLogsRequest<'_> {
     fn serialize(&self) -> String {
-        serialize_parts(vec!["SERVICE-CLEAR-LOGS", self.project_name, self.service_name])
+        serialize_parts(vec![
+            "SERVICE-CLEAR-LOGS",
+            self.project_name,
+            self.service_name,
+        ])
     }
 }
 

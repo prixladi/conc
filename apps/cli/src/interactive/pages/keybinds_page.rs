@@ -68,7 +68,7 @@ impl PageView for KeybindsPage {
             Page::Keybinds(_) => (String::from("keybinds"), get_keybinds_keybinds()),
         };
 
-        let block = CommonBlock::new(format!("Keybind for page: {}", title))
+        let block = CommonBlock::new(format!("Keybinds for page: {}", title))
             .set_border_color(Color::Green)
             .add_instruction(("Return", "tab"));
 

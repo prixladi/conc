@@ -3,6 +3,7 @@ use std::{error::Error, vec};
 use std::cmp::{max, min};
 
 use ansi_to_tui::IntoText;
+use app_config::LogPreviewMode;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use daemon_client::{ProjectInfo, Requester, ServiceInfo, ServiceStatus};
 use project_settings::ProjectSettings;
@@ -18,7 +19,7 @@ use ratatui::{
 use crate::interactive::keybind_utils::{
     is_char_event, is_ctrl_alt_char_event, is_shift_char_event,
 };
-use crate::interactive::tui_settings::{LogPreviewSettings, TuiSettings};
+use crate::interactive::tui_settings::TuiSettings;
 use crate::{
     interactive::{
         components::{ActiveTable, CommonBlock, Input},
@@ -73,8 +74,8 @@ impl PageView for ProjectPage {
         self.project = Some(project);
 
         if let Some(selected_service) = self.get_selected_service() {
-            if context.settings.log_preview != LogPreviewSettings::Off {
-                let lines = read_last_n_lines_from_file(&selected_service.logfile_path)?;
+            if context.settings.log_preview != LogPreviewMode::Off {
+                let lines = read_last_n_lines_from_file(&selected_service.logfile_path, 50)?;
                 self.logs = lines;
             }
         }
@@ -380,14 +381,14 @@ impl PageLayout {
         let show_search = page.is_in_raw_mode();
 
         let table_line_display_count = match settings.log_preview {
-            LogPreviewSettings::On => min(MAX_FORCED_TABLE_LINE_COUNT, max_table_line_count),
-            LogPreviewSettings::Off | LogPreviewSettings::Fit => max_table_line_count,
+            LogPreviewMode::On => min(MAX_FORCED_TABLE_LINE_COUNT, max_table_line_count),
+            _ => max_table_line_count,
         };
 
         let show_logs = match settings.log_preview {
-            LogPreviewSettings::Off => false,
-            LogPreviewSettings::On => area.height > MIN_LOGS_HEIGHT + table_line_display_count,
-            LogPreviewSettings::Fit => area.height > (max_table_line_count + MIN_LOGS_HEIGHT),
+            LogPreviewMode::Off => false,
+            LogPreviewMode::On => area.height > MIN_LOGS_HEIGHT + table_line_display_count,
+            LogPreviewMode::Fit => area.height > (max_table_line_count + MIN_LOGS_HEIGHT),
         };
 
         if !show_search {

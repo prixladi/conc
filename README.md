@@ -43,6 +43,10 @@ Run `make install` to install the **daemon**, the **cli**, and the **gui**, and 
 
 If you want to install just individual parts, you can run `make install_{daemon/cli/gui}`, note that **daemon** and **cli** are required for conc to work properly, **gui** is optional.
 
+### Mac OS
+
+Tested on macOS Tahoe Version 26.2 (25C56). Everything except systemd service config should work.
+
 ### Other
 
 The project is currently heavily dependent on many **POSIX** features such as `Unix socket` and `unistd` from libc, and it should work on any POSIX compliant system but it was only tested on **Linux**. Because of this it will not work Windows and there is currently not plan to support it.
