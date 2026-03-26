@@ -36,19 +36,7 @@
           mkShell rec {
             hardeningDisable = [ "all" ];
             buildInputs =
-              packages.daemon.buildInputs
-              ++ (with pkgs; [
-                rust-bin.stable."1.85.0".default
-
-                libxkbcommon
-                libGL
-
-                # WINIT_UNIX_BACKEND=x11
-                xorg.libXcursor
-                xorg.libXrandr
-                xorg.libXi
-                xorg.libX11
-              ]);
+              packages.daemon.buildInputs ++ packages.cli.buildInputs ++ packages.cli.nativeBuildInputs;
 
             LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
             WINIT_UNIX_BACKEND = "x11";
