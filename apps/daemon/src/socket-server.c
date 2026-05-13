@@ -3,9 +3,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <poll.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/select.h>
 #include <sys/un.h>
 
 #include "utils/log.h"
@@ -29,6 +29,7 @@ struct server
     volatile struct server_options opts;
     volatile pthread_t main_thread;
     volatile bool running;
+    int pipe_fds[2];
 };
 
 struct handler_options
@@ -49,6 +50,14 @@ server_run_async(struct server_options opts)
     server->running = true;
     server->opts = opts;
 
+    server->pipe_fds[0] = -1;
+    server->pipe_fds[1] = -1;
+    if (pipe(server->pipe_fds) != 0)
+    {
+        log_critical("Unable to create pipe for socket server\n");
+        return NULL;
+    }
+
     pthread_t thr;
     pthread_create(&thr, NULL, server_run, (void *)server);
 
@@ -61,12 +70,18 @@ void
 server_stop(struct server *server)
 {
     server->running = false;
+    char buf = 0;
+    write(server->pipe_fds[1], &buf, 1);
 }
 
 void
 server_wait_and_free(struct server *server)
 {
     pthread_join(server->main_thread, NULL);
+    if (server->pipe_fds[0] != -1)
+        close(server->pipe_fds[0]);
+    if (server->pipe_fds[1] != -1)
+        close(server->pipe_fds[1]);
     free(server);
     log_info("Socket server stopped\n");
 }
@@ -102,27 +117,34 @@ server_run(void *data)
 
     while (server->running)
     {
-        fd_set read_fds;
-        FD_ZERO(&read_fds);
-        FD_SET(server_socket, &read_fds);
+        struct pollfd fds[2] = {
+            { .fd = server_socket, .events = POLLIN },
+            { .fd = server->pipe_fds[0], .events = POLLIN },
+        };
 
-        struct timeval timeout = { .tv_sec = 0, .tv_usec = 1000 * 100 };
-
-        // TODO: Use pselect or other fd for instant interruption, this causes delay of the timeout duration on exit
-        int select_status = select(server_socket + 1, &read_fds, NULL, NULL, &timeout);
-        if (select_status > 0 && FD_ISSET(server_socket, &read_fds) && server->running)
+        int poll_status = poll(fds, 2, -1);
+        if (poll_status <= 0 || !(fds[0].revents & POLLIN) || !server->running)
         {
-            struct sockaddr_un client_addr;
-            unsigned int clen = sizeof(client_addr);
+            if (poll_status < 0)
+                log_error("Socket server poll returned %d while polling for data from socket.\n", poll_status);
+            continue;
+        }
 
-            int client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &clen);
-            log_trace(TRACE_NAME, "Accepted socket connection '%d'\n", client_socket);
+        struct sockaddr_un client_addr;
+        unsigned int clen = sizeof(client_addr);
 
-            struct handler_options *handler_opts = malloc(sizeof(struct handler_options));
-            handler_opts->dispatch = server->opts.dispatch;
-            handler_opts->client_socket = client_socket;
+        int client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &clen);
+        log_trace(TRACE_NAME, "Accepted socket connection '%d'\n", client_socket);
 
-            thread_pool_queue_job(pool, NULL, client_socket_handle, handler_opts);
+        struct handler_options *handler_opts = malloc(sizeof(struct handler_options));
+        handler_opts->dispatch = server->opts.dispatch;
+        handler_opts->client_socket = client_socket;
+
+        if (thread_pool_queue_job(pool, NULL, client_socket_handle, handler_opts) != 0)
+        {
+            log_critical("Unable to queue client socket handle to on threadpool.");
+            shutdown(client_socket, SHUT_WR);
+            close(client_socket);
         }
     }
 
@@ -162,7 +184,7 @@ client_socket_handle(void *data)
     shutdown(opts->client_socket, SHUT_WR);
 
     log_trace(TRACE_NAME, "Closing socket connection '%d'\n", opts->client_socket);
-    if (close(opts->client_socket) > 0)
+    if (close(opts->client_socket) != 0)
         log_error("Unable to close client socket '%d'\n", opts->client_socket);
 
     return NULL;

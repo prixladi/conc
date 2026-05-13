@@ -22,6 +22,7 @@ app_config_init(int argc, char **argv, struct app_config *config)
     config->is_daemon = !isatty(STDOUT_FILENO);
     config->log_level = DEFAULT_LOG_LEVEL;
     config->print_help = false;
+    config->print_version = false;
     config->work_dir = NULL;
 
     for (int i = 1; i < argc; i++)
