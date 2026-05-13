@@ -167,7 +167,11 @@ impl ProjectsPage {
 
                 self.table.select(selected_service);
                 self.search.clear();
-                self.mode = Mode::Normal
+                self.mode = Mode::Normal;
+            }
+            KeyCode::Up | KeyCode::Down => {
+                let project_count = self.get_filtered_projects().len();
+                self.table.handle_key_event(key_event, project_count);
             }
             code => self.search.handle_key_code(code),
         }
@@ -194,9 +198,8 @@ impl ProjectsPage {
             .add_instruction(("Stop", "d"));
 
         let rows = self
-            .projects
+            .get_filtered_projects()
             .iter()
-            .filter(|project| self.search.is_empty() || project.name.contains(&self.search.value()))
             .enumerate()
             .map(|(i, project)| {
                 let status: Span = format!(
@@ -231,7 +234,11 @@ impl ProjectsPage {
     fn get_filtered_projects(&self) -> Vec<ProjectInfo> {
         self.projects
             .iter()
-            .filter(|project| self.search.is_empty() || project.name.contains(&self.search.value()))
+            .filter(|project| {
+                self.mode == Mode::Normal
+                    || self.search.is_empty()
+                    || project.name.contains(&self.search.value())
+            })
             .cloned()
             .collect()
     }

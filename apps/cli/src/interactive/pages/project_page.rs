@@ -204,7 +204,7 @@ impl ProjectPage {
             return Ok(Action::None);
         }
 
-        let service_count = self.get_services().len();
+        let service_count = self.get_filtered_services().len();
         self.table.handle_key_event(key_event, service_count);
         Ok(Action::None)
     }
@@ -229,6 +229,10 @@ impl ProjectPage {
                 self.table.select(selected_service);
                 self.search.clear();
                 self.mode = Mode::Normal
+            }
+            KeyCode::Up | KeyCode::Down => {
+                let project_count = self.get_filtered_services().len();
+                self.table.handle_key_event(key_event, project_count);
             }
             code => self.search.handle_key_code(code),
         }
@@ -265,7 +269,7 @@ impl ProjectPage {
             .add_instruction(("Logs", "enter"));
 
         let rows = self
-            .get_services()
+            .get_filtered_services()
             .iter()
             .enumerate()
             .map(|(i, service)| {
@@ -311,7 +315,7 @@ impl ProjectPage {
 }
 
 impl ProjectPage {
-    fn get_services(&self) -> Vec<ServiceInfo> {
+    fn get_filtered_services(&self) -> Vec<ServiceInfo> {
         match &self.project {
             Some(project) => match self.mode {
                 Mode::Normal => project.services.clone(),
@@ -319,7 +323,9 @@ impl ProjectPage {
                     .services
                     .iter()
                     .filter(|service| {
-                        self.search.is_empty() || service.name.contains(&self.search.value())
+                        self.mode == Mode::Normal
+                            || self.search.is_empty()
+                            || service.name.contains(&self.search.value())
                     })
                     .cloned()
                     .collect(),
@@ -342,7 +348,7 @@ impl ProjectPage {
 
     fn get_selected_service(&self) -> Option<ServiceInfo> {
         let selected = self.table.selected().unwrap_or_default();
-        let services = self.get_services();
+        let services = self.get_filtered_services();
 
         if services.is_empty() {
             None
