@@ -30,6 +30,8 @@ app_config_init(int argc, char **argv, struct app_config *config)
 
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
             config->print_help = true;
+        else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0)
+            config->print_version = true;
         else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--daemon") == 0)
             config->is_daemon = true;
         else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--log-level") == 0)
@@ -78,6 +80,22 @@ Examples:\n\
     %s --work-dir /var/lib/conc       Starts services with root work directory in /var/lib/conc\n\
     %s --daemon                       Starts services as a daemon\n",
                       app_name, app_name, app_name, app_name, app_name);
+}
+
+#ifndef __GIT_COMMIT_HASH
+#define __GIT_COMMIT_HASH "unknown"
+#endif
+
+#ifdef __DEBUG__
+const char *commit_hash = __GIT_COMMIT_HASH "-dev";
+#else
+const char *commit_hash = __GIT_COMMIT_HASH;
+#endif
+
+const char *
+get_version()
+{
+    return commit_hash;
 }
 
 static char *

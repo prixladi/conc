@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "utils/log.h"
+#include "utils/memory.h"
 
 #include "socket-server.h"
 #include "protocol.h"
@@ -22,20 +23,25 @@ main(int argc, char **argv)
     setvbuf(stdout, stdout_buffer, _IOLBF, 1024);
 
     struct app_config config;
-    char *config_error = app_config_init(argc, argv, &config);
+    scoped char *config_error = app_config_init(argc, argv, &config);
     if (config_error)
     {
         fprintf(stderr, "%s", config_error);
-        free(config_error);
         return 1;
     }
 
     if (config.print_help)
     {
-        char *help_message = get_help_message(argv[0]);
+        scoped char *help_message = get_help_message(argv[0]);
         printf("%s", help_message); // intentionally not using log_* to ignore log level
-        free(help_message);
-        return config.is_daemon ? 1 : 0; // deamon should never ask for help
+        return config.is_daemon ? 1 : 0; // daemon should never ask for help
+    }
+
+    if (config.print_version)
+    {
+        const char *version_message = get_version();
+        printf("%s\n", version_message); // intentionally not using log_* to ignore log level
+        return config.is_daemon ? 1 : 0; // daemon should never ask for version
     }
 
     if (config.work_dir)

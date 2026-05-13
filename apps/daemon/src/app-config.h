@@ -10,10 +10,12 @@ struct app_config
     bool is_daemon;
     enum log_level log_level;
     bool print_help;
+    bool print_version;
     char *work_dir;
 };
 
 char *app_config_init(int argc, char **argv, struct app_config *config);
 char *get_help_message(char *app_name);
+const char *get_version();
 
 #endif

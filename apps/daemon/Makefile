@@ -1,5 +1,6 @@
 CC=gcc
-FLAGS = -D_GNU_SOURCE -D_POSIX_C_SOURCE=200112L -W -Wall -pedantic -Werror -std=c99 -Wno-gnu-auto-type
+GIT_COMMIT_HASH=$(shell git rev-parse HEAD 2>/dev/null || echo "unknown")
+FLAGS = -D_GNU_SOURCE -D_POSIX_C_SOURCE=200112L -W -Wall -pedantic -Werror -std=c99 -Wno-gnu-auto-type -D__GIT_COMMIT_HASH=\"$(GIT_COMMIT_HASH)\"
 SOURCES = src/external/*.c src/utils/*.c src/*.c
 HEADERS = src/external/*.h src/utils/*.h src/*.h
 
