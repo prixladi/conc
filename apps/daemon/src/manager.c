@@ -25,6 +25,7 @@ struct project_store
 
 static enum d_result project_services_start(struct project_settings project, const struct env_variable *env);
 static enum d_result project_services_stop(struct project_settings project);
+static enum d_result project_services_restart(struct project_settings project, const struct env_variable *env);
 static enum d_result project_services_stop_and_remove(struct project_settings project);
 static enum d_result project_services_clear_logs(struct project_settings project);
 
@@ -291,15 +292,8 @@ project_restart(const char *proj_name, const struct env_variable *env)
     pthread_mutex_lock(project.lock);
 
     pthread_mutex_unlock(store.lock);
-    enum d_result result = project_services_stop(project.settings);
 
-    if (result < D_OK)
-    {
-        pthread_mutex_unlock(project.lock);
-        return M_DRIVER_ERROR;
-    }
-
-    result = project_services_start(project.settings, env);
+    enum d_result result = project_services_restart(project.settings, env);
 
     pthread_mutex_unlock(project.lock);
 
@@ -476,8 +470,21 @@ service_restart(const char *proj_name, const char *serv_name, const struct env_v
         return M_SERVICE_NOT_FOUND;
     }
 
-    enum d_result result = d_service_stop(project.settings.name, service);
-    if (result < D_OK)
+    struct d_service_info d_info;
+    enum d_result get_result = d_service_info_get(project.settings.name, service.name, &d_info);
+    if (get_result != D_OK)
+        return M_DRIVER_ERROR;
+
+    if (d_info.status != D_RUNNING)
+    {
+        pthread_mutex_unlock(project.lock);
+        d_service_info_free(d_info);
+        return M_NO_ACTION;
+    }
+    d_service_info_free(d_info);
+
+    enum d_result result = d_service_stop(project.settings.name, service.name);
+    if (result != D_OK)
     {
         pthread_mutex_unlock(project.lock);
         return M_DRIVER_ERROR;
@@ -515,7 +522,7 @@ service_stop(const char *proj_name, const char *serv_name)
         return M_SERVICE_NOT_FOUND;
     }
 
-    enum d_result stop_result = d_service_stop(project.settings.name, service);
+    enum d_result stop_result = d_service_stop(project.settings.name, service.name);
 
     pthread_mutex_unlock(project.lock);
 
@@ -549,7 +556,7 @@ service_clear_logs(const char *proj_name, const char *serv_name)
         return M_SERVICE_NOT_FOUND;
     }
 
-    enum d_result stop_result = d_service_clear_logs(project.settings.name, service);
+    enum d_result stop_result = d_service_clear_logs(project.settings.name, service.name);
 
     pthread_mutex_unlock(project.lock);
 
@@ -597,12 +604,45 @@ project_services_start(struct project_settings project, const struct env_variabl
 }
 
 static enum d_result
+project_services_restart(struct project_settings project, const struct env_variable *env)
+{
+    enum d_result final_result = D_NO_ACTION;
+    for (size_t i = 0; i < vec_length(project.services); i++)
+    {
+        struct d_service_info d_info;
+        enum d_result get_result = d_service_info_get(project.name, project.services[i].name, &d_info);
+        if (get_result != D_OK)
+        {
+            final_result = get_result;
+            continue;
+        }
+
+        if (d_info.status != D_RUNNING)
+        {
+            d_service_info_free(d_info);
+            continue;
+        }
+
+        d_service_info_free(d_info);
+
+        enum d_result result = d_service_stop(project.name, project.services[i].name);
+        if (result <= D_OK && final_result >= D_OK)
+            final_result = result;
+        result = d_service_start(project, project.services[i], env);
+        if (result <= D_OK && final_result >= D_OK)
+            final_result = result;
+    }
+
+    return final_result;
+}
+
+static enum d_result
 project_services_stop(struct project_settings project)
 {
     enum d_result final_result = D_NO_ACTION;
     for (size_t i = 0; i < vec_length(project.services); i++)
     {
-        enum d_result result = d_service_stop(project.name, project.services[i]);
+        enum d_result result = d_service_stop(project.name, project.services[i].name);
         if (result <= D_OK && final_result >= D_OK)
             final_result = result;
     }
@@ -616,7 +656,7 @@ project_services_clear_logs(struct project_settings project)
     enum d_result final_result = D_NO_ACTION;
     for (size_t i = 0; i < vec_length(project.services); i++)
     {
-        enum d_result result = d_service_clear_logs(project.name, project.services[i]);
+        enum d_result result = d_service_clear_logs(project.name, project.services[i].name);
         if (result <= D_OK && final_result >= D_OK)
             final_result = result;
     }

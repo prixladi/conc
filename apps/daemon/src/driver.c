@@ -217,13 +217,13 @@ d_service_start(const struct project_settings project, const struct service_sett
 }
 
 enum d_result
-d_service_stop(const char *proj_name, const struct service_settings service_settings)
+d_service_stop(const char *proj_name, const char *serv_name)
 {
-    struct service_process_info process_info = get_service_info(proj_name, service_settings.name);
+    struct service_process_info process_info = get_service_info(proj_name, serv_name);
     if (process_info.pid <= 0)
         return D_NO_ACTION;
 
-    log_debug("Stopping process '%s/%s - %d'\n", proj_name, service_settings.name, process_info.pid);
+    log_debug("Stopping process '%s/%s - %d'\n", proj_name, serv_name, process_info.pid);
 
     if (process_kill_pid_pg(process_info.pid) > 0)
     {
@@ -233,9 +233,9 @@ d_service_stop(const char *proj_name, const struct service_settings service_sett
 
     process_info.s_time = time(NULL);
 
-    if (write_service_meta_file(proj_name, service_settings.name, process_info) > 0)
+    if (write_service_meta_file(proj_name, serv_name, process_info) > 0)
     {
-        log_error("Unable to write service meta for service '%s' in project '%s'\n", service_settings.name, proj_name);
+        log_error("Unable to write service meta for service '%s' in project '%s'\n", serv_name, proj_name);
         return D_FS_ERROR;
     }
 
@@ -243,9 +243,9 @@ d_service_stop(const char *proj_name, const struct service_settings service_sett
 }
 
 enum d_result
-d_service_clear_logs(const char *proj_name, const struct service_settings service_settings)
+d_service_clear_logs(const char *proj_name, const char *serv_name)
 {
-    bool res = clear_service_logfile(proj_name, service_settings.name);
+    bool res = clear_service_logfile(proj_name, serv_name);
     return res ? D_OK : D_FS_ERROR;
 }
 
