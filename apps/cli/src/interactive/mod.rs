@@ -1,9 +1,10 @@
 use std::{error::Error, time::Duration};
 
-use app_config::{AppConfig, LogPreviewMode};
+use app_config::{AppConfig, LogPreviewMode, RestartType};
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use daemon_client::Requester;
 use external_command::{open_log_file, open_string_in_less};
+use keybind_utils::{is_char_event, is_ctrl_char_event};
 use pages::{Page, PageContext, PageManager};
 use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget, DefaultTerminal, Frame};
 use tui_settings::TuiSettings;
@@ -118,29 +119,38 @@ impl App {
     }
 
     fn handle_key_event_global(&mut self, key_event: KeyEvent) -> Option<ActionResult> {
-        match key_event.code {
-            KeyCode::Char('q') | KeyCode::Esc if key_event.kind == KeyEventKind::Press => {
-                Some(Ok(Action::Exit))
-            }
-            KeyCode::Tab => {
-                let current_page = self.page_manager.current_page().clone();
-
-                match current_page {
-                    Page::Keybinds(_) => None,
-                    _ => Some(Ok(Action::GotoPage(Page::Keybinds(Box::new(current_page))))),
-                }
-            }
-            KeyCode::Char('i') => {
-                self.settings.log_preview = match self.settings.log_preview {
-                    LogPreviewMode::On => LogPreviewMode::Fit,
-                    LogPreviewMode::Off => LogPreviewMode::On,
-                    LogPreviewMode::Fit => LogPreviewMode::Off,
-                };
-
-                Some(Ok(Action::None))
-            }
-            _ => None,
+        if is_char_event(&key_event, 'q') || key_event.code == KeyCode::Esc {
+            return Some(Ok(Action::Exit));
         }
+
+        if key_event.code == KeyCode::Tab {
+            let current_page = self.page_manager.current_page().clone();
+
+            return match current_page {
+                Page::Keybinds(_) => None,
+                _ => Some(Ok(Action::GotoPage(Page::Keybinds(Box::new(current_page))))),
+            };
+        }
+
+        if is_ctrl_char_event(&key_event, 'l') {
+            self.settings.log_preview = match self.settings.log_preview {
+                LogPreviewMode::On => LogPreviewMode::Fit,
+                LogPreviewMode::Off => LogPreviewMode::On,
+                LogPreviewMode::Fit => LogPreviewMode::Off,
+            };
+
+            return Some(Ok(Action::None));
+        }
+
+        if is_ctrl_char_event(&key_event, 'r') {
+            self.settings.service_restart_behavior = match self.settings.service_restart_behavior {
+                RestartType::Hot => RestartType::Cold,
+                RestartType::Cold => RestartType::Hot,
+            };
+            return Some(Ok(Action::None));
+        }
+
+        return None;
     }
 
     fn create_page_context(&self) -> PageContext {
