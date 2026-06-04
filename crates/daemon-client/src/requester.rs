@@ -15,6 +15,7 @@ use crate::{
     socket_client::SocketClient,
     ProjectInfo, Response, ServiceInfo,
 };
+use app_config::RestartType;
 
 type Res<T> = Result<T, ErrorResponse>;
 
@@ -73,9 +74,14 @@ impl Requester {
         .map(|res| res.value)
     }
 
-    pub fn restart_project(&self, project_name: &str) -> Res<ProjectInfo> {
+    pub fn restart_project(
+        &self,
+        project_name: &str,
+        restart_type: &RestartType,
+    ) -> Res<ProjectInfo> {
         self.send_request(ProjectRestartRequest {
             project_name,
+            restart_type: to_protocol_restart_type(restart_type),
             env: self.get_request_env(),
         })
         .map(|res| res.value)
@@ -118,10 +124,16 @@ impl Requester {
         .map(|res| res.value)
     }
 
-    pub fn restart_service(&self, project_name: &str, service_name: &str) -> Res<ServiceInfo> {
+    pub fn restart_service(
+        &self,
+        project_name: &str,
+        service_name: &str,
+        restart_type: &RestartType,
+    ) -> Res<ServiceInfo> {
         self.send_request(ServiceRestartRequest {
             project_name,
             service_name,
+            restart_type: to_protocol_restart_type(restart_type),
             env: self.get_request_env(),
         })
         .map(|res| res.value)
@@ -157,5 +169,12 @@ impl Requester {
         } else {
             String::from("{}")
         }
+    }
+}
+
+fn to_protocol_restart_type(rt: &RestartType) -> &'static str {
+    match rt {
+        RestartType::Hot => "HOT",
+        RestartType::Cold => "COLD",
     }
 }

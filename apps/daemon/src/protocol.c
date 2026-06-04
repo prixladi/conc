@@ -44,6 +44,8 @@ static char *handle_error_results(enum m_result resp);
 static char *format_list(char **lines);
 static char *format_service_info(struct service_info info);
 
+static int try_parse_restart_type(char *type, enum restart_type *rt);
+
 char *
 dispatch_command(const char *input)
 {
@@ -65,7 +67,7 @@ dispatch_command(const char *input)
     if (response == NULL)
         response = match_and_handle("PROJECT-START", command, 2, handle_project_start);
     if (response == NULL)
-        response = match_and_handle("PROJECT-RESTART", command, 2, handle_project_restart);
+        response = match_and_handle("PROJECT-RESTART", command, 3, handle_project_restart);
     if (response == NULL)
         response = match_and_handle("PROJECT-CLEAR-LOGS", command, 1, handle_project_clear_logs);
     if (response == NULL)
@@ -79,7 +81,7 @@ dispatch_command(const char *input)
     if (response == NULL)
         response = match_and_handle("SERVICE-START", command, 3, handle_service_start);
     if (response == NULL)
-        response = match_and_handle("SERVICE-RESTART", command, 3, handle_service_restart);
+        response = match_and_handle("SERVICE-RESTART", command, 4, handle_service_restart);
     if (response == NULL)
         response = match_and_handle("SERVICE-CLEAR-LOGS", command, 2, handle_service_clear_logs);
     if (response == NULL)
@@ -316,11 +318,15 @@ static char *
 handle_project_restart(char **command)
 {
     struct env_variable *env[1];
-    char *parse_error = environment_vars_parse(command[1], env);
+    char *parse_error = environment_vars_parse(command[2], env);
     if (parse_error != NULL)
         return resp_error(parse_error);
 
-    int result = project_restart(command[0], *env);
+    enum restart_type restart_type;
+    if (try_parse_restart_type(command[1], &restart_type) != 0)
+        return resp_error("Invalid restart type");
+
+    int result = project_restart(command[0], restart_type, *env);
     environment_vars_free(*env);
 
     if (result < M_OK)
@@ -417,11 +423,15 @@ static char *
 handle_service_restart(char **command)
 {
     struct env_variable *env[1];
-    char *parse_error = environment_vars_parse(command[2], env);
+    char *parse_error = environment_vars_parse(command[3], env);
     if (parse_error != NULL)
         return resp_error(parse_error);
 
-    int result = service_restart(command[0], command[1], *env);
+    enum restart_type restart_type;
+    if (try_parse_restart_type(command[2], &restart_type) != 0)
+        return resp_error("Invalid restart type");
+
+    int result = service_restart(command[0], command[1], restart_type, *env);
     environment_vars_free(*env);
 
     if (result < M_OK)
@@ -514,4 +524,21 @@ format_service_info(const struct service_info info)
 
     char *logfile_path = info.logfile_path ? info.logfile_path : "-";
     return str_printf("%s %s %d %ld %ld %s", info.name, status, info.pid, info.start_time, info.stop_time, logfile_path);
+}
+
+static int
+try_parse_restart_type(char *type, enum restart_type *rt)
+{
+    if (strcmp(type, "COLD") == 0)
+    {
+        *rt = COLD;
+        return 0;
+    }
+    if (strcmp(type, "HOT") == 0)
+    {
+        *rt = HOT;
+        return 0;
+    }
+
+    return 1;
 }

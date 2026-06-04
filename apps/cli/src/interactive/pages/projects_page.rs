@@ -14,6 +14,7 @@ use crate::{
     interactive::{
         components::{ActiveTable, CommonBlock, Input},
         keybind_utils::{is_char_event, is_ctrl_alt_char_event},
+        tui_settings::TuiSettings,
         Action, ActionResult,
     },
     utils::start_time_to_age,
@@ -62,7 +63,7 @@ impl PageView for ProjectsPage {
 
     fn handle_key_event(&mut self, key_event: KeyEvent, context: PageContext) -> ActionResult {
         match self.mode {
-            Mode::Normal => self.handle_key_event(key_event, &context.requester),
+            Mode::Normal => self.handle_key_event(key_event, &context.requester, &context.settings),
             Mode::Search(prev_selected) => self.handle_key_event_search(key_event, prev_selected),
         }
     }
@@ -102,7 +103,12 @@ impl PageView for ProjectsPage {
 }
 
 impl ProjectsPage {
-    fn handle_key_event(&mut self, key_event: KeyEvent, requester: &Requester) -> ActionResult {
+    fn handle_key_event(
+        &mut self,
+        key_event: KeyEvent,
+        requester: &Requester,
+        settings: &TuiSettings,
+    ) -> ActionResult {
         let selected_project = self.get_selected_project();
 
         if is_char_event(&key_event, 's') {
@@ -116,7 +122,11 @@ impl ProjectsPage {
         }
 
         if is_char_event(&key_event, 'r') {
-            selected_project.map(|project| requester.restart_project(&project.name).unwrap());
+            selected_project.map(|project| {
+                requester
+                    .restart_project(&project.name, &settings.service_restart_behavior)
+                    .unwrap()
+            });
             return Ok(Action::None);
         }
 
@@ -191,7 +201,7 @@ impl ProjectsPage {
     fn render_table(&mut self, area: Rect, buf: &mut Buffer, context: PageContext) {
         let title = format!("Projects ({})", self.projects.len());
         let block = CommonBlock::new(title)
-            .add_top_info(context.settings.to_info())
+            .add_top_info(context.settings.to_short_info())
             .set_border_color(Color::LightYellow)
             .add_instruction(("Show keybinds", "tab"))
             .add_instruction(("Start", "s"))

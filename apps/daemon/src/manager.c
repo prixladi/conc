@@ -25,7 +25,8 @@ struct project_store
 
 static enum d_result project_services_start(struct project_settings project, const struct env_variable *env);
 static enum d_result project_services_stop(struct project_settings project);
-static enum d_result project_services_restart(struct project_settings project, const struct env_variable *env);
+static enum d_result project_services_restart(struct project_settings project, enum restart_type restart_type,
+                                              const struct env_variable *env);
 static enum d_result project_services_stop_and_remove(struct project_settings project);
 static enum d_result project_services_clear_logs(struct project_settings project);
 
@@ -278,7 +279,7 @@ project_start(const char *proj_name, const struct env_variable *env)
 }
 
 enum m_result
-project_restart(const char *proj_name, const struct env_variable *env)
+project_restart(const char *proj_name, enum restart_type restart_type, const struct env_variable *env)
 {
     pthread_mutex_lock(store.lock);
 
@@ -293,7 +294,7 @@ project_restart(const char *proj_name, const struct env_variable *env)
 
     pthread_mutex_unlock(store.lock);
 
-    enum d_result result = project_services_restart(project.settings, env);
+    enum d_result result = project_services_restart(project.settings, restart_type, env);
 
     pthread_mutex_unlock(project.lock);
 
@@ -448,7 +449,8 @@ service_start(const char *proj_name, const char *serv_name, const struct env_var
 }
 
 enum m_result
-service_restart(const char *proj_name, const char *serv_name, const struct env_variable *env)
+service_restart(const char *proj_name, const char *serv_name, enum restart_type restart_type,
+                const struct env_variable *env)
 {
     pthread_mutex_lock(store.lock);
 
@@ -475,7 +477,7 @@ service_restart(const char *proj_name, const char *serv_name, const struct env_v
     if (get_result != D_OK)
         return M_DRIVER_ERROR;
 
-    if (d_info.status != D_RUNNING)
+    if (d_info.status != D_RUNNING && restart_type != COLD)
     {
         pthread_mutex_unlock(project.lock);
         d_service_info_free(d_info);
@@ -604,7 +606,7 @@ project_services_start(struct project_settings project, const struct env_variabl
 }
 
 static enum d_result
-project_services_restart(struct project_settings project, const struct env_variable *env)
+project_services_restart(struct project_settings project, enum restart_type restart_type, const struct env_variable *env)
 {
     enum d_result final_result = D_NO_ACTION;
     for (size_t i = 0; i < vec_length(project.services); i++)
@@ -617,7 +619,7 @@ project_services_restart(struct project_settings project, const struct env_varia
             continue;
         }
 
-        if (d_info.status != D_RUNNING)
+        if (d_info.status != D_RUNNING && restart_type != COLD)
         {
             d_service_info_free(d_info);
             continue;

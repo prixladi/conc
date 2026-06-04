@@ -182,7 +182,7 @@ fn handle_message(app: &mut App, message: &Message) -> Result<UpdateAction, Stri
 
         Message::RestartProject { project_name } => app
             .requester
-            .restart_project(project_name)
+            .restart_project(project_name, &app.config.default_service_restart_behavior)
             .map(|_| UpdateAction::Refresh)
             .map_err(|err| err.to_string()),
 
@@ -206,7 +206,11 @@ fn handle_message(app: &mut App, message: &Message) -> Result<UpdateAction, Stri
             service_name,
         } => app
             .requester
-            .restart_service(project_name, service_name)
+            .restart_service(
+                project_name,
+                service_name,
+                &app.config.default_service_restart_behavior,
+            )
             .map(|_| UpdateAction::Refresh)
             .map_err(|err| err.to_string()),
 

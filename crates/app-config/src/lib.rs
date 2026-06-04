@@ -13,12 +13,19 @@ pub enum LogPreviewMode {
     Fit,
 }
 
+#[derive(Debug, PartialEq, Clone, Deserialize, Serialize)]
+pub enum RestartType {
+    Hot,
+    Cold,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct AppConfig {
     pub use_caller_env: bool,
     pub daemon_socket_path: String,
     pub log_view_command: Vec<String>,
     pub default_log_preview_mode: LogPreviewMode,
+    pub default_service_restart_behavior: RestartType,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -27,6 +34,7 @@ pub struct UserAppConfig {
     pub daemon_socket_path: Option<String>,
     pub log_view_command: Option<Vec<String>>,
     pub default_log_preview_mode: Option<LogPreviewMode>,
+    pub default_service_restart_behavior: Option<RestartType>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -54,6 +62,7 @@ impl AppConfig {
                 daemon_socket_path: String::from(SOCKET_DEBUG_LOCATION),
                 log_view_command: get_default_log_view_command(),
                 default_log_preview_mode: LogPreviewMode::On,
+                default_service_restart_behavior: RestartType::Cold,
             });
         }
 
@@ -77,6 +86,7 @@ impl AppConfig {
                     .log_view_command
                     .unwrap_or_else(get_default_log_view_command),
                 default_log_preview_mode: uc.default_log_preview_mode.unwrap_or(LogPreviewMode::On),
+                default_service_restart_behavior: uc.default_service_restart_behavior.unwrap_or(RestartType::Cold),
             })
     }
 }

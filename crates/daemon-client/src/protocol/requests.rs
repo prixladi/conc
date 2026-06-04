@@ -75,12 +75,18 @@ impl Request<ProjectInfoResponse> for ProjectStartRequest<'_> {
 
 pub(crate) struct ProjectRestartRequest<'a> {
     pub(crate) project_name: &'a str,
+    pub(crate) restart_type: &'a str,
     pub(crate) env: String,
 }
 
 impl Request<ProjectInfoResponse> for ProjectRestartRequest<'_> {
     fn serialize(&self) -> String {
-        serialize_parts(vec!["PROJECT-RESTART", self.project_name, &self.env])
+        serialize_parts(vec![
+            "PROJECT-RESTART",
+            self.project_name,
+            self.restart_type,
+            &self.env,
+        ])
     }
 }
 
@@ -155,6 +161,7 @@ impl Request<ServiceInfoResponse> for ServiceStartRequest<'_> {
 pub(crate) struct ServiceRestartRequest<'a> {
     pub(crate) project_name: &'a str,
     pub(crate) service_name: &'a str,
+    pub(crate) restart_type: &'a str,
     pub(crate) env: String,
 }
 
@@ -164,6 +171,7 @@ impl Request<ServiceInfoResponse> for ServiceRestartRequest<'_> {
             "SERVICE-RESTART",
             self.project_name,
             self.service_name,
+            self.restart_type,
             &self.env,
         ])
     }

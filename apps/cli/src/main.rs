@@ -160,12 +160,16 @@ fn run() -> Output {
         Command::Restart {
             project,
             service: Some(service),
-        } => requester.restart_service(&project, &service).into(),
+        } => requester
+            .restart_service(&project, &service, &config.default_service_restart_behavior)
+            .into(),
 
         Command::Restart {
             project,
             service: None,
-        } => requester.restart_project(&project).into(),
+        } => requester
+            .restart_project(&project, &config.default_service_restart_behavior)
+            .into(),
 
         Command::Stop {
             project,

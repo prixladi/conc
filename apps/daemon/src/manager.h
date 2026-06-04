@@ -25,6 +25,12 @@ enum service_status
     EXITED,
 };
 
+enum restart_type
+{
+    HOT,
+    COLD
+};
+
 struct service_info
 {
     char *name;
@@ -52,13 +58,14 @@ enum m_result project_info_get(const char *proj_name, struct project_info *info)
 enum m_result project_upsert(const struct project_settings settings);
 enum m_result project_remove(const char *proj_name);
 enum m_result project_start(const char *proj_name, const struct env_variable *env);
-enum m_result project_restart(const char *proj_name, const struct env_variable *env);
+enum m_result project_restart(const char *proj_name, enum restart_type restart_type, const struct env_variable *env);
 enum m_result project_stop(const char *proj_name);
 enum m_result project_clear_logs(const char *proj_name);
 
 enum m_result service_info_get(const char *proj_name, const char *serv_name, struct service_info *info);
 enum m_result service_start(const char *proj_name, const char *serv_name, const struct env_variable *env);
-enum m_result service_restart(const char *proj_name, const char *serv_name, const struct env_variable *env);
+enum m_result service_restart(const char *proj_name, const char *serv_name, enum restart_type restart_type,
+                              const struct env_variable *env);
 enum m_result service_stop(const char *proj_name, const char *serv_name);
 enum m_result service_clear_logs(const char *proj_name, const char *serv_name);
 

@@ -995,6 +995,7 @@ dependencies = [
 name = "daemon-client"
 version = "0.1.0"
 dependencies = [
+ "app-config",
  "serde",
  "serde_json",
  "thiserror 1.0.69",

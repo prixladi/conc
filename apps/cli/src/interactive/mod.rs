@@ -46,6 +46,7 @@ impl App {
             page_manager: PageManager::new(Page::Projects),
             settings: TuiSettings {
                 log_preview: config.default_log_preview_mode.clone(),
+                service_restart_behavior: config.default_service_restart_behavior.clone(),
             },
             config,
         }

@@ -85,7 +85,7 @@ impl PageView for ProjectPage {
 
     fn handle_key_event(&mut self, key_event: KeyEvent, context: PageContext) -> ActionResult {
         match self.mode {
-            Mode::Normal => self.handle_key_event(key_event, &context.requester),
+            Mode::Normal => self.handle_key_event(key_event, &context.requester, &context.settings),
             Mode::Search(prev_selected) => self.handle_key_event_search(key_event, prev_selected),
         }
     }
@@ -132,7 +132,12 @@ impl PageView for ProjectPage {
 }
 
 impl ProjectPage {
-    fn handle_key_event(&mut self, key_event: KeyEvent, requester: &Requester) -> ActionResult {
+    fn handle_key_event(
+        &mut self,
+        key_event: KeyEvent,
+        requester: &Requester,
+        settings: &TuiSettings,
+    ) -> ActionResult {
         let selected_service = self.get_selected_service();
 
         if is_char_event(&key_event, 's') {
@@ -151,7 +156,11 @@ impl ProjectPage {
 
         if is_char_event(&key_event, 'r') {
             if let Some(service) = selected_service {
-                requester.restart_service(&self.project_name, &service.name)?;
+                requester.restart_service(
+                    &self.project_name,
+                    &service.name,
+                    &settings.service_restart_behavior,
+                )?;
             }
             return Ok(Action::None);
         }
@@ -176,7 +185,7 @@ impl ProjectPage {
         }
 
         if is_shift_char_event(&key_event, 'r') {
-            requester.restart_project(&self.project_name)?;
+            requester.restart_project(&self.project_name, &settings.service_restart_behavior)?;
             return Ok(Action::None);
         }
 
@@ -261,7 +270,7 @@ impl ProjectPage {
             project.service_count()
         );
         let block = CommonBlock::new(title)
-            .add_top_info(context.settings.to_info())
+            .add_top_info(context.settings.to_short_info())
             .set_border_color(Color::LightBlue)
             .add_instruction(("Show keybinds", "tab"))
             .add_instruction(("Start", "s"))
