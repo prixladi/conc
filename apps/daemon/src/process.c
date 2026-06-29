@@ -4,6 +4,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <errno.h>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -57,23 +58,33 @@ process_start(const struct project_settings project, const struct service_settin
 }
 
 int
-process_kill_pid_pg(int pid)
+process_kill_pid_pg_with_timeout(pid_t pgid)
 {
-    int attempt = 0;
-    while (++attempt < 2000)
+    if (killpg(pgid, SIGTERM) != 0)
+        return errno == ESRCH ? 0 : -1;
+
+    for (int ms = 0; ms < 5000; ms += 5)
     {
-        if (attempt < 10 || attempt % 50 == 0)
-            if (killpg(pid, attempt >= 1000 ? SIGKILL : SIGTERM) != 0)
-                return 0;
+        sleep_ms(5);
+        if (killpg(pgid, 0) != 0)
+            return errno == ESRCH ? 0 : -1;
+    }
 
-        if (attempt)
-            sleep_ms(5);
-    };
+    if (killpg(pgid, SIGKILL) != 0)
+        return errno == ESRCH ? 0 : -1;
 
+    for (int ms = 0; ms < 3000; ms += 5)
+    {
+        sleep_ms(5);
+        if (killpg(pgid, 0) != 0)
+            return errno == ESRCH ? 0 : -1;
+    }
+
+    log_error("Unable to ensure process group '%d' exit in the timeout period", pgid);
     return 1;
 }
 
-// TODO: this whole function runs inc the child process after fork()
+// TODO: this whole function runs in the child process after fork()
 // It should probably just use async-signal-safe functions, need to learn more about this
 static void
 handle_child(struct process_descriptor pd)

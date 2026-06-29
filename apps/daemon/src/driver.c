@@ -209,7 +209,13 @@ d_service_start(const struct project_settings project, const struct service_sett
     {
         log_error("Unable to write service meta for service '%s' in project '%s'\n", service_settings.name, project.name);
         if (pid > 0)
-            process_kill_pid_pg(pid);
+        {
+            if (process_kill_pid_pg_with_timeout(pid) != 0)
+            {
+                log_error("Unable to kill PID '%d'\n", pid);
+                return D_PROC_ERROR;
+            }
+        }
         return D_FS_ERROR;
     }
 
@@ -225,7 +231,7 @@ d_service_stop(const char *proj_name, const char *serv_name)
 
     log_debug("Stopping process '%s/%s - %d'\n", proj_name, serv_name, process_info.pid);
 
-    if (process_kill_pid_pg(process_info.pid) > 0)
+    if (process_kill_pid_pg_with_timeout(process_info.pid) != 0)
     {
         log_error("Unable to kill PID '%d'\n", process_info.pid);
         return D_PROC_ERROR;
