@@ -96,9 +96,14 @@ impl ProjectSettings {
 impl ProjectSettings {
     pub fn find_parse_and_populate(pwd: Option<String>) -> Result<Self, ProjectSettingsError> {
         let (path, json) = resolve_settings_path_and_json(pwd)?;
-        let mut settings = try_parse(json.as_str())?;
+        Self::parse_and_populate(&json, path)
+    }
 
-        settings.cwd = resolve_cwd(path, settings.cwd);
+    /// Validates settings JSON and resolves a relative/empty `cwd` against `base_dir`.
+    pub fn parse_and_populate(json: &str, base_dir: String) -> Result<Self, ProjectSettingsError> {
+        let mut settings = try_parse(json)?;
+
+        settings.cwd = resolve_cwd(base_dir, settings.cwd);
         settings.env = populate_env(settings.env);
 
         for service in &mut settings.services {

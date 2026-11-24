@@ -21,5 +21,8 @@ install_cli:
 install_gui: 
 	cd apps/gui && make install && cd ../..
 
+install_api: 
+	cd apps/api && make install && cd ../..
+
 install_vscode: 
 	cd apps/vscode && make install && cd ../..
