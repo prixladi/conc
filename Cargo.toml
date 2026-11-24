@@ -1,6 +1,6 @@
 [workspace]
 members = ["apps/*", "crates/*"]
-exclude = ["apps/daemon"]
+exclude = ["apps/daemon", "apps/vscode"]
 resolver = "2"
 
 [profile.dev]

@@ -1,0 +1,369 @@
+{
+  "name": "conc-vscode",
+  "displayName": "Conc",
+  "description": "Visual frontend for the conc service runner daemon",
+  "version": "0.1.0",
+  "publisher": "prixladi",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prixladi/conc"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "process",
+    "service",
+    "runner",
+    "daemon"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "configuration": {
+      "title": "Conc",
+      "properties": {
+        "conc.socketPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the daemon unix socket. When empty, the value from ~/.conc/conf.json or ~/.conc/run/conc.sock is used."
+        },
+        "conc.refreshInterval": {
+          "type": "number",
+          "default": 1000,
+          "minimum": 250,
+          "description": "How often (in milliseconds) the daemon state is polled."
+        },
+        "conc.defaultRestartBehavior": {
+          "type": "string",
+          "enum": [
+            "",
+            "Hot",
+            "Cold"
+          ],
+          "enumDescriptions": [
+            "Use the value from ~/.conc/conf.json (Cold when not set)",
+            "Restart only services that are currently running",
+            "Restart all services, including stopped ones"
+          ],
+          "default": "",
+          "description": "Restart behavior used by the plain Restart action."
+        },
+        "conc.useCallerEnv": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": null,
+          "description": "Pass the VS Code environment to started services. When null, the value from ~/.conc/conf.json is used (true when not set)."
+        },
+        "conc.logLines": {
+          "type": "number",
+          "default": 500,
+          "minimum": 50,
+          "description": "Number of trailing log lines shown in the dashboard log viewer."
+        },
+        "conc.notifyOnExit": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a notification when a running service exits on its own."
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "conc",
+          "title": "Conc",
+          "icon": "media/conc.svg"
+        }
+      ]
+    },
+    "views": {
+      "conc": [
+        {
+          "id": "conc.projects",
+          "name": "Projects",
+          "icon": "media/conc.svg"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "conc.projects",
+        "contents": "The conc daemon is not reachable.\nStart it with `systemctl --user start concd` or check the `conc.socketPath` setting.\n[Retry](command:conc.refresh)",
+        "when": "conc.daemonState == offline"
+      },
+      {
+        "view": "conc.projects",
+        "contents": "No projects registered yet.\n[Upsert Project from conc.json](command:conc.upsertProject)",
+        "when": "conc.daemonState == online"
+      }
+    ],
+    "commands": [
+      {
+        "command": "conc.refresh",
+        "title": "Refresh",
+        "category": "Conc",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "conc.openDashboard",
+        "title": "Open Dashboard",
+        "category": "Conc",
+        "icon": "$(dashboard)"
+      },
+      {
+        "command": "conc.upsertProject",
+        "title": "Upsert Project from conc.json",
+        "category": "Conc",
+        "icon": "$(add)"
+      },
+      {
+        "command": "conc.startProject",
+        "title": "Start Project",
+        "category": "Conc",
+        "icon": "$(debug-start)"
+      },
+      {
+        "command": "conc.stopProject",
+        "title": "Stop Project",
+        "category": "Conc",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "conc.restartProject",
+        "title": "Restart Project",
+        "category": "Conc",
+        "icon": "$(debug-restart)"
+      },
+      {
+        "command": "conc.restartProjectHot",
+        "title": "Restart Project (Hot: running only)",
+        "category": "Conc"
+      },
+      {
+        "command": "conc.restartProjectCold",
+        "title": "Restart Project (Cold: all services)",
+        "category": "Conc"
+      },
+      {
+        "command": "conc.clearProjectLogs",
+        "title": "Clear Project Logs",
+        "category": "Conc",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "conc.showProjectSettings",
+        "title": "Show Project Settings",
+        "category": "Conc",
+        "icon": "$(json)"
+      },
+      {
+        "command": "conc.removeProject",
+        "title": "Remove Project",
+        "category": "Conc",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "conc.startService",
+        "title": "Start Service",
+        "category": "Conc",
+        "icon": "$(debug-start)"
+      },
+      {
+        "command": "conc.stopService",
+        "title": "Stop Service",
+        "category": "Conc",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "conc.restartService",
+        "title": "Restart Service",
+        "category": "Conc",
+        "icon": "$(debug-restart)"
+      },
+      {
+        "command": "conc.openServiceLog",
+        "title": "Open Log in Editor",
+        "category": "Conc",
+        "icon": "$(output)"
+      },
+      {
+        "command": "conc.tailServiceLog",
+        "title": "Follow Log in Terminal",
+        "category": "Conc",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "conc.clearServiceLogs",
+        "title": "Clear Service Logs",
+        "category": "Conc",
+        "icon": "$(clear-all)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "conc.upsertProject",
+          "when": "view == conc.projects",
+          "group": "navigation@1"
+        },
+        {
+          "command": "conc.openDashboard",
+          "when": "view == conc.projects",
+          "group": "navigation@2"
+        },
+        {
+          "command": "conc.refresh",
+          "when": "view == conc.projects",
+          "group": "navigation@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "conc.startProject",
+          "when": "view == conc.projects && viewItem =~ /^project/ && viewItem != project-allRunning",
+          "group": "inline@1"
+        },
+        {
+          "command": "conc.stopProject",
+          "when": "view == conc.projects && viewItem =~ /^project-(any|all)Running/",
+          "group": "inline@2"
+        },
+        {
+          "command": "conc.restartProject",
+          "when": "view == conc.projects && viewItem =~ /^project/",
+          "group": "inline@3"
+        },
+        {
+          "command": "conc.startProject",
+          "when": "view == conc.projects && viewItem =~ /^project/",
+          "group": "1_run@1"
+        },
+        {
+          "command": "conc.stopProject",
+          "when": "view == conc.projects && viewItem =~ /^project/",
+          "group": "1_run@2"
+        },
+        {
+          "command": "conc.restartProjectHot",
+          "when": "view == conc.projects && viewItem =~ /^project/",
+          "group": "1_run@3"
+        },
+        {
+          "command": "conc.restartProjectCold",
+          "when": "view == conc.projects && viewItem =~ /^project/",
+          "group": "1_run@4"
+        },
+        {
+          "command": "conc.showProjectSettings",
+          "when": "view == conc.projects && viewItem =~ /^project/",
+          "group": "2_info@1"
+        },
+        {
+          "command": "conc.clearProjectLogs",
+          "when": "view == conc.projects && viewItem =~ /^project/",
+          "group": "3_danger@1"
+        },
+        {
+          "command": "conc.removeProject",
+          "when": "view == conc.projects && viewItem =~ /^project/",
+          "group": "3_danger@2"
+        },
+        {
+          "command": "conc.startService",
+          "when": "view == conc.projects && viewItem =~ /^service/ && viewItem != service-RUNNING",
+          "group": "inline@1"
+        },
+        {
+          "command": "conc.stopService",
+          "when": "view == conc.projects && viewItem == service-RUNNING",
+          "group": "inline@1"
+        },
+        {
+          "command": "conc.restartService",
+          "when": "view == conc.projects && viewItem =~ /^service/",
+          "group": "inline@2"
+        },
+        {
+          "command": "conc.openServiceLog",
+          "when": "view == conc.projects && viewItem =~ /^service/",
+          "group": "inline@3"
+        },
+        {
+          "command": "conc.startService",
+          "when": "view == conc.projects && viewItem =~ /^service/",
+          "group": "1_run@1"
+        },
+        {
+          "command": "conc.stopService",
+          "when": "view == conc.projects && viewItem =~ /^service/",
+          "group": "1_run@2"
+        },
+        {
+          "command": "conc.restartService",
+          "when": "view == conc.projects && viewItem =~ /^service/",
+          "group": "1_run@3"
+        },
+        {
+          "command": "conc.openServiceLog",
+          "when": "view == conc.projects && viewItem =~ /^service/",
+          "group": "2_logs@1"
+        },
+        {
+          "command": "conc.tailServiceLog",
+          "when": "view == conc.projects && viewItem =~ /^service/",
+          "group": "2_logs@2"
+        },
+        {
+          "command": "conc.clearServiceLogs",
+          "when": "view == conc.projects && viewItem =~ /^service/",
+          "group": "3_danger@1"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "conc.upsertProject",
+          "when": "resourceFilename == conc.json",
+          "group": "conc@1"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "conc.upsertProject",
+          "when": "resourceFilename == conc.json",
+          "group": "conc@1"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "conc.restartProjectHot",
+          "when": "false"
+        },
+        {
+          "command": "conc.restartProjectCold",
+          "when": "false"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package --no-dependencies --allow-missing-repository -o conc.vsix",
+    "vscode:prepublish": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.2.0",
+    "typescript": "^5.9.0"
+  }
+}

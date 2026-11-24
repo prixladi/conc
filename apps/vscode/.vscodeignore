@@ -1,0 +1,8 @@
+src/**
+node_modules/**
+**/*.map
+tsconfig.json
+Makefile
+install.sh
+*.vsix
+.vscode/**
